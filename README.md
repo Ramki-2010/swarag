@@ -78,6 +78,21 @@ Swarag has completed its baseline feature extraction and validation phase.
 - Improving Top-1 ranking stability
 - Calibrating confidence thresholds
 
+## Sample Output
+
+Below is a representative output from **Swarag 1.0**, showing raga-level statistical structure derived from tonic-normalized pitch analysis.
+
+<p align="center">
+  <img src="docs/assets/sample_output.png" alt="Swarag sample output" width="800"/>
+</p>
+
+**What this shows**
+- Tonic-normalized pitch-class statistics
+- Singer-agnostic raga structure
+- Clear separation between structurally similar ragas
+
+This output is generated entirely from audio input, without hand-coded raga rules.
+
 ---
 
 ## Project Structure
