@@ -1,48 +1,145 @@
-# Swarag – Carnatic Raga Identification (Research Project)
+# 🎵 Swarag — Carnatic Raga Identification Engine
 
-Swarag is an early-stage research and learning project focused on identifying Carnatic ragas from audio recordings using signal processing and machine learning techniques.
+Swarag is a research-driven Carnatic raga identification engine that analyzes audio directly, modeling ragas as pitch behavior and pitch movement rather than fixed note rules or symbolic representations.
 
-The project explores how melodic patterns, pitch contours, and characteristic phrases (raga lakshanas) can be extracted from audio and used for raga identification.
+Unlike rule-based systems or black-box classifiers, Swarag treats ragas as musical grammars — defined by how pitches are used and how they move, not just which swaras appear.
+
+---
+
+## Motivation
+
+Most existing raga identification approaches struggle with real Carnatic performances because they rely on:
+
+- static arohanam / avarohanam rules
+- absolute pitch templates
+- aggressive smoothing that destroys gamakas
+- early reliance on opaque ML models
+
+Carnatic music is tonic-relative, ornament-rich, and improvisational.  
+Swarag is built to respect those realities.
+
+---
+
+## Core Idea
+
+Swarag is based on three principles:
+
+- Relative pitch, not absolute frequency  
+- Behavior over checklists  
+- Preserve musical information early  
+
+All analysis is normalized to the singer’s tonic (Sa).  
+Gamakas and micro-variations are preserved, not smoothed away prematurely.
+
+---
+
+## What Swarag Does Today
+
+Swarag 1.0 currently supports:
+
+- Vocal pitch extraction using pYIN
+- Automatic tonic (Sa) estimation
+- Conversion to tonic-relative cents
+- Pitch Class Distribution (PCD) modeling (36 bins)
+- Stable dyad (pitch transition) modeling
+- Aggregation of raga signatures from multiple samples
+- Distance-based raga recognition (Jensen–Shannon divergence)
+- Confidence-aware output (Top-1 / Top-3 / Unknown)
+- Fully versioned, reproducible aggregation runs
+
+---
+
+## What Swarag Is NOT (Yet)
+
+- No deep learning classifiers yet
+- No hard-coded arohanam / avarohanam rules
+- No absolute pitch assumptions
+- No real-time inference
+- No percussion-heavy audio handling
+
+These are future extensions, not current guarantees.
+
+---
 
 ## Project Status
 
-This project is currently in the dataset collection and preprocessing phase.
+Swarag has completed its baseline feature extraction and validation phase.
 
-The immediate goals are:
-- Collect publicly available Carnatic music audio samples
-- Organize them by raga with proper metadata
-- Convert audio into spectrograms and pitch-based features
-- Experiment with classical ML and deep learning approaches for raga classification
+### Achieved
+- Stable tonic-relative feature extraction
+- Statistical separation between ragas
+- Pitch transition grammar captured via dyads
+- Consistent Top-3 recognition
+- Modular, non-destructive experiment pipeline
 
-## Data Sources
+### Current Focus
+- Adding more structurally distinct ragas
+- Fixing tonic alignment consistency
+- Improving Top-1 ranking stability
+- Calibrating confidence thresholds
 
-Audio samples are collected from publicly available sources such as:
-- Freesound.org (Carnatic varnam datasets and related recordings)
-- Other openly licensed Carnatic music datasets
+---
 
-Only audio files with appropriate licenses are used.  
-This project does not access private user data.
+## Project Structure
 
-## Intended Use of APIs
+swarag/
+├── scripts/
+│ ├── extract_pitch_batch.py
+│ ├── aggregate_pcds.py
+│ ├── aggregate_dyads.py
+│ ├── recognize_raga.py
+│ └── batch_evaluate.py
+├── pcd_results/
+└── datasets/
 
-The Freesound API is used only for:
-- Searching public audio datasets
-- Downloading openly licensed audio files
-- Accessing metadata (tags, descriptions, licenses)
 
-No OAuth login or user authentication is required.
+---
 
-## Non-Commercial Notice
+## Aggregation Policy
 
-This is a non-commercial, educational, and research-oriented project.
+- All aggregation outputs are timestamped
+- No aggregation run overwrites a previous run
+- Every experiment is reproducible
 
-## Tech Stack (planned)
+---
 
-- Python
-- Librosa (audio processing)
-- NumPy / SciPy
-- PyTorch or TensorFlow (later stages)
+## Quick Start (Experimental)
 
-## License
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
 
-This repository is intended for research and educational use.
+Typical workflow:
+
+python extract_pitch_batch.py
+python aggregate_pcds.py
+python aggregate_dyads.py
+python batch_evaluate.py
+
+## Tech Stack:
+Python 3.10+
+Librosa
+NumPy
+SciPy
+Matplotlib
+
+## Data:
+Swarag operates on user-provided or publicly licensed audio.
+No private user data is collected.
+
+## License:
+MIT License.
+
+## Contributions:
+Contributions are welcome for:
+
+Adding new ragas
+Improving tonic estimation
+Performance optimization
+Evaluation and diagnostics
+Documentation
+
+## Please open an issue or discussion before major changes.
+
+## One Line Summary:
+Swarag models Carnatic ragas as pitch behavior and movement, building intelligence only after musical truth is validated.
