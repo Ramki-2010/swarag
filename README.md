@@ -123,7 +123,7 @@ pip install -r requirements.txt
 - python aggregate_dyads.py
 - python batch_evaluate.py
 
-```bash
+```
 
 ## Tech Stack:
 - Python 3.10+
