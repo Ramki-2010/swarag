@@ -95,6 +95,9 @@ Swarag has completed its baseline feature extraction and validation phase.
 
 ---
 
+
+---
+
 ## Aggregation Policy
 
 - All aggregation outputs are timestamped
@@ -105,9 +108,13 @@ Swarag has completed its baseline feature extraction and validation phase.
 
 ## Quick Start (Experimental)
 
-- python -m venv venv
-- venv\Scripts\activate
-- pip install -r requirements.txt
+```bash
+git clone https://github.com/Ramki-2010/swarag.git
+cd swarag
+
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
 
 ## Typical workflow:
 
@@ -115,6 +122,8 @@ Swarag has completed its baseline feature extraction and validation phase.
 - python aggregate_pcds.py
 - python aggregate_dyads.py
 - python batch_evaluate.py
+
+```bash
 
 ## Tech Stack:
 - Python 3.10+
