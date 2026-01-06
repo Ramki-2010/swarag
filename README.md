@@ -82,15 +82,15 @@ Swarag has completed its baseline feature extraction and validation phase.
 
 ## Project Structure
 
-swarag/
-├── scripts/
-│ ├── extract_pitch_batch.py
-│ ├── aggregate_pcds.py
-│ ├── aggregate_dyads.py
-│ ├── recognize_raga.py
-│ └── batch_evaluate.py
-├── pcd_results/
-└── datasets/
+- swarag/
+- ├── scripts/
+- │ ├── extract_pitch_batch.py
+- │ ├── aggregate_pcds.py
+- │ ├── aggregate_dyads.py
+- │ ├── recognize_raga.py
+- │ └── batch_evaluate.py
+- ├── pcd_results/
+- └── datasets/
 
 
 ---
@@ -105,41 +105,41 @@ swarag/
 
 ## Quick Start (Experimental)
 
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+- python -m venv venv
+- venv\Scripts\activate
+- pip install -r requirements.txt
 
-Typical workflow:
+## Typical workflow:
 
-python extract_pitch_batch.py
-python aggregate_pcds.py
-python aggregate_dyads.py
-python batch_evaluate.py
+- python extract_pitch_batch.py
+- python aggregate_pcds.py
+- python aggregate_dyads.py
+- python batch_evaluate.py
 
 ## Tech Stack:
-Python 3.10+
-Librosa
-NumPy
-SciPy
-Matplotlib
+- Python 3.10+
+- Librosa
+- NumPy
+- SciPy
+- Matplotlib
 
 ## Data:
-Swarag operates on user-provided or publicly licensed audio.
-No private user data is collected.
+- Swarag operates on user-provided or publicly licensed audio.
+- No private user data is collected.
 
 ## License:
-MIT License.
+- MIT License.
 
 ## Contributions:
 Contributions are welcome for:
 
-Adding new ragas
-Improving tonic estimation
-Performance optimization
-Evaluation and diagnostics
-Documentation
+- Adding new ragas
+- Improving tonic estimation
+- Performance optimization
+- Evaluation and diagnostics
+- Documentation
 
 ## Please open an issue or discussion before major changes.
 
 ## One Line Summary:
-Swarag models Carnatic ragas as pitch behavior and movement, building intelligence only after musical truth is validated.
+- Swarag models Carnatic ragas as pitch behavior and movement, building intelligence only after musical truth is validated.
