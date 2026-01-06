@@ -205,3 +205,19 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# =========================
+# Swarag project-specific
+# =========================
+
+# Generated audio features and statistics
+pcd_results/
+
+# Raw or processed audio datasets
+datasets/
+*.wav
+*.mp3
+*.flac
+
+# Large experiment artifacts
+*.npz
