@@ -5,6 +5,7 @@ Swarag is a research-driven Carnatic raga identification engine that analyzes au
 Unlike rule-based systems or black-box classifiers, Swarag treats ragas as musical grammars — defined by how pitches are used and how they move, not just which swaras appear.
 
 📌 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening issues or pull requests.
+
 🔖 **Current stable research baseline:** `v0.1-research`
 
 ---
