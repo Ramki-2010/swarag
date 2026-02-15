@@ -1,0 +1,39 @@
+# ========================
+# DATASETS
+# ========================
+datasets/
+saraga/
+
+# ========================
+# MODEL & OUTPUT FOLDERS
+# ========================
+pcd_results/
+demucs_outputs/
+separated/
+ML Models/
+
+# ========================
+# VIRTUAL ENVIRONMENTS
+# ========================
+my_virtual_env_swarag/
+myenv/
+demucs_env/
+
+# ========================
+# RESEARCH / DOC FILES
+# ========================
+Publications/
+Links.docx
+
+# ========================
+# PYTHON CACHE
+# ========================
+__pycache__/
+*.pyc
+
+# ========================
+# TEMP FILES
+# ========================
+*.tmp
+~$*
+python_DISABLED
