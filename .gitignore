@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -221,3 +222,44 @@ datasets/
 
 # Large experiment artifacts
 *.npz
+=======
+# ========================
+# DATASETS
+# ========================
+datasets/
+saraga/
+
+# ========================
+# MODEL & OUTPUT FOLDERS
+# ========================
+pcd_results/
+demucs_outputs/
+separated/
+ML Models/
+
+# ========================
+# VIRTUAL ENVIRONMENTS
+# ========================
+my_virtual_env_swarag/
+myenv/
+demucs_env/
+
+# ========================
+# RESEARCH / DOC FILES
+# ========================
+Publications/
+Links.docx
+
+# ========================
+# PYTHON CACHE
+# ========================
+__pycache__/
+*.pyc
+
+# ========================
+# TEMP FILES
+# ========================
+*.tmp
+~$*
+python_DISABLED
+>>>>>>> 3507cb62bb7d7c0b60c944ec3e1be532bc9d8c3b

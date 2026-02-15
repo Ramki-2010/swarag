@@ -1,5 +1,6 @@
 # Contributing to Swarag
 
+<<<<<<< HEAD
 Thank you for your interest in **Swarag**.
 
 Swarag is a research-driven project focused on **Carnatic raga identification using signal-derived statistical features**, not rule-based systems.
@@ -77,3 +78,28 @@ git checkout -b feature/your-feature-name
 ---
 
 **Swarag values depth over speed.**
+=======
+Swarag follows a deterministic DSP-based architecture.
+
+Before contributing:
+
+1. Do not introduce deep learning models without discussion.
+2. Maintain version isolation (v1.1, v1.2, etc.).
+3. Preserve reproducibility and metadata logging.
+4. Avoid dataset inclusion in repository.
+5. All changes must be testable via batch_evaluate.py.
+
+## Workflow
+
+- Create a feature branch
+- Make isolated changes
+- Run evaluation
+- Compare against previous version
+- Submit PR with diagnostic summary
+
+## Code Principles
+
+- No silent parameter changes
+- No mixing version artifacts
+- No dataset commits
+>>>>>>> 3507cb62bb7d7c0b60c944ec3e1be532bc9d8c3b
