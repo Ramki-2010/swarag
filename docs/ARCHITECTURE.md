@@ -10,22 +10,53 @@ precedes machine learning or optimization concerns.
 ---
 
 ## High-Level Pipeline
-Audio<br>
-↓<br>
-Pitch Extraction (pYIN)<br>
-↓<br>
-Tonic (Sa) Estimation & Normalization<br>
-↓<br>
-Feature Modeling<br>
-├─ Pitch Class Distribution (PCD)<br>
-└─ Stable Dyad Transitions<br>
-↓<br>
-Raga Scoring & Ranking<br>
-↓<br>
-Confidence-Aware Output
 
+`
+Audio (.wav / .mp3 / .flac)
+  |
+  v
+Vocal Isolation (Saraga multitrack stems or Demucs htdemucs)
+  |
+  v
+Pitch Extraction (pYIN, 6-minute cap)
+  |
+  v
+Tonic (Sa) Estimation & Normalization
+  |
+  v
+Feature Modeling
+  |-- Pitch Class Distribution (PCD, 36-bin)
+  +-- Directional Dyad Transitions (mean_up / mean_down)
+  |
+  v
+Aggregation --> Versioned Raga Signatures (pcd_stats/ + dyad_stats/)
+  |
+  v
+Raga Scoring & Ranking
+  |-- Dot-product similarity (PCD + Dyads)
+  |-- Weighted fusion (PCD=0.6, Dyad=0.4)
+  +-- Tiered confidence: HIGH / MODERATE / UNKNOWN
+  |
+  v
+Output: { final, ranking, margin, confidence_tier }
+`
 
 Each stage is intentionally isolated and testable.
+
+---
+
+## Stage 0: Vocal Isolation
+
+Carnatic concert recordings contain violin, mridangam, and tambura alongside
+vocals. These instruments contaminate pitch extraction (especially violin,
+which plays the same raga phrases).
+
+**Requirement**: All audio must be vocal-only before entering the pipeline.
+
+**Methods** (in preference order):
+1. **Saraga multitrack stems** -- lossless vocal track from the dataset (168 tracks available)
+2. **Demucs htdemucs** -- AI-based source separation (`--two-stems vocals`)
+3. **Clean recordings** -- solo vocal with drone only (e.g., Carnatic Varnam dataset)
 
 ---
 
@@ -42,6 +73,10 @@ Each stage is intentionally isolated and testable.
 - No hard smoothing applied
 - Voiced/unvoiced frames explicitly tracked
 - Pitch range kept wide to avoid cutting valid alapana phrases
+
+- **Duration cap**: Only the first 6 minutes are processed (`MAX_DURATION_SEC=360`).
+  A raga establishes its identity within 3-5 minutes. Processing beyond that
+  has diminishing returns but 10x the compute cost.
 
 The goal at this stage is **maximum musical fidelity**, not cleanliness.
 
@@ -85,15 +120,23 @@ PCD serves as the **baseline feature** for raga identity.
 
 ---
 
-### 3.2 Stable Dyad Transitions
+### 3.2 Directional Dyad Transitions
 
 PCD alone cannot distinguish sibling ragas reliably.
 Dyads capture *how pitches move*, not just where they occur.
 
+In v1.2, dyads are **directional** -- split into ascending and descending
+transitions -- because Carnatic ragas are structurally asymmetric:
+arohanam is not equal to avarohanam.
+
 **Definition**
 - Dyads represent transitions between stable pitch regions
 - Computed only across frames that exceed a minimum stability duration
-- Represented as a 36 × 36 transition matrix
+  (`MIN_STABLE_FRAMES=5`)
+- Split into two directed matrices:
+  - `mean_up` -- ascending transitions (arohanam character)
+  - `mean_down` -- descending transitions (avarohanam character)
+- Each represented as a 36 × 36 transition matrix
 
 **Why “Stable” Dyads**
 - Avoids noise from rapid pitch jitter
@@ -110,10 +153,11 @@ For each raga:
 
 - Multiple samples are aggregated
 - Mean and variance are computed for:
-  - PCD
-  - Dyad matrices
-- Outputs are saved with timestamps
-- No aggregation run overwrites another
+  - PCD -> saved to `pcd_stats/`
+  - Directional dyad matrices -> saved to `dyad_stats/`
+- A `metadata.json` is written alongside each aggregation run
+- Outputs are saved with version timestamps in named subfolders
+- No aggregation run overwrites another (non-destructive by design)
 
 This produces a **raga signature**, not a single exemplar.
 
@@ -129,16 +173,28 @@ This produces a **raga signature**, not a single exemplar.
 - Generate PCD and dyads
 - Compare against aggregated raga signatures
 
-**Distance Metrics**
-- Jensen–Shannon divergence for PCD
-- Jensen–Shannon divergence for dyads
-- Weighted combination for final score
+**Scoring**
+- Dot-product similarity for PCD
+- Dot-product similarity for directional dyads (up + down averaged)
+- Weighted combination: `score = 0.6 * pcd_sim + 0.4 * dyad_sim`
 
-**Output**
-- Ranked list of ragas
-- Top-1 prediction
-- Top-3 candidates
-- Explicit UNKNOWN / LOW CONFIDENCE state
+**Tiered Confidence System**
+
+| Tier | Condition | Meaning |
+|---|---|---|
+| HIGH | margin >= 0.003 | Strong separation, high confidence |
+| MODERATE | 0.001 <= margin < 0.003 | Acceptable separation |
+| UNKNOWN | margin < 0.001 | Too close to call -- returns UNKNOWN |
+
+**Output -- Frozen Interface Contract**
+```python
+{ "final": str, "ranking": list, "margin": float, "confidence_tier": str }
+```
+- `final` -- top predicted raga name, or "UNKNOWN / LOW CONFIDENCE"
+- `ranking` -- ordered list of (raga, score) candidates
+- `margin` -- score gap between top-1 and top-2
+- `confidence_tier` -- "HIGH", "MODERATE", or "UNKNOWN"
+
 
 UNKNOWN is a deliberate design choice, not a failure case.
 
@@ -168,19 +224,26 @@ Every feature must first prove **musical validity** before optimization.
 
 ---
 
-## Current Scope
+## Current Scope (v1.2.1)
 
-- Monophonic vocal audio
-- Clean or vocal-isolated recordings
-- Medium-length excerpts (minutes, not seconds)
+- 6 ragas modeled: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Kamboji
+- 50 vocal-isolated training clips
+- Monophonic vocal audio (vocal-isolated)
+- Medium-length excerpts (capped at 6 minutes)
 
 ---
 
 ## Planned Extensions
 
-- Sliding-window inference
-- Lightweight classifiers on validated features
-- Support for more ragas
+- Expand to full 72 Melakarta raga set
+- Add janya ragas
+- Phrase motif detection
+- Improved Sa drift handling
+- Gamaka modeling via micro-contour analysis
+- Sliding-window inference for longer recordings
+- Lightweight classifiers on top of validated features
+- Android deployment prototype
+- Live singing inference support
 - Educational explanations layered on top of results
 
 ---
