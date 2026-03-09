@@ -1,3 +1,16 @@
+# =============================================================================
+# DEPRECATED -- v1.0 inference runner
+# Replaced by: batch_evaluate_random.py
+#
+# Differences from v1.2:
+#   - Imports from recognize_raga.py (v1.1), not recognize_raga_v12.py
+#   - Unpacks a 3-tuple return (verdict, ranked, best_dist) -- incompatible
+#     with the v1.2 dict schema {final, ranking, margin, confidence_tier}
+#   - No confidence_tier or margin in output CSV
+#
+# Do not use for new evaluations.
+# =============================================================================
+
 import os
 import csv
 import random

@@ -2,23 +2,26 @@ import os
 import csv
 import numpy as np
 from datetime import datetime
-from recognize_raga_v12 import recognize_raga
+from recognize_raga_v12 import recognize_raga, load_aggregated_models
 
 # =========================
 # CONFIG
 # =========================
-BASE_DIR = r"D:\Swaragam"
-DATASET_DIR = os.path.join(BASE_DIR, "datasets", "seed_carnatic")
+BASE_DIR     = r"D:\Swaragam"
+DATASET_DIR  = os.path.join(BASE_DIR, "datasets", "seed_carnatic")
+AGG_FOLDER   = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260309_082638"  # B2: was missing
 
 EVAL_BASE_DIR = os.path.join(BASE_DIR, "pcd_results", "evaluation")
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-RUN_DIR = os.path.join(EVAL_BASE_DIR, f"run_{timestamp}")
+timestamp     = datetime.now().strftime("%Y%m%d_%H%M%S")
+RUN_DIR       = os.path.join(EVAL_BASE_DIR, f"run_{timestamp}")
 
 os.makedirs(RUN_DIR, exist_ok=True)
 
 PER_FILE_CSV = os.path.join(RUN_DIR, "per_file_results.csv")
 PER_RAGA_CSV = os.path.join(RUN_DIR, "per_raga_results.csv")
-SUMMARY_TXT = os.path.join(RUN_DIR, "summary.txt")
+SUMMARY_TXT  = os.path.join(RUN_DIR, "summary.txt")
+
+SUPPORTED_EXTS = (".wav", ".mp3", ".flac")
 
 
 # =========================
@@ -26,115 +29,90 @@ SUMMARY_TXT = os.path.join(RUN_DIR, "summary.txt")
 # =========================
 def evaluate():
 
+    # Pre-load model once — avoid re-loading for every file
+    models = load_aggregated_models(AGG_FOLDER)
+    if not models:
+        print(f"✗ No models found in: {AGG_FOLDER}")
+        return
+
+    print(f"\nSwarag v1.2 — Seed Dataset Evaluation")
+    print(f"AGG folder : {AGG_FOLDER}")
+    print(f"Dataset    : {DATASET_DIR}")
+    print(f"Run output : {RUN_DIR}\n")
+    print("=" * 60)
+
     per_file_rows = []
-    raga_stats = {}
+    raga_stats    = {}
 
     total_files = 0
-    correct = 0
+    correct     = 0
+    unknown_count = 0
 
-    for raga_folder in os.listdir(DATASET_DIR):
+    for raga_folder in sorted(os.listdir(DATASET_DIR)):
 
         raga_path = os.path.join(DATASET_DIR, raga_folder)
         if not os.path.isdir(raga_path):
             continue
 
-        for file in os.listdir(raga_path):
+        for file in sorted(os.listdir(raga_path)):
 
-            if not file.endswith(".wav"):
+            if not file.lower().endswith(SUPPORTED_EXTS):
                 continue
 
             total_files += 1
-            audio_path = os.path.join(raga_path, file)
+            audio_path  = os.path.join(raga_path, file)
 
-            # Load stored extraction for inference
-            # IMPORTANT: you must load f0, sa_hz, voiced_flag
-            # from your feature file logic (adapt if needed)
+            # C2: use v1.2 API — (audio_path, aggregation_folder, models)
+            result = recognize_raga(audio_path, AGG_FOLDER, models=models)
 
-            from extract_pitch_batch_v12 import process_file  # reuse logic
+            final           = result["final"]
+            ranking         = result["ranking"]
+            margin          = result["margin"]
+            confidence_tier = result.get("confidence_tier", "UNKNOWN")
 
-            # Re-extract features live for evaluation
-            # (alternatively load stored .npz if you prefer)
-            # For now we assume extraction returns f0 etc.
-            import librosa
-            SR = 22050
-            FMIN = librosa.note_to_hz("C1")
-            FMAX = librosa.note_to_hz("C6")
+            top1_score = ranking[0][1] if len(ranking) >= 1 else 0.0
+            top2_score = ranking[1][1] if len(ranking) >= 2 else 0.0
+            top3_score = ranking[2][1] if len(ranking) >= 3 else 0.0
 
-            y, sr = librosa.load(audio_path, sr=SR)
-            f0, voiced_flag, _ = librosa.pyin(
-                y, fmin=FMIN, fmax=FMAX, sr=sr
-            )
+            is_correct = (final == raga_folder)
 
-            valid_f0 = f0[~np.isnan(f0)]
-            if len(valid_f0) == 0:
-                continue
-
-            # Simple tonic estimation (reuse extraction logic)
-            hist, bin_edges = np.histogram(valid_f0, bins=200)
-            top_idx = np.argsort(hist)[-5:]
-            top_peaks = [(bin_edges[i] + bin_edges[i+1]) / 2 for i in top_idx]
-
-            from extract_pitch_batch_v12 import choose_best_tonic
-            sa_hz = choose_best_tonic(top_peaks, valid_f0)
-
-            predictions = recognize_raga(f0, sa_hz, voiced_flag)
-
-            if predictions is None:
-                continue
-
-            top_raga, top_data = predictions[0]
-            second_raga, second_data = predictions[1]
-
-            margin = top_data["final"] - second_data["final"]
-
-            is_correct = (top_raga == raga_folder)
-            if is_correct:
+            if final == "UNKNOWN / LOW CONFIDENCE":
+                unknown_count += 1
+            elif is_correct:
                 correct += 1
 
-            # Store per-file
             per_file_rows.append([
                 file,
                 raga_folder,
-                top_raga,
-                round(top_data["raw"], 4),
-                round(top_data["final"], 4),
-                round(top_data["genericness"], 4),
-                top_data["transitions"],
-                round(margin, 4),
+                final,
+                confidence_tier,
+                round(margin,    6),
+                round(top1_score, 4),
+                round(top2_score, 4),
+                round(top3_score, 4),
                 is_correct
             ])
 
-            # Aggregate per-raga stats
-            stats = raga_stats.setdefault(raga_folder, {
-                "total": 0,
-                "correct": 0
-            })
-
+            stats = raga_stats.setdefault(raga_folder, {"total": 0, "correct": 0, "unknown": 0})
             stats["total"] += 1
             if is_correct:
                 stats["correct"] += 1
+            if final == "UNKNOWN / LOW CONFIDENCE":
+                stats["unknown"] += 1
 
-            print(f"{file} | True={raga_folder} | Pred={top_raga} "
-                  f"| Raw={top_data['raw']:.3f} "
-                  f"| Final={top_data['final']:.3f} "
-                  f"| Gen={top_data['genericness']:.3f} "
-                  f"| Trans={top_data['transitions']} "
-                  f"| Margin={margin:.3f}")
+            status_sym = "✔" if is_correct else ("?" if "UNKNOWN" in final else "✗")
+            print(f"{status_sym} {file:<35} | True={raga_folder:<20} | Pred={final:<25} "
+                  f"| Tier={confidence_tier:<10} | Margin={round(margin, 4)}")
 
     # =========================
     # SAVE PER FILE CSV
     # =========================
-    with open(PER_FILE_CSV, "w", newline="") as f:
+    with open(PER_FILE_CSV, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "file",
-            "true_raga",
-            "predicted_raga",
-            "raw_score",
-            "final_score",
-            "genericness",
-            "transitions",
-            "top2_margin",
+            "file", "true_raga", "predicted_raga",
+            "confidence_tier", "margin",
+            "top1_score", "top2_score", "top3_score",
             "correct"
         ])
         writer.writerows(per_file_rows)
@@ -143,29 +121,52 @@ def evaluate():
     # SAVE PER RAGA CSV
     # =========================
     per_raga_rows = []
-    for raga, stats in raga_stats.items():
-        acc = stats["correct"] / stats["total"]
-        per_raga_rows.append([raga, stats["total"], stats["correct"], round(acc, 4)])
+    for raga, stats in sorted(raga_stats.items()):
+        decided = stats["total"] - stats["unknown"]
+        acc_all     = stats["correct"] / stats["total"]          if stats["total"] > 0 else 0
+        acc_decided = stats["correct"] / decided                 if decided > 0 else 0
+        per_raga_rows.append([
+            raga, stats["total"], stats["correct"],
+            stats["unknown"], round(acc_all, 4), round(acc_decided, 4)
+        ])
 
-    with open(PER_RAGA_CSV, "w", newline="") as f:
+    with open(PER_RAGA_CSV, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["raga", "total", "correct", "accuracy"])
+        writer.writerow(["raga", "total", "correct", "unknown", "acc_all", "acc_decided"])
         writer.writerows(per_raga_rows)
 
     # =========================
     # SAVE SUMMARY
     # =========================
-    overall_accuracy = correct / total_files if total_files > 0 else 0
+    decided_total    = total_files - unknown_count
+    overall_acc_all  = correct / total_files      if total_files > 0 else 0
+    overall_acc_dec  = correct / decided_total    if decided_total > 0 else 0
+    unknown_rate     = unknown_count / total_files if total_files > 0 else 0
 
-    with open(SUMMARY_TXT, "w") as f:
-        f.write(f"Total files: {total_files}\n")
-        f.write(f"Correct: {correct}\n")
-        f.write(f"Overall accuracy: {overall_accuracy:.4f}\n")
+    summary_lines = [
+        f"Swarag v1.2 Evaluation — {timestamp}",
+        f"AGG Folder  : {AGG_FOLDER}",
+        f"",
+        f"Total files  : {total_files}",
+        f"Correct      : {correct}",
+        f"Unknown      : {unknown_count}  ({unknown_rate:.1%})",
+        f"Decided      : {decided_total}",
+        f"",
+        f"Accuracy (all)     : {overall_acc_all:.4f}",
+        f"Accuracy (decided) : {overall_acc_dec:.4f}",
+    ]
 
-    print("\n===================================")
-    print(f"Overall accuracy: {overall_accuracy:.4f}")
-    print("Results saved to:", RUN_DIR)
-    print("===================================")
+    with open(SUMMARY_TXT, "w", encoding="utf-8") as f:
+        f.write("\n".join(summary_lines))
+
+    print("\n" + "=" * 60)
+    print(f"Total        : {total_files}")
+    print(f"Correct      : {correct}")
+    print(f"Unknown      : {unknown_count}  ({unknown_rate:.1%})")
+    print(f"Acc (all)    : {overall_acc_all:.4f}")
+    print(f"Acc (decided): {overall_acc_dec:.4f}")
+    print(f"\nResults saved to: {RUN_DIR}")
+    print("=" * 60)
 
 
 if __name__ == "__main__":

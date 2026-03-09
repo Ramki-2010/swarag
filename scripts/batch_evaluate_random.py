@@ -1,106 +1,116 @@
 import os
 import csv
-import time
 from datetime import datetime
-
-from recognize_raga import recognize_raga
+from recognize_raga_v12 import recognize_raga, load_aggregated_models
 
 # =========================
 # CONFIG
 # =========================
-AUDIO_DIR = r"D:\Swaragam\datasets\audio test"
-OUTPUT_BASE_DIR = r"D:\Swaragam\pcd_results\randomevaluations"
+
+RANDOM_TEST_FOLDER = r"D:\Swaragam\datasets\audio test"
+AGG_FOLDER         = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260309_082638"
+OUTPUT_BASE        = r"D:\Swaragam\pcd_results\random_evaluations_v12"
 
 SUPPORTED_EXTS = (".wav", ".mp3", ".flac")
 
-# =========================
-# SETUP OUTPUT DIR (NO OVERWRITE)
-# =========================
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-RUN_DIR = os.path.join(OUTPUT_BASE_DIR, f"run_{timestamp}")
-os.makedirs(RUN_DIR, exist_ok=True)
-
-PER_FILE_CSV = os.path.join(RUN_DIR, "per_file_results.csv")
-SUMMARY_TXT = os.path.join(RUN_DIR, "summary.txt")
 
 # =========================
 # MAIN
 # =========================
-def main():
-    print("\nStarting Swarag random batch evaluation")
-    print("--------------------------------------\n")
 
-    audio_files = [
-        f for f in os.listdir(AUDIO_DIR)
+def main():
+
+    print("\nStarting Swarag v1.2 Random Batch Evaluation")
+    print("=============================================\n")
+
+    timestamp  = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_folder = os.path.join(OUTPUT_BASE, f"run_{timestamp}")
+    os.makedirs(run_folder, exist_ok=True)
+
+    files = [
+        f for f in os.listdir(RANDOM_TEST_FOLDER)
         if f.lower().endswith(SUPPORTED_EXTS)
     ]
 
-    if not audio_files:
-        print("No audio files found.")
+    if not files:
+        print("⚠ No audio files found.")
         return
 
-    results = []
+    # Pre-load models once for efficiency
+    models = load_aggregated_models(AGG_FOLDER)
+    if not models:
+        print(f"✗ No models found in: {AGG_FOLDER}")
+        return
 
-    for fname in audio_files:
-        audio_path = os.path.join(AUDIO_DIR, fname)
+    print(f"Loaded {len(models)} raga model(s): {', '.join(sorted(models.keys()))}")
+    print(f"Run output: {run_folder}\n")
 
-        print(f"▶ Analyzing: {fname}")
+    # C3: collect rows for CSV output
+    csv_rows = []
+
+    for file in files:
+
+        print(f">> Analyzing: {file}\n")
+
         try:
-            pred, ranking = recognize_raga(audio_path)
+            audio_path = os.path.join(RANDOM_TEST_FOLDER, file)
 
-            top1 = ranking[0][0]
-            top3 = [r for r, _ in ranking[:3]]
+            result = recognize_raga(audio_path, AGG_FOLDER, models=models)
 
-            results.append({
-                "file": fname,
-                "prediction": pred,
-                "top1": top1,
-                "top3": ", ".join(top3)
-            })
+            final           = result["final"]
+            ranking         = result["ranking"]
+            margin          = result["margin"]
+            confidence_tier = result.get("confidence_tier", "UNKNOWN")
 
-            print(f"    ✓ Prediction → {pred}\n")
+            top1_score = ranking[0][1] if len(ranking) >= 1 else 0.0
+            top2_score = ranking[1][1] if len(ranking) >= 2 else 0.0
+            top3_name  = ranking[2][0] if len(ranking) >= 3 else ""
+            top3_score = ranking[2][1] if len(ranking) >= 3 else 0.0
+
+            print(f"Final Prediction : {final}")
+            print(f"Confidence Tier  : {confidence_tier}")
+            print(f"Margin           : {round(margin, 4)}")
+
+            print("\nRanking:")
+            for raga, score in ranking:
+                print(f"  {raga:20} | {round(score, 4)}")
+
+            print()
+
+            # C3: accumulate CSV data
+            csv_rows.append([
+                file,
+                final,
+                confidence_tier,
+                round(margin, 6),
+                ranking[0][0] if len(ranking) >= 1 else "",
+                round(top1_score, 4),
+                ranking[1][0] if len(ranking) >= 2 else "",
+                round(top2_score, 4),
+                top3_name,
+                round(top3_score, 4),
+            ])
 
         except Exception as e:
-            print(f"    ✗ Error processing {fname}: {e}\n")
-            results.append({
-                "file": fname,
-                "prediction": "ERROR",
-                "top1": "",
-                "top3": ""
-            })
+            print(f"✗ Error processing {file}: {e}\n")
+            csv_rows.append([file, "ERROR", "UNKNOWN", 0.0, "", 0.0, "", 0.0, "", 0.0])
 
-    # =========================
-    # SAVE CSV
-    # =========================
-    with open(PER_FILE_CSV, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=["file", "prediction", "top1", "top3"]
-        )
-        writer.writeheader()
-        writer.writerows(results)
+    # C3: Write CSV
+    csv_path = os.path.join(run_folder, "results.csv")
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "file",
+            "predicted_raga", "confidence_tier", "margin",
+            "top1_raga", "top1_score",
+            "top2_raga", "top2_score",
+            "top3_raga", "top3_score",
+        ])
+        writer.writerows(csv_rows)
 
-    # =========================
-    # SAVE SUMMARY
-    # =========================
-    total = len(results)
-    unknown = sum(1 for r in results if r["prediction"] == "UNKNOWN / LOW CONFIDENCE")
-    errors = sum(1 for r in results if r["prediction"] == "ERROR")
-
-    with open(SUMMARY_TXT, "w", encoding="utf-8") as f:
-        f.write("Swarag Random Evaluation Summary\n")
-        f.write("--------------------------------\n")
-        f.write(f"Total files: {total}\n")
-        f.write(f"UNKNOWN / LOW CONFIDENCE: {unknown}\n")
-        f.write(f"Errors: {errors}\n")
-
-    print("Batch evaluation completed.\n")
-    print("Results saved to:")
-    print(RUN_DIR)
+    print("Random batch evaluation completed.")
+    print(f"Results saved to: {csv_path}")
 
 
-# =========================
-# ENTRY
-# =========================
 if __name__ == "__main__":
     main()

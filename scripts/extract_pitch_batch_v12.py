@@ -7,6 +7,7 @@ from datetime import datetime
 # CONFIG
 # =========================
 SR = 22050
+MAX_DURATION_SEC = 360  # 6-minute cap per file
 FMIN = librosa.note_to_hz("C1")
 FMAX = librosa.note_to_hz("C6")
 PCD_BINS = 36
@@ -84,7 +85,7 @@ def apply_pitch_stability_gate(f0, sa_hz, voiced_flag):
 # =========================
 def process_file(audio_path, raga_label):
 
-    y, sr = librosa.load(audio_path, sr=SR)
+    y, sr = librosa.load(audio_path, sr=SR, duration=MAX_DURATION_SEC)
 
     f0, voiced_flag, _ = librosa.pyin(
         y, fmin=FMIN, fmax=FMAX, sr=sr
@@ -147,7 +148,7 @@ def batch_extract():
             continue
 
         for file in os.listdir(raga_path):
-            if not file.endswith(".wav"):
+            if not file.lower().endswith((".wav", ".mp3", ".flac")):
                 continue
 
             audio_path = os.path.join(raga_path, file)

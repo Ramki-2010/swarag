@@ -1,3 +1,16 @@
+# =============================================================================
+# DEPRECATED -- v1.1 recognition engine
+# Replaced by: recognize_raga_v12.py
+#
+# Differences from v1.2:
+#   - Uses symmetric (undirected) dyads -- no ascent/descent split
+#   - Loads flat "mean_dyads" key, incompatible with v1.2 aggregation output
+#   - No genericness penalty
+#   - Sibling escalation logic is hardcoded, not tiered
+#
+# Do not use for new evaluations.
+# =============================================================================
+
 import os
 import sys
 import numpy as np

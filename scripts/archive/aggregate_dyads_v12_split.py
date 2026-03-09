@@ -1,3 +1,16 @@
+# =============================================================================
+# DEPRECATED -- split v1.2 directional dyad-only aggregation
+# Replaced by: aggregate_all_v12.py
+#
+# Differences from current pipeline:
+#   - Aggregates directional dyads only -- does not produce pcd_stats/
+#   - Reads from features_validated/ not features_v12/
+#   - Was intended as a temporary split step before aggregate_all_v12.py
+#     unified PCD and directional dyad aggregation into one run
+#
+# Do not use for new aggregations.
+# =============================================================================
+
 # Deprecated: replaced by aggregate_all_v12.py
 
 import os

@@ -1,7 +1,10 @@
-import numpy as np
+# =============================================================================
+# DIAGNOSTIC SCRATCH SCRIPT -- not part of any pipeline
+# Inspects keys and contents of a single raw features .npz file.
+# Hardcoded to a specific file path -- update path before running.
+# =============================================================================
 
-# Load one sample
-data = np.load(r"D:\Swagaram\pcd_results\features_raw\Bhairavi_clean_2_20251228_191457.npz")
+import numpy as np
 
 # Print everything
 print("Keys:", list(data.keys()))

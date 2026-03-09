@@ -1,3 +1,17 @@
+# =============================================================================
+# DEPRECATED -- pre-v1.2 single-file extraction with validation pipeline
+# Replaced by: extract_pitch_batch_v12.py
+#
+# Differences from v1.2:
+#   - Single file per run, not a batch pipeline
+#   - Saves to features/ directory with an older schema (no feature_version key)
+#   - No pitch stability gating
+#   - Intended for use with validate_tonic_and_features.py, which is itself
+#     superseded by the gating logic inside extract_pitch_batch_v12.py
+#
+# Do not use for new extractions.
+# =============================================================================
+
 import os
 import librosa
 import numpy as np

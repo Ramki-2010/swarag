@@ -32,8 +32,16 @@ __pycache__/
 *.pyc
 
 # ========================
+# IDE / TOOL FILES
+# ========================
+.continue/
+antigravity-claude-proxy/
+swarag/
+
+# ========================
 # TEMP FILES
 # ========================
 *.tmp
 ~$*
 python_DISABLED
+scripts/apply_fixes.py

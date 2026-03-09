@@ -1,3 +1,18 @@
+# =============================================================================
+# DEPRECATED -- pre-v1.2 symmetric dyad aggregation (stats/ output)
+# Replaced by: aggregate_all_v12.py
+#
+# Differences from v1.2:
+#   - Computes undirected (symmetric) dyads -- no ascent/descent split
+#   - Saves key "mean_dyads" -- incompatible with v1.2 dyad_stats schema
+#     (mean_up / mean_down)
+#   - Reads from features_validated/ (old extract_pitch_batch -> validate pipeline)
+#   - Writes directly to aggregation/stats/ with no versioning or run folders
+#   - No Laplace smoothing, no feature_version guardrail
+#
+# Do not use for new aggregations.
+# =============================================================================
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt

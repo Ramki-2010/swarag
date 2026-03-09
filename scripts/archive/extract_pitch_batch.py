@@ -1,18 +1,21 @@
+# =============================================================================
+# DEPRECATED -- v1.1 batch pitch extraction (schema version 1.1)
+# Replaced by: extract_pitch_batch_v12.py
+#
+# Differences from v1.2:
+#   - Saves schema_version="1.1", not feature_version="v1.2"
+#   - No pitch stability gating (WINDOW_SIZE / DRIFT_THRESHOLD logic)
+#   - Saves to features_raw/, not features_v12/
+#   - Output is not compatible with aggregate_all_v12.py
+#
+# Do not use for new extractions.
+# =============================================================================
+
 import os
 import librosa
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
-
-# =========================
-# CONFIG
-# =========================
-SR = 22050
-FMIN = librosa.note_to_hz("C1")
-FMAX = librosa.note_to_hz("C6")
-PCD_BINS = 36
-
-SCHEMA_VERSION = "1.1"
 
 BASE_DIR = r"D:\Swagaram"
 FEATURE_DIR = os.path.join(BASE_DIR, "pcd_results", "features_raw")

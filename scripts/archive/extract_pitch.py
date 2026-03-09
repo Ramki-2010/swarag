@@ -1,3 +1,17 @@
+# =============================================================================
+# DEPRECATED -- early single-file pitch extraction prototype
+# Replaced by: extract_pitch_batch_v12.py
+#
+# Differences from v1.2:
+#   - Single hardcoded file, not a batch pipeline
+#   - Tonic estimated via raw argmax on linear histogram -- no octave-aware
+#     candidate scoring
+#   - No pitch stability gating
+#   - No feature saving -- diagnostic/visualisation only
+#
+# Do not use for new extractions.
+# =============================================================================
+
 import librosa
 import numpy as np
 import matplotlib.pyplot as plt

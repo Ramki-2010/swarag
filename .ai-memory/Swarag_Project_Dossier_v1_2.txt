@@ -1,0 +1,147 @@
+Swarag v1.2 -- Project Dossier
+=========================================================
+
+Author:   Ram Krishna
+Project:  Swarag (AI-based Carnatic Raga Recognition Engine)
+Version:  v1.2
+Updated:  2025-02-16 (session 2 end)
+
+=========================================================
+1. WHAT IS SWARAG
+=========================================================
+
+Swarag identifies Carnatic ragas from audio using a deterministic
+DSP pipeline (not deep learning). It extracts pitch features and
+matches them against known raga signatures.
+
+The goal is to codify Carnatic musical grammar into computation.
+Raga identity is structured grammar, not statistical coincidence.
+
+Current: 3 ragas. Target: 72 Melakartas, janya ragas, live
+inference, Android app.
+
+=========================================================
+2. PIPELINE
+=========================================================
+
+Audio -> Pitch Extraction (pYIN) -> Tonic Estimation
+-> Normalization (cents) -> PCD + Directional Dyads
+-> Scoring (dot-product, weighted) -> Guardrails -> Output
+
+Details: .ai-memory/architecture.md
+
+=========================================================
+3. CURRENT STATE (2025-02-16, session 2 end)
+=========================================================
+
+Working:
+  - Full pipeline, 3 ragas, directional dyads, interface contract
+  - BUG-001 RESOLVED: missing constants + error logging fixed
+  - Development memory system and workflow established
+  - mirdata installed in venv for future Saraga downloads
+
+Held (code ready, waiting for more data):
+  - Genericness removal (confirmed inert, scores shift to positive)
+  - Escalation fix (confirmed harmful for Kalyani)
+  - Threshold recalibration (needs positive score range first)
+
+Open bugs: BUG-002 through BUG-007 (see bugs.md)
+
+Last test: 1/4 correct (25%) — unchanged across all code fixes.
+Baseline weights (0.6/0.4) confirmed best with current data.
+Escalation crushes Kalyani margin 5x (BUG-007).
+
+Bottleneck: Training data too thin (6 clips/raga). Code tuning
+cannot improve accuracy until models are built from 15-20 clips.
+
+Data expansion COMPLETE:
+  - Expanded from 3 ragas to 6 (added Mohanam, Thodi, Kamboji)
+  - 50 clips across 6 ragas (up from 22 across 3)
+  - All audio vocal-isolated (Saraga stems + Demucs htdemucs)
+  - MAX_DURATION_SEC=360 restored (6-min cap, 10x speedup)
+  - OOD false positives ELIMINATED (Hamsadwani, Mohanam now UNKNOWN)
+  - Rankings correct: Bhairavi #1, Kalyani #1
+  - Confidence still UNKNOWN tier (thresholds need recalibration)
+
+Details: .ai-memory/bugs.md, .ai-memory/datasets.md
+
+=========================================================
+4. NEXT STEPS
+=========================================================
+
+Immediate:  Recalibrate margin thresholds for 6-raga model
+            (scores are correct but below current thresholds)
+Short-term: Apply held code fixes (genericness removal, escalation fix)
+            Add more clips for Kamboji (3) and Mohanam (6) -- still below 15
+Medium:     Add OOD score floor, expand raga coverage
+Long-term:  72 Melakartas -> janya ragas -> phrase modeling
+            -> gamaka analysis -> live inference -> Android
+
+=========================================================
+5. DEVELOPMENT PROCESS
+=========================================================
+
+Loop: PLAN -> IMPLEMENT (sandbox-first) -> VERIFY -> DOCUMENT
+
+Sandbox-first: all fixes tested in test_*.py before production.
+Fix priority: BLOCKING > DATA > SCORING > ARCHITECTURE > DATASET
+
+Details: .ai-memory/workflow.md
+
+=========================================================
+6. PROJECT STRUCTURE
+=========================================================
+
+D:\Swaragam\
+  scripts/          Python code (6 production + sandbox)
+  .ai/              AI agent rules (agent_spec.md, 15 rules)
+  .ai-memory/       Project memory (8 files including this one)
+  datasets/         Audio files (seed + test)
+  pcd_results/      Features, models, evaluation outputs
+
+Details: .ai-memory/architecture.md
+
+=========================================================
+7. KEY DECISIONS
+=========================================================
+
+- Deterministic DSP (small dataset, explainability, control)
+- Directional dyads (Carnatic ragas are asymmetric)
+- Sandbox-first workflow (never edit production untested)
+- UNKNOWN over wrong certainty (margin guardrails)
+
+=========================================================
+8. RISKS
+=========================================================
+
+- Silent failures: except-Exception hides crashes as UNKNOWN
+- No OOD rejection: untrained ragas get misclassified
+- Sibling ragas (Kalyani/Shankarabharanam) nearly identical
+- Constants must stay synchronized across scripts
+
+Details: .ai-memory/bugs.md, .ai-memory/lessons.md
+
+=========================================================
+9. ORIGIN
+=========================================================
+
+Born from a family steeped in Carnatic music. Identifying ragas
+from listening -- a skill once natural to elders, now rare.
+Swarag is computational ethnomusicology: translating parampara
+intelligence into algorithmic form.
+
+=========================================================
+WHERE TO LOOK
+=========================================================
+
+  architecture.md    Pipeline, scripts, constants
+  bugs.md            Active bugs (7) and resolved bugs (1)
+  lessons.md         Lessons learned (19)
+  datasets.md        Data locations, test results, external sources
+  workflow.md        Development process
+  debug-playbook.md  Debugging guide
+  agent_spec.md      AI assistant rules (15)
+
+=========================================================
+End of Dossier
+=========================================================

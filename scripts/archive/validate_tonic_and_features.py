@@ -1,3 +1,17 @@
+# =============================================================================
+# DEPRECATED -- tonic validation post-processing tool
+# Part of the old two-step pipeline: extract_pitch_batch.py -> this script
+#
+# That pipeline has been replaced in full by extract_pitch_batch_v12.py,
+# which folds tonic validation into the extraction step itself via the
+# pitch stability gate (WINDOW_SIZE / DRIFT_THRESHOLD logic).
+#
+# Reads from features_raw/ and writes to features_validated/ -- neither
+# directory is used by the v1.2 pipeline.
+#
+# Kept for reference only. Do not use.
+# =============================================================================
+
 import os
 import numpy as np
 
