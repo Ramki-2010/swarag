@@ -9,6 +9,8 @@ from utils import estimate_tonic   # C1: single canonical tonic source
 # CONFIG
 # =========================
 
+SR               = 22050
+MAX_DURATION_SEC = 360   # 6-minute cap per file
 PCD_WEIGHT       = 0.6
 DYAD_WEIGHT      = 0.4
 GENERICNESS_WEIGHT = 0.0   # BUG-004 fix: confirmed inert, removed
@@ -193,13 +195,13 @@ def recognize_raga(audio_path, aggregation_folder, models=None):
             }
 
         # ---- Audio load & pitch extraction ----
-        y, sr = librosa.load(audio_path, sr=22050)
+        y, sr = librosa.load(audio_path, sr=SR, duration=MAX_DURATION_SEC)
 
         f0, voiced_flag, _ = librosa.pyin(
             y,
             fmin=librosa.note_to_hz("C1"),
             fmax=librosa.note_to_hz("C6"),
-            sr=22050,
+            sr=SR,
         )
 
         valid = f0[~np.isnan(f0)]
