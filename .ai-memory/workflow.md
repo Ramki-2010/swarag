@@ -352,3 +352,18 @@ The AI should say "this might be a good time for /analyze-swarag" when:
   5. Debug Investigator   -- paths, loading, shapes, silent errors
 
 Full expert definitions are in agent_spec.md Rule 13.
+
+
+---
+
+## 13. Parked Features (Activate at Scale)
+
+Some features have been validated in sandbox but are premature for the
+current dataset size. Check this table when adding ragas.
+
+| Feature | Parked Since | Trigger | Sandbox Script | Bug Ref |
+|---|---|---|---|---|
+| Hubness correction (centered) | 2026-03-12 | Ragas >= 15 | sandbox_hubness.py | BUG-010 |
+
+When adding ragas, check this table. If trigger condition is met,
+re-run the sandbox script with LOO validation before integrating.

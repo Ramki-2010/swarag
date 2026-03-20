@@ -9,7 +9,8 @@ Most failures occur in data pipelines, not algorithms.
 1. FILE PATHS
    - Does the audio file exist?
    - Does the aggregation folder exist?
-     Current: pcd_results/aggregation/v1.2/run_20260309_082638/
+     Current: pcd_results/aggregation/v1.2/run_20260312_205842_72bins/
+     Scoring: IDF x Variance weighted, 72 bins (Phase 4, v1.2.4)
    - Are pcd_stats/ and dyad_stats/ subfolders present?
    - Are .npz files loadable?
 
@@ -29,7 +30,7 @@ Most failures occur in data pipelines, not algorithms.
 
 4. DATA LOADING
    - Do .npz files contain expected keys? (mean_pcd, mean_up, mean_down)
-   - Are array shapes correct? (PCD: 36, Dyads: 1296)
+   - Are array shapes correct? (PCD: 72, Dyads: 5184)
    - Are values non-zero and non-NaN?
 
 5. PITCH EXTRACTION
@@ -73,9 +74,14 @@ Most failures occur in data pipelines, not algorithms.
 | Margin is always tiny | Score compression — features lack discriminative power |
 | Kalyani/Shankarabharanam tied | Sibling raga problem — need phrase-level features |
 | Kalyani margin crushed | Escalation path (BUG-007) — dyad-heavy reweighting hurts |
+| Thodi absorbs everything | Thodi PCD concentrated on Sa/Pa/Ma (universal swaras) — BUG-008 |
+| Dyad similarities all ~0.001 | ALPHA too high (was 0.5, should be 0.01) — Phase 2 fix |
+| OOD false positives on mix audio | Instrument noise inflates scores -- must vocal-isolate first (BUG-009) |
 | Noisy PCD with extra peaks | Instrument contamination — use vocal-only audio |
 | Very slow processing | Missing MAX_DURATION_SEC=360 cap, or processing full concerts |
 | ModuleNotFoundError | Virtual environment not activated |
+| Sandbox accuracy much higher than LOO | Self-evaluation bias -- use LOO for true accuracy |
+| Accuracy drops when adding scoring layer | Feature too weak for current dataset size (see BUG-010) |
 | && syntax error | Using PowerShell — use `;` instead |
 | UnicodeEncodeError (checkmark) | aggregate_all_v12.py print statement — cosmetic, aggregation completed |
 
@@ -93,7 +99,7 @@ python batch_evaluate_random.py
 python batch_evaluate.py
 
 # Run Demucs vocal isolation on a file
-D:\Swaragam\demucs_env\Scripts\python.exe -m demucs --two-stems vocals --mp3 -o D:\Swaragam\demucs_outputs\vocal_separation "path\to\file.mp3"
+D:\Swaragam\demucs_env\Scripts\python.exe -m demucs --two-stems vocals -o D:\Swaragam\demucs_outputs\vocal_separation "path\to\file.mp3"
 
 # Check feature file contents
 python -c "import numpy as np; d=np.load('file.npz',allow_pickle=True); print(list(d.keys())); print(d['raga'])"

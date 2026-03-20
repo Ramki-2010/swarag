@@ -2,144 +2,153 @@
 
 ## Active Bugs
 
-### BUG-002: Shankarabharanam Sink (OOD Absorption)
-- **Status**: OPEN — architectural issue
-- **Found**: 2025-02-15 (test_recognize_fix.py run)
+### BUG-002: OOD Sink (was Shankarabharanam, now Thodi)
+- **Status**: PARTIALLY RESOLVED — shifted from Shankarabharanam to Thodi
+- **Found**: 2026-02-15 (test_recognize_fix.py run)
+- **Updated**: 2026-03-10 (Phase 2 analysis)
 - **Description**:
-  Untrained ragas (Hamsadwani, Mohanam) are confidently misclassified as
-  Shankarabharanam. The major-scale-like PCD of Shankarabharanam attracts
-  any raga with a broadly distributed pitch histogram.
-- **Impact**: False positives on out-of-distribution audio.
-- **Evidence**:
-  - Hamsadwani -> Shankarabharanam (margin 0.00431)
-  - Mohanam -> Shankarabharanam (margin 0.003845)
-- **Root Cause**: No out-of-distribution (OOD) detection mechanism.
-  The system picks the "least bad" match from its trained set.
-  Shankarabharanam has the most generic/uniform PCD, so it wins by default.
-- **Potential Fixes**:
-  1. Increase genericness penalty weight
-  2. Add minimum absolute score threshold (not just margin)
-  3. Add OOD detector (e.g., max score below threshold -> UNKNOWN)
-  4. Train more ragas to crowd out false matches
+  Originally: untrained ragas misclassified as Shankarabharanam.
+  After expanding to 6 ragas: OOD test files (Hamsadwani, Mohanam) now
+  correctly return UNKNOWN. The OOD false positive issue is FIXED.
+  However, cross-raga leakage now goes to Thodi (10/18 seed wrongs).
+- **Impact**: OOD false positives fixed. Intra-trained leakage remains.
+- **Evidence (Phase 2)**:
+  - Hamsadwani -> UNKNOWN (margin 0.000672) CORRECT
+  - Mohanam -> UNKNOWN (margin 0.000254) CORRECT
+  - But 10/18 seed misclassifications go to Thodi
+- **Root Cause**: Thodi has concentrated PCD on Sa/Ni/Ma (universal swaras),
+  giving it high dot-product with many other ragas' audio.
+- **Fix Applied**: Expanded to 6 ragas (eliminated Shankarabharanam sink),
+  boosted Thodi to 10 clips, excluded 2 outlier clips.
+- **Remaining**: See BUG-008 for Thodi sink details.
 
-### BUG-003: Kalyani / Shankarabharanam Score Compression
-- **Status**: OPEN — scoring issue
-- **Found**: 2025-02-15 (test_recognize_fix.py run)
+### BUG-003: Score Compression Between Sibling Ragas
+- **Status**: IMPROVED — margins 1.6-5x better after Phase 1-2 fixes
+- **Found**: 2026-02-15 (test_recognize_fix.py run)
+- **Updated**: 2026-03-10 (Phase 2 ALPHA fix)
 - **Description**:
-  Kalyani is ranked #1 for Kalyani test audio, but the margin between
-  Kalyani and Shankarabharanam is only 0.000227 — far too small for any
-  reasonable confidence threshold.
-- **Impact**: Kalyani audio returns UNKNOWN even though it IS the correct
-  top-1 prediction.
-- **Evidence**:
-  - Kalyani:          -0.142419
-  - Shankarabharanam: -0.142646
-  - Margin:            0.000227
-- **Root Cause**: These are sibling ragas sharing most swaras. The current
-  PCD + directional dyad features may not have enough discriminative power
-  to separate them cleanly. All scores are also negative (genericness
-  penalty outweighs similarities), compressing the effective range.
-- **Updated Evidence (2025-02-16, test_dyad_weights.py)**:
-  Without genericness, first-pass (0.6/0.4) Kalyani margin is actually
-  0.001131 — but escalation (0.3/0.7) crushes it to 0.000227 (see BUG-007).
-- **Potential Fixes**:
-  1. Remove genericness penalty (confirmed inert, ready to apply)
-  2. Fix escalation (BUG-007) so first-pass margin is preserved
-  3. Add more training clips for both ragas (priority — only 6-10 clips)
-  4. Add phrase-level features specific to Kalyani vs Shankarabharanam
+  Sibling ragas (sharing most swaras) have very small margins.
+  Originally Kalyani margin was 0.000227. After Phase 2 fixes:
+  Kalyani margin is now 0.006558-0.008833 (HIGH confidence).
+- **Impact**: Largely resolved for Kalyani. Bhairavi still shows
+  compression vs Thodi (margin 0.002-0.004).
+- **Fixes Applied**:
+  1. Genericness removed (scores shifted positive) — BUG-004
+  2. Escalation disabled (preserved first-pass margin) — BUG-007
+  3. Thresholds recalibrated (0.003/0.001) — BUG-006
+  4. ALPHA fixed (0.5→0.01, dyads now contribute) — Phase 2
+  5. Training data expanded (6→53 clips, 6 ragas)
+- **Remaining**: Bhairavi/Thodi separation needs improvement.
 
 ### BUG-004: Genericness Penalty Does Not Affect Ranking
-- **Status**: OPEN — first fix attempt REJECTED
-- **Found**: 2025-02-16 (architectural audit)
-- **File**: `scripts/recognize_raga_v12.py`, function `_score_models()`
-- **Description**:
-  `compute_genericness(pcd)` is computed from the TEST audio's PCD only.
-  It does not reference any raga model. Since the same PCD is used for
-  every raga in the loop, the same genericness value is subtracted from
-  ALL scores equally. This means the penalty does not change ranking.
-- **Fix Attempt 1 (REJECTED 2025-02-16)**:
-  Compute genericness from MODEL PCD instead of test PCD.
-  Result: Made things WORSE. Shankarabharanam had lowest model entropy
-  (3.248) so it got the smallest penalty. Kalyani flipped from #1 to #2.
-  All model entropies too close (3.25-3.29) to differentiate.
-  Sandbox: test_bug004_genericness.py
-- **Fix Attempt 2 (HELD 2025-02-16)**:
-  Remove genericness entirely. Rankings and margins identical to baseline
-  (confirms penalty was inert). Scores shift negative to positive.
-  Clean-up only, no accuracy gain. Held until accuracy improves.
-  Sandbox: test_bug004_no_genericness.py
-- **Remaining options**:
-  1. Remove genericness (ready to apply, no accuracy change)
-  2. Try different penalty: KL divergence from uniform
-  3. Move to post-scoring filter
-  4. Skip BUG-004 entirely and focus on what actually moves accuracy
+- **Status**: RESOLVED (2026-03-09)
+- **Found**: 2026-02-16 (architectural audit)
+- **Fix**: Set GENERICNESS_WEIGHT = 0.0 in recognize_raga_v12.py.
+  Penalty was mathematically inert (same value subtracted from all scores).
+  Removal shifts scores from negative to positive, no ranking change.
+- **Verified**: sandbox_phase1_fast.py confirms margins unchanged.
 
 ### BUG-005: ESCALATION_MARGIN Defined But Never Used
-- **Status**: OPEN — dead code
-- **Found**: 2025-02-16 (architectural audit)
-- **File**: `scripts/recognize_raga_v12.py`
-- **Description**:
-  `ESCALATION_MARGIN = 0.02` is declared in CONFIG but never referenced
-  in the code. The escalation path triggers whenever `margin < MARGIN_STRICT`,
-  regardless of how small the margin is.
-- **Impact**: Dead code. Suggests the tiered confidence was incompletely
-  implemented. The original intent may have been:
-  - `margin >= MARGIN_STRICT (0.05)` -> HIGH
-  - `margin >= ESCALATION_MARGIN (0.02)` -> try escalation
-  - `margin < ESCALATION_MARGIN` -> skip straight to UNKNOWN
-- **Root Cause**: Incomplete implementation during v1.2 rewrite.
-- **Fix**: Either use it or remove it. If used, add a check before
-  escalation: `if margin < ESCALATION_MARGIN: return UNKNOWN`
+- **Status**: RESOLVED (2026-03-09)
+- **Found**: 2026-02-16 (architectural audit)
+- **Fix**: Escalation path disabled entirely. Replaced with simple
+  two-tier confidence: HIGH (margin >= 0.003), MODERATE (>= 0.001).
+  ESCALATION_MARGIN constant removed along with escalation logic.
 
 ### BUG-006: Margin Thresholds Miscalibrated for Actual Score Range
-- **Status**: OPEN — threshold issue
-- **Found**: 2025-02-16 (architectural audit)
-- **File**: `scripts/recognize_raga_v12.py`
-- **Description**:
-  Production thresholds `MARGIN_STRICT=0.05` and `MIN_MARGIN_FINAL=0.01`
-  are larger than the actual score spread observed in test runs (~0.03 total).
-  This means nothing can ever reach HIGH confidence, and most results
-  will be UNKNOWN even when the ranking is correct.
-- **Impact**: System is overly conservative — rejects correct predictions.
-- **Evidence**:
-  - Best Bhairavi margin: 0.005664 (below MARGIN_STRICT=0.05)
-  - Total score spread: ~0.03 (MARGIN_STRICT=0.05 exceeds this)
-- **Root Cause**: Thresholds were likely set before genericness penalty
-  was added, when scores were positive and had wider spread.
-- **Fix**: Recalibrate after removing genericness (scores become positive)
-  and after adding more training data. Set thresholds based on actual
-  score distributions from a full evaluation run.
+- **Status**: RESOLVED (2026-03-09)
+- **Found**: 2026-02-16 (architectural audit)
+- **Fix**: Recalibrated thresholds based on empirical score distributions:
+  - MARGIN_STRICT: 0.05 -> 0.003 (HIGH confidence)
+  - MIN_MARGIN_FINAL: 0.01 -> 0.001 (MODERATE confidence)
+  Now 27/53 clips reach HIGH, 2 reach MODERATE (was 0 before).
 
 ### BUG-007: Escalation Path Crushes Kalyani Margin
-- **Status**: OPEN — confirmed harmful
-- **Found**: 2025-02-16 (test_dyad_weights.py)
-- **File**: `scripts/recognize_raga_v12.py`, escalation logic
+- **Status**: RESOLVED (2026-03-09)
+- **Found**: 2026-02-16 (test_dyad_weights.py)
+- **Fix**: Escalation path disabled entirely. Confidence tier changed
+  from ESCALATED to MODERATE. First-pass margin (0.6/0.4) is now final.
+  Kalyani margin improved from 0.000227 (escalated) to 0.008833 (HIGH).
+
+### BUG-008: Thodi Sink (Cross-Raga Leakage)
+- **Status**: MOSTLY RESOLVED (Phase 3+4: IDF x Variance + 72 bins)
+- **Found**: 2026-03-10 (sandbox_phase1_fast.py / sandbox_phase2_alpha.py)
 - **Description**:
-  When the first-pass margin (0.6 PCD / 0.4 Dyad) is below MARGIN_STRICT,
-  the code re-scores with escalation weights (0.3 PCD / 0.7 Dyad).
-  For Kalyani, this REDUCES the margin from 0.001131 to 0.000227 — a 5x
-  degradation. The PCD is what provides the Kalyani signal (Ma1 vs Ma2),
-  and shifting weight away from PCD destroys it.
-- **Impact**: Kalyani goes from correct-but-tight (#1 with 0.001131)
-  to UNKNOWN (margin 0.000227 below MIN_MARGIN_FINAL).
-- **Evidence (test_dyad_weights.py, no genericness)**:
-  - First pass (0.6/0.4): Kalyani #1, margin 0.001131
-  - Escalation (0.3/0.7): Kalyani #1, margin 0.000227
-  - Dyad-only (0.0/1.0): Shankarabharanam #1 (ranking flipped)
-- **Root Cause**: Escalation assumes dyads are more discriminative than
-  PCD. With only 6 training clips, dyad matrices are too noisy to lead.
-  The PCD difference (Ma1 vs Ma2 bin) is small but real; shifting weight
-  away from PCD dilutes the only signal that works.
-- **Fix**: Hold until more training data is added. With 15-20 clips,
-  dyad matrices may become strong enough for escalation to help.
-  Alternative: remove escalation entirely and rely on first-pass only.
+  Thodi model attracts many non-Thodi clips. 10/18 seed misclassifications
+  go to Thodi. Thodi has concentrated PCD on bins 0, 35, 14, 21, 20
+  (Sa, Ni, Ma, Da, Pa) — universal strong swaras that appear in most ragas.
+- **Impact**: 34% of seed clips are WRONG, most leaking to Thodi.
+- **Evidence**:
+  - Thodi self: 10/10 correct (9 HIGH, 1 UNKNOWN) — excellent
+  - But Kalyani->Thodi (5 clips), Shankarabharanam->Thodi (3),
+    Bhairavi->Thodi (3), Kamboji->Thodi (1) leaking
+- **Root Cause**: PCD overlap on universal swaras (Sa, Pa, Ma).
+  Thodi's distinctive features (Ri1, Ga2, Da1 gamakas) are better
+  captured by dyads than PCD.
+- **Mitigation Applied**:
+  1. Excluded 2 outlier clips (Munnu Ravana, Koluvamaregatha)
+  2. Added 5 new Thodi clips from external sources
+  3. Fixed ALPHA (0.5->0.01) to make dyads discriminative
+- **Production Evidence (2026-03-11)**:
+  Seed: 14/15 total wrongs go to Thodi. Blind test: 4/6 OOD false positives -> Thodi.
+  Mix audio (with instruments) makes it worse -- instrument noise boosts Thodi PCD match.
+- **Remaining**: Dyads improved discrimination ratio to 2.03x for Thodi
+  but leakage persists. Needs: more Kamboji/Bhairavi data,
+  Phase 3 OOD hybrid detection (top_score - mean_score metric),
+  and mandatory vocal isolation for inference.
+
+### BUG-009: Mix Audio Causes OOD False Positives
+- **Status**: OPEN -- design limitation
+- **Found**: 2026-03-11 (blind test with archive.zip mix audio)
+- **Description**:
+  OOD rejection works correctly on vocal-isolated audio (2/2 original tests -> UNKNOWN)
+  but fails on full mix recordings with instruments (6/6 new OOD tests -> FALSE POSITIVE).
+  Violin, mridangam, and tambura add pitch content that inflates dot-product scores,
+  pushing margins above the UNKNOWN threshold.
+- **Impact**: System is unreliable on non-vocal-isolated audio.
+- **Evidence**:
+  - Vocal-only OOD: 2/2 correctly rejected (Hamsadwani, Mohanam alapana)
+  - Mix OOD: 0/6 rejected (Behag, Kamas, Saveri, Sahana, Hindolam, Hamsadhvani)
+  - Mix OOD margins: 0.0016-0.0140 (all above 0.001 MODERATE threshold)
+- **Root Cause**: pYIN extracts pitches from ALL sources (vocal + violin + mridangam).
+  Instrument pitches inflate the PCD, making scores artificially high and margins wide.
+- **Potential Fixes**:
+  1. Mandatory Demucs vocal isolation before recognition (recommended)
+  2. Add instrument-contamination detection (energy in non-vocal bands)
+  3. Raise margin thresholds for mix audio (separate threshold set)
+  4. Train on mix audio too (but degrades model quality)
 
 ---
 
 ## Resolved Bugs
 
 ### BUG-001: Missing Constants in recognize_raga_v12.py
-- **Resolved**: 2025-02-16
+- **Resolved**: 2026-02-16
 - **Fix**: Added MIN_STABLE_FRAMES=5, ALPHA=0.5, EPS=1e-8 to CONFIG.
   Also added error logging to except block (traceback.print_exc).
 - **Verified**: Production import test + sandbox test pass.
+
+
+### BUG-010: Hubness Correction Parked (Premature at 6 Ragas)
+- **Status**: PARKED -- revisit when raga count >= 15
+- **Found**: 2026-03-12 (sandbox_hubness.py, multi-agent analysis)
+- **Trigger**: When raga count reaches 15+, re-run sandbox_hubness.py LOO test
+- **Description**:
+  Centered hubness correction (score = raw - avg_sim + global_mean)
+  eliminates Thodi sink entirely (0/8 wrongs to Thodi) and improves weak
+  ragas (Bhairavi +8%, Shankarabharanam +6%, Kamboji +50%), but drops
+  overall LOO accuracy from 78.6% to 74.2% due to 2 new wrongs from
+  small-sample instability.
+- **Why parked (not rejected)**:
+  Multi-agent analysis (5 experts unanimous):
+  - Architecturally correct -- penalizes hub ragas (Thodi bias +0.000783)
+  - Bias values too small at 6 ragas (+-0.0003-0.0008 vs noise floor)
+  - New wrongs are small-sample artifacts (Kamboji has only 3 clips)
+  - At 15+ ragas, bias spread will be >= 0.002 -> correction becomes reliable
+  - Correction is below pYIN pitch extraction noise floor at 72 bins
+- **Sandbox reference**: scripts/sandbox_hubness.py (full LOO test)
+- **Evidence**:
+  Hubness diagnostic: Thodi=HUB (+0.000783), Kalyani=HUB (+0.000359),
+  Shankarabharanam=ok, Bhairavi=ok, Kamboji=low, Mohanam=low.
+  LOO 72-bin: No hubness=78.6% (22c/6w/25u), +Hubness=74.2% (23c/8w/22u).
+  Thodi sink: 1/6 -> 0/8. But +2 new wrongs (Bhairavi->Kamboji, Kamboji->Mohanam).

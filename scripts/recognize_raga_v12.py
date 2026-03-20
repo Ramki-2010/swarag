@@ -14,11 +14,11 @@ MAX_DURATION_SEC = 360   # 6-minute cap per file
 PCD_WEIGHT       = 0.6
 DYAD_WEIGHT      = 0.4
 GENERICNESS_WEIGHT = 0.0   # BUG-004 fix: confirmed inert, removed
-N_BINS           = 36   # Must match aggregation bins
+N_BINS           = 72   # Phase 4: was 36 (finer microtonal resolution)
 
 # Shared constants — must match aggregate_all_v12.py exactly
 MIN_STABLE_FRAMES = 5
-ALPHA             = 0.5
+ALPHA             = 0.01  # Phase 2 fix: was 0.5
 EPS               = 1e-8
 
 # B1: Tiered margin constants
@@ -146,24 +146,64 @@ def compute_directional_dyads(cents):
 # =========================
 # SCORE ONE PASS
 # =========================
+# IDF x VARIANCE PCD WEIGHTS (Phase 3 fix: BUG-008 Thodi sink)
+# =========================
 
-def _score_models(pcd, test_up, test_down, models, pcd_w, dyad_w):
-    """Dot-product similarity scoring for all ragas with given weights."""
+def compute_pcd_weights(models):
+    """
+    Compute IDF x variance weights from loaded raga models.
+    Downweights common bins, upweights distinctive bins.
+    Formula: weight = idf / (std + eps)  [safer form]
+    Normalized so weights sum to N_BINS.
+    """
+    all_pcds = np.array([m["pcd"] for m in models.values()])
+
+    # IDF: bins used by many ragas get low weight
+    threshold = 1.0 / N_BINS
+    doc_freq = np.sum(all_pcds > threshold, axis=0)
+    idf = np.log(len(models) / (doc_freq + 1)) + 1
+
+    # Variance: bins where models agree get low weight
+    bin_std = np.std(all_pcds, axis=0)
+
+    # Combined: IDF / (std + eps)
+    weights = idf / (bin_std + EPS)
+    weights = weights / (np.sum(weights) + EPS) * N_BINS
+
+    return weights
+
+
+# =========================
+# SCORE ONE PASS
+# =========================
+
+def _score_models(pcd, test_up, test_down, models, pcd_w, dyad_w,
+                  pcd_weights=None):
+    """IDF x variance weighted dot-product scoring for all ragas."""
     scores = {}
 
+    # Apply PCD weights if provided (Phase 3 BUG-008 fix)
+    if pcd_weights is not None:
+        pcd_w_arr = pcd * pcd_weights
+        pcd_w_arr = pcd_w_arr / (np.sum(pcd_w_arr) + EPS)
+    else:
+        pcd_w_arr = pcd
+
     for raga, model in models.items():
-        pcd_sim  = np.dot(pcd,      model["pcd"])
+
+        if pcd_weights is not None:
+            model_w = model["pcd"] * pcd_weights
+            model_w = model_w / (np.sum(model_w) + EPS)
+        else:
+            model_w = model["pcd"]
+
+        pcd_sim  = np.dot(pcd_w_arr, model_w)
         up_sim   = np.dot(test_up,  model["mean_up"])
         down_sim = np.dot(test_down, model["mean_down"])
 
-        dyad_sim    = 0.5 * (up_sim + down_sim)
-        genericness = compute_genericness(pcd)
+        dyad_sim = 0.5 * (up_sim + down_sim)
 
-        scores[raga] = (
-            pcd_w  * pcd_sim +
-            dyad_w * dyad_sim -
-            GENERICNESS_WEIGHT * genericness
-        )
+        scores[raga] = pcd_w * pcd_sim + dyad_w * dyad_sim
 
     return scores
 
@@ -238,10 +278,13 @@ def recognize_raga(audio_path, aggregation_folder, models=None):
 
         # ================================================================
         # B1: TIERED CONFIDENCE LOGIC
-        # Step 1 — Standard scoring (0.6 PCD / 0.4 Dyad)
+        # Step 1 -- IDF x Variance weighted scoring (Phase 3 BUG-008 fix)
         # ================================================================
+        pcd_weights = compute_pcd_weights(models)
+
         scores = _score_models(pcd, test_up, test_down, models,
-                               PCD_WEIGHT, DYAD_WEIGHT)
+                               PCD_WEIGHT, DYAD_WEIGHT,
+                               pcd_weights=pcd_weights)
 
         ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
@@ -290,3 +333,4 @@ def recognize_raga(audio_path, aggregation_folder, models=None):
             "margin": 0.0,
             "confidence_tier": "UNKNOWN"
         }
+

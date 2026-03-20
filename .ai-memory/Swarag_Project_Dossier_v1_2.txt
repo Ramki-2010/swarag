@@ -1,10 +1,10 @@
-Swarag v1.2 -- Project Dossier
+Swarag v1.2.4 -- Project Dossier
 =========================================================
 
 Author:   Ram Krishna
 Project:  Swarag (AI-based Carnatic Raga Recognition Engine)
-Version:  v1.2
-Updated:  2025-02-16 (session 2 end)
+Version:  v1.2.4
+Updated:  2026-03-12 (Phase 4: 72-bin PCD + IDF x Variance)
 
 =========================================================
 1. WHAT IS SWARAG
@@ -17,7 +17,7 @@ matches them against known raga signatures.
 The goal is to codify Carnatic musical grammar into computation.
 Raga identity is structured grammar, not statistical coincidence.
 
-Current: 3 ragas. Target: 72 Melakartas, janya ragas, live
+Current: 6 ragas (53 clips). Target: 72 Melakartas, janya ragas, live
 inference, Android app.
 
 =========================================================
@@ -31,49 +31,74 @@ Audio -> Pitch Extraction (pYIN) -> Tonic Estimation
 Details: .ai-memory/architecture.md
 
 =========================================================
-3. CURRENT STATE (2025-02-16, session 2 end)
+3. CURRENT STATE (2026-03-10, Phase 2 ALPHA fix)
 =========================================================
 
 Working:
-  - Full pipeline, 3 ragas, directional dyads, interface contract
-  - BUG-001 RESOLVED: missing constants + error logging fixed
-  - Development memory system and workflow established
-  - mirdata installed in venv for future Saraga downloads
+  - Full pipeline, 6 ragas, 53 clips, directional dyads
+  - ALPHA fixed: 0.5 -> 0.01 (dyad discrimination 1.24x -> 1.73x)
+  - IDF x Variance PCD weighting (Thodi sink halved, +6% accuracy)
+  - 72-bin PCD resolution (LOO: 66.7% -> 78.6%, wrongs 14 -> 6)
+  - Hubness correction tested and PARKED for 15+ ragas (BUG-010)
+  - OOD false positives ELIMINATED (both test OOD files -> UNKNOWN)
+  - Kalyani: HIGH confidence (margin 0.0066-0.0088)
+  - Thodi: 10/10 self-recognition (9 HIGH, 1 UNKNOWN)
+  - Best accuracy: 78.6% LOO (72-bin IDF x Variance), up from 25% baseline
 
-Held (code ready, waiting for more data):
-  - Genericness removal (confirmed inert, scores shift to positive)
-  - Escalation fix (confirmed harmful for Kalyani)
-  - Threshold recalibration (needs positive score range first)
+Resolved bugs this session:
+  - BUG-004: Genericness removed (GENERICNESS_WEIGHT=0.0)
+  - BUG-005: Escalation disabled
+  - BUG-006: Thresholds recalibrated (0.003/0.001)
+  - BUG-007: Escalation disabled (was crushing margins 5x)
 
-Open bugs: BUG-002 through BUG-007 (see bugs.md)
+Data work this session:
+  - Thodi expanded: 7 -> 10 clips (2 outliers excluded, 5 new added)
+  - 5 new Thodi sources: Malladi Bros, MS Subbulakshmi, HydBros, etc.
+  - All new audio vocal-isolated via Demucs htdemucs
+  - Saraga 1.5 Thodi exhausted (all 7 recordings already used)
 
-Last test: 1/4 correct (25%) — unchanged across all code fixes.
-Baseline weights (0.6/0.4) confirmed best with current data.
-Escalation crushes Kalyani margin 5x (BUG-007).
+Open issues:
+  - BUG-008: Thodi sink (mostly resolved: 1/6 in LOO at 72 bins)
+  - BUG-003: Score compression (improved but not eliminated)
+  - Bhairavi test file misclassifies as Thodi (shared komal swaras)
+  - Kamboji only 3 clips (below 15-clip target)
+  - No OOD score floor yet (Phase 3 planned)
 
-Bottleneck: Training data too thin (6 clips/raga). Code tuning
-cannot improve accuracy until models are built from 15-20 clips.
-
-Data expansion COMPLETE:
-  - Expanded from 3 ragas to 6 (added Mohanam, Thodi, Kamboji)
-  - 50 clips across 6 ragas (up from 22 across 3)
-  - All audio vocal-isolated (Saraga stems + Demucs htdemucs)
-  - MAX_DURATION_SEC=360 restored (6-min cap, 10x speedup)
-  - OOD false positives ELIMINATED (Hamsadwani, Mohanam now UNKNOWN)
-  - Rankings correct: Bhairavi #1, Kalyani #1
-  - Confidence still UNKNOWN tier (thresholds need recalibration)
-
-Details: .ai-memory/bugs.md, .ai-memory/datasets.md
+Key Phase 2 finding:
+  ALPHA=0.5 made dyads noise (signal ratio 36%, discrimination 1.24x)
+  ALPHA=0.01 makes dyads useful (signal ratio 97%, discrimination 1.73x)
+  Literature (Chordia & Rae 2007) confirms: PCDDs degrade on unseen data
+  when computed incorrectly. Our fix aligns with their methodology.
 
 =========================================================
 4. NEXT STEPS
 =========================================================
 
-Immediate:  Recalibrate margin thresholds for 6-raga model
-            (scores are correct but below current thresholds)
-Short-term: Apply held code fixes (genericness removal, escalation fix)
-            Add more clips for Kamboji (3) and Mohanam (6) -- still below 15
-Medium:     Add OOD score floor, expand raga coverage
+Immediate:  Add more data for weak ragas:
+            - Kamboji: 3 -> 10+ clips (currently fragile, 0% in LOO)
+            - Mohanam: 6 -> 15 clips (25% LOO, needs diversity)
+            - Bhairavi: add diverse clips (67% LOO, komal swara confusion)
+Short-term: Add new ragas (Hamsadhwani, Abhogi, Madhyamavati, Saveri)
+            -> improves IDF weights + OOD rejection
+            -> re-test hubness correction at 15+ ragas (BUG-010)
+Medium:     OOD hybrid detection (top_score - mean_score)
+            Visualize dyad matrices
+            Cross-validation with k-fold
+Long-term:  72 Melakartas -> janya ragas -> phrase modeling
+            -> gamaka analysis -> live inference -> Android
+
+=========================================================
+OLD NEXT STEPS (kept for reference, superseded by above)
+=========================================================
+
+OLD Immediate:  Run production batch evaluation with ALPHA=0.01 models
+OLD Short-term: Phase 3 — Hybrid OOD detection:
+            - confidence = top_score - mean(all_scores)
+            - if confidence < 0.01 -> UNKNOWN
+            - empirically calibrate absolute PCD floor
+Medium:     Add more clips for Kamboji (3 -> 15) and Mohanam (6 -> 15)
+            Add new ragas (Hamsadhwani, Arabhi, Saveri)
+            Visualize dyad matrices (imshow) to confirm transition patterns
 Long-term:  72 Melakartas -> janya ragas -> phrase modeling
             -> gamaka analysis -> live inference -> Android
 
@@ -93,11 +118,13 @@ Details: .ai-memory/workflow.md
 =========================================================
 
 D:\Swaragam\
-  scripts/          Python code (6 production + sandbox)
+  scripts/          Python code (6 production + 13 sandbox)
   .ai/              AI agent rules (agent_spec.md, 15 rules)
   .ai-memory/       Project memory (8 files including this one)
   datasets/         Audio files (seed + test)
   pcd_results/      Features, models, evaluation outputs
+  demucs_env/       Demucs virtual environment (vocal isolation)
+  demucs_outputs/   Demucs output files (vocal stems)
 
 Details: .ai-memory/architecture.md
 
@@ -114,12 +141,27 @@ Details: .ai-memory/architecture.md
 8. RISKS
 =========================================================
 
+- Thodi sink: concentrated PCD on universal swaras attracts other ragas
 - Silent failures: except-Exception hides crashes as UNKNOWN
-- No OOD rejection: untrained ragas get misclassified
-- Sibling ragas (Kalyani/Shankarabharanam) nearly identical
-- Constants must stay synchronized across scripts
+- Sibling ragas (Bhairavi/Thodi share komal swaras) compress margins
+- Constants must stay synchronized across scripts (ALPHA, N_BINS, etc.)
+- Kamboji too thin (3 clips) — model may be unstable
+- No absolute OOD score floor (margin-only detection)
 
 Details: .ai-memory/bugs.md, .ai-memory/lessons.md
+
+=========================================================
+9. EVOLUTION SUMMARY
+=========================================================
+
+| Date | Version | Ragas | Clips | Accuracy | Key Change |
+|---|---|---|---|---|---|
+| 2026-02-15 | v1.2 | 3 | 22 | 25% | Baseline (dyad fix, BUG-001) |
+| 2026-03-09 | v1.2.1 | 6 | 50 | N/A | 6 ragas, vocal isolation, OOD fixed |
+| 2026-03-10 | v1.2.2 | 6 | 53 | 64% | Phase 2 ALPHA fix (0.5->0.01) |
+| 2026-03-11 | v1.2.2 | 6 | 53 | 64%/38% | Production batch + blind test (vocal/mix) |
+| 2026-03-12 | v1.2.3 | 6 | 53 | 70% | Phase 3: IDF x Variance PCD weighting |
+| 2026-03-12 | v1.2.4 | 6 | 53 | 78.6% LOO | Phase 4: 72-bin PCD + hubness parked |
 
 =========================================================
 9. ORIGIN
@@ -134,9 +176,9 @@ intelligence into algorithmic form.
 WHERE TO LOOK
 =========================================================
 
-  architecture.md    Pipeline, scripts, constants
-  bugs.md            Active bugs (7) and resolved bugs (1)
-  lessons.md         Lessons learned (19)
+  architecture.md    Pipeline, scripts, constants (v1.2.3)
+  bugs.md            Active bugs (4) and resolved bugs (5)
+  lessons.md         Lessons learned (35)
   datasets.md        Data locations, test results, external sources
   workflow.md        Development process
   debug-playbook.md  Debugging guide

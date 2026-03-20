@@ -9,7 +9,7 @@ from recognize_raga_v12 import recognize_raga, load_aggregated_models
 # =========================
 BASE_DIR     = r"D:\Swaragam"
 DATASET_DIR  = os.path.join(BASE_DIR, "datasets", "seed_carnatic")
-AGG_FOLDER   = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260309_082638"  # B2: was missing
+AGG_FOLDER   = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260320_222322"  # 6 ragas, 61 clips (deduped+guardrail), 72 bins
 
 EVAL_BASE_DIR = os.path.join(BASE_DIR, "pcd_results", "evaluation")
 timestamp     = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -100,7 +100,7 @@ def evaluate():
             if final == "UNKNOWN / LOW CONFIDENCE":
                 stats["unknown"] += 1
 
-            status_sym = "✔" if is_correct else ("?" if "UNKNOWN" in final else "✗")
+            status_sym = "+" if is_correct else ("?" if "UNKNOWN" in final else "X")
             print(f"{status_sym} {file:<35} | True={raga_folder:<20} | Pred={final:<25} "
                   f"| Tier={confidence_tier:<10} | Margin={round(margin, 4)}")
 
@@ -171,3 +171,4 @@ def evaluate():
 
 if __name__ == "__main__":
     evaluate()
+

@@ -12,9 +12,10 @@ AGG_BASE_DIR = os.path.join(BASE_DIR, "pcd_results", "aggregation")
 
 FEATURE_VERSION = "v1.2"
 
-N_BINS = 36
+N_BINS = 72  # Phase 4: was 36
 MIN_STABLE_FRAMES = 5
-ALPHA = 0.5
+MIN_CLIPS_PER_RAGA = 5  # Ragas with fewer clips are excluded (unstable models)
+ALPHA = 0.01  # Phase 2 fix: was 0.5 (destroyed dyad signal)
 EPS = 1e-8
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -157,6 +158,27 @@ def aggregate_all():
         clip_counts[raga] = clip_counts.get(raga, 0) + 1
 
     # =========================
+    # FILTER: exclude ragas with too few clips (BUG-011)
+    # =========================
+    excluded_ragas = []
+    for raga in list(raga_pcds.keys()):
+        if clip_counts[raga] < MIN_CLIPS_PER_RAGA:
+            excluded_ragas.append((raga, clip_counts[raga]))
+            del raga_pcds[raga]
+            del raga_up[raga]
+            del raga_down[raga]
+            del raga_gating[raga]
+            del raga_transitions[raga]
+            del clip_counts[raga]
+
+    if excluded_ragas:
+        print("\n[EXCLUDED] Ragas with < {} clips:".format(MIN_CLIPS_PER_RAGA))
+        for raga, count in excluded_ragas:
+            print("  {} ({} clips) -- needs {} more".format(
+                raga, count, MIN_CLIPS_PER_RAGA - count))
+        print()
+
+    # =========================
     # SAVE PER RAGA
     # =========================
     for raga in raga_pcds.keys():
@@ -211,16 +233,24 @@ def aggregate_all():
         "timestamp": timestamp,
         "feature_source": FEATURES_DIR,
         "total_files_seen": total_files_seen,
-        "skipped_files": skipped_files
+        "skipped_files": skipped_files,
+        "excluded_ragas": {r: c for r, c in excluded_ragas} if excluded_ragas else {},
+        "included_ragas": list(clip_counts.keys()),
+        "included_clips": sum(clip_counts.values()),
+        "min_clips_per_raga": MIN_CLIPS_PER_RAGA
     }
 
     with open(os.path.join(RUN_DIR, "aggregation_metadata.json"), "w") as f:
         json.dump(metadata, f, indent=4)
 
-    print("\n✔ v1.2 Aggregation complete")
+    print("\n[OK] v1.2 Aggregation complete")
     print("Saved to:", RUN_DIR)
     print(f"Files seen: {total_files_seen} | Skipped: {skipped_files}")
+    print(f"Ragas included: {len(clip_counts)} | Clips: {sum(clip_counts.values())}")
+    if excluded_ragas:
+        print(f"Ragas excluded: {len(excluded_ragas)} (need >= {MIN_CLIPS_PER_RAGA} clips)")
 
 
 if __name__ == "__main__":
     aggregate_all()
+

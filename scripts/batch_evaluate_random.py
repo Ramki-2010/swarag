@@ -8,7 +8,7 @@ from recognize_raga_v12 import recognize_raga, load_aggregated_models
 # =========================
 
 RANDOM_TEST_FOLDER = r"D:\Swaragam\datasets\audio test"
-AGG_FOLDER         = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260309_082638"
+AGG_FOLDER   = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260320_222322"  # 6 ragas, 61 clips (deduped+guardrail), 72 bins
 OUTPUT_BASE        = r"D:\Swaragam\pcd_results\random_evaluations_v12"
 
 SUPPORTED_EXTS = (".wav", ".mp3", ".flac")
@@ -114,3 +114,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
