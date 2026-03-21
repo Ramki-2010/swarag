@@ -161,6 +161,22 @@
 - **Fix**: Moved to excluded/. Kamboji dropped below guardrail (3 clips remain).
 - **Impact**: Overall LOO dropped 72% to 58.8% (honest baseline).
 
+### BUG-014: extract_new_clips.py Skips Saveri Varnams (Substring Match Bug)
+- **Status**: OPEN
+- **Found**: 2026-03-21 (feature extraction monitoring)
+- **Description**:
+  extract_new_clips.py uses `base[:20] in existing` to check if a file
+  has already been extracted. This loose substring matching incorrectly
+  skips files when the first 20 chars of a new filename match any existing
+  feature. The 5 Saveri varnams (223598-223602) were skipped during
+  extraction while all 5 Abhogi varnams (223578-223582) extracted fine.
+- **Impact**: Saveri cannot be activated until varnams are force-extracted.
+- **Root Cause**: `any(base[:20] in existing for existing in existing_features)`
+  matches substrings too broadly. The varnam IDs (223598-223602) may share
+  a prefix with existing feature filenames.
+- **Fix**: Change matching to exact prefix match or full filename match.
+  Alternatively, force-extract the 5 Saveri varnams with a targeted script.
+
 ## Resolved Bugs
 
 ### BUG-001: Missing Constants in recognize_raga_v12.py

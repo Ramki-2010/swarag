@@ -35,7 +35,7 @@ Aggregation (aggregate_all_v12.py)
   v
 Raga Scoring (recognize_raga_v12.py)
   |-- IDF x Variance weighted dot-product (PCD + Dyads)
-  |-- Weighted fusion (PCD_WEIGHT=0.6, DYAD_WEIGHT=0.4)
+  |-- Weighted fusion (PCD_WEIGHT=0.7, DYAD_WEIGHT=0.3)
   |-- Genericness penalty REMOVED (GENERICNESS_WEIGHT=0.0)
   |-- Escalation DISABLED
   +-- Tiered confidence:
@@ -74,35 +74,38 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 | `sandbox_phase4_production.py` | Phase 4 production test |
 | `sandbox_hubness.py` | Hubness correction (PARKED for 15+ ragas) |
 
-## Trained Ragas (5 ragas, 55 clips)
+## Trained Ragas (v1.3: 5 ragas, 55 clips)
 
-| Raga | Clips | Batch Eval Acc (decided) |
+| Raga | Clips | LOO Acc (decided) |
 |---|---|---|
-| Bhairavi | 11 | 33% |
-| Kalyani | 14 | 100% |
-| Shankarabharanam | 9 | 87.5% |
-| Mohanam | 11 | 50% |
-| Thodi | 11 | 100% |
-| Kamboji | 5 | 66.7% |
+| Thodi | 11 | 83% |
+| Kalyani | 14 | 80% |
+| Bhairavi | 11 | 50% |
+| Shankarabharanam | 9 | 50% |
+| Mohanam | 10 | 17% |
 
 ### Staged Ragas (excluded by MIN_CLIPS_PER_RAGA=5 guardrail)
-- Abhogi: 2 clips (needs 3 more)
-- Madhyamavati: 2 clips (needs 3 more)
-- Saveri: 3 clips (needs 2 more)
+- Kamboji: 3 clips (needs 2 more; 3 Harikambhoji removed, BUG-013)
+- Madhyamavati: 2-3 clips (needs 2-3 more)
 - Hamsadhvani: 1 clip (needs 4 more)
+
+### Ragas Pending Activation (varnam extraction in progress 2026-03-21)
+- Abhogi: 2 existing + 5 new varnams (Zenodo) = 7 clips -> WILL PASS guardrail
+- Saveri: 3 existing + 5 new varnams (Zenodo) = 8 clips -> WILL PASS guardrail
+- NOTE: extract_new_clips.py skipped Saveri varnams due to BUG-014, needs re-run
 
 ## Aggregation Data Location
 ```
 D:\Swaragam\pcd_results\aggregation\v1.2\run_20260321_135629\
-  pcd_stats\    -> {raga}_pcd_stats.npz (6 ragas)
-  dyad_stats\   -> {raga}_dyad_stats.npz (6 ragas)
-  aggregation_metadata.json  (alpha=0.01, bins=72, 61 clips, min_clips=5)
+  pcd_stats\    -> {raga}_pcd_stats.npz (5 ragas)
+  dyad_stats\   -> {raga}_dyad_stats.npz (5 ragas)
+  aggregation_metadata.json  (alpha=0.01, bins=72, 55 clips, min_clips=5)
 ```
 
 ## Feature Storage
 ```
-D:\Swaragam\pcd_results\features_v12\           68 unique .npz files
-D:\Swaragam\pcd_results\features_v12\excluded\  13 duplicates + 2 Thodi outliers
+D:\Swaragam\pcd_results\features_v12\           ~65+ .npz files (55 modeled + Abhogi varnams extracted, Saveri pending)
+D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Harikambhoji clips
 ```
 
 ## Shared Constants (must be identical in aggregate + recognize)
@@ -128,14 +131,15 @@ D:\Swaragam\pcd_results\features_v12\excluded\  13 duplicates + 2 Thodi outliers
 { "final": str, "ranking": list, "margin": float, "confidence_tier": str }
 ```
 
-## Current Accuracy (v1.3)
+## Current Accuracy (v1.3, LOO, 5 ragas, 55 clips)
 
-| Metric | LOO | Batch Eval |
-|---|---|---|
-| Accuracy (decided) | 72.0% | 72.7% |
-| Correct | 18/61 | 32/81 |
-| Unknown | 36 (59%) | 37 (45.7%) |
-| Wrongs | 7 | 12 |
+| Metric | Value |
+|---|---|
+| Accuracy (decided) | 58.8% |
+| Correct | 20 |
+| Wrong | 14 |
+| Unknown | 21 (38%) |
+| Thodi sink | 5/14 wrongs |
 
 ## Accuracy Evolution
 
@@ -146,15 +150,26 @@ D:\Swaragam\pcd_results\features_v12\excluded\  13 duplicates + 2 Thodi outliers
 | v1.2.2 | 64% | ALPHA fix (0.5 to 0.01) |
 | v1.2.3 | 70% | IDF x Variance scoring |
 | v1.2.4 | 78.6% | 72-bin PCD (53 clips) |
-| v1.3 | 72.0% | Expanded to 61 clips, dedup, MIN_CLIPS guardrail |
+| v1.2.5 | 72.0% | Expanded to 61 clips, dedup, MIN_CLIPS guardrail |
+| v1.3 | 58.8% | Harikambhoji removed, weights 0.7/0.3, honest 5-raga baseline |
 
 ## Remaining Issues
-1. Bhairavi: 33% batch eval accuracy (8/11 go UNKNOWN) -- model issue
-2. Mohanam: 50% accuracy (9/13 go UNKNOWN) -- model issue
-3. Kamboji: 66.7% (5/8 go UNKNOWN) -- needs more clips
-4. Score compression for sibling ragas
-5. No OOD score floor (margin-only detection)
-6. BUG-009: Mix audio causes OOD false positives
+1. Mohanam: 17% LOO -- worst raga, needs diverse clips
+2. Bhairavi: 50% LOO -- PCD overlaps 78% with Thodi, identity is in gamakas
+3. Kamboji: excluded (only 3 real clips after Harikambhoji cleanup)
+4. BUG-014: extract_new_clips.py skips Saveri varnams (substring matching bug)
+5. Abhogi + Saveri varnams ready to activate after BUG-014 fix
+6. Per-raga dyad weight tested: Bhairavi=0.5/0.5 -> 90% but tanks Thodi
+7. No OOD score floor (margin-only detection)
+8. BUG-009: Mix audio causes OOD false positives
+
+## Per-Raga Dyad Weight Sandbox Results (2026-03-21)
+| Config | Bhairavi | Kalyani | Thodi | Overall |
+|---|---|---|---|---|
+| Baseline 0.7/0.3 | 50% | 80% | 83% | 58.8% |
+| Bhairavi=0.5/0.5 | 90% | 89% | 43% | 61.5% |
+| Bhairavi=0.4/0.6 | 90% | 73% | 0% | 53.8% |
+| Global 0.8/0.2 | 67% | 89% | 100% | 65.5% |
 
 ## Parked Features
 | Feature | Trigger | Sandbox Script |

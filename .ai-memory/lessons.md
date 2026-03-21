@@ -491,3 +491,30 @@
 - **Date**: 2026-03-21
 - **Context**: Cleaning bad data dropped accuracy from 72% to 58.8%.
 - **Rule**: Never keep bad data for better numbers. The honest number is the foundation.
+
+### L-042: Per-Raga Dyad Weight Is a Trade, Not a Fix
+- **Date**: 2026-03-21
+- **Context**: Tested per-raga dyad weight overrides. Bhairavi=0.5/0.5 boosted
+  Bhairavi from 50% to 90% but tanked Thodi from 83% to 43%. Bhairavi became
+  a new sink (absorbing 5 wrongs). More aggressive overrides (0.4/0.6, 0.3/0.7)
+  made it worse -- Thodi dropped to 0%. The override creates a scoring asymmetry:
+  when Bhairavi gets dyad-heavy weight, its score becomes artificially high for
+  clips that have any transition similarity, pulling in Thodi clips.
+- **Rule**: Per-raga weight overrides trade accuracy between ragas rather than
+  improving overall. They only work if the boosted raga's dyads are truly
+  distinctive AND don't overlap with other ragas' dyads. For Bhairavi/Thodi
+  (78% PCD overlap, shared komal swaras), this trade is always lossy.
+  Better approach: add more diverse data to make PCD+dyads naturally distinctive.
+- **Impact**: Prevents wasting time on weight hacks when the root cause is
+  feature overlap. Bhairavi needs gamaka/phrase features, not weight tricks.
+
+### L-043: Existing Datasets May Have Untapped Ragas
+- **Date**: 2026-03-21
+- **Context**: The Carnatic Varnam zip (already downloaded at D:\Swaragam\datasets)
+  contained 28 recordings across 7 ragas. We had only used Kalyani (4) and
+  Mohanam (4). The remaining 20 files included 5 Abhogi + 5 Saveri varnams --
+  enough to activate both ragas past the MIN_CLIPS=5 guardrail.
+- **Rule**: Before searching for new data sources, always check what you already
+  have. Audit existing downloads, zips, and datasets for ragas you need.
+  The cheapest data is data you already downloaded but forgot about.
+- **Impact**: Activated 2 new ragas (Abhogi + Saveri) with zero download time.

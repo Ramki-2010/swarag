@@ -3,7 +3,7 @@
 ## Seed Dataset (Training)
 - **Location**: `D:\Swaragam\datasets\seed_carnatic\`
 - **Structure**: One subfolder per raga, audio files inside
-- **Ragas (6)**: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Kamboji
+- **Ragas (10)**: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Kamboji, Abhogi, Saveri, Madhyamavati, Hamsadhvani
 - **Format**: .wav, .mp3, .flac
 - **Purpose**: Training data for aggregation pipeline
 - **Current clip counts** (as of 2026-03-10, post Phase 2):
@@ -14,8 +14,12 @@
   | Shankarabharanam | 9 | 6 clean wav + 1 stem + 2 demucs |
   | Thodi | 10 | 3 stems + 2 demucs (old) + 5 demucs (new external) |
   | Mohanam | 6 | 4 varnam + 2 demucs |
-  | Kamboji | 3 | 3 demucs |
-  **Total: 61 clips across 6 modeled ragas (68 features total, 3 ragas staged)**
+  | Kamboji | 3 | 3 real Kamboji (3 Harikambhoji removed to excluded/, BUG-013) |
+  | Abhogi | 7 | 2 demucs + 5 varnams (Zenodo, extracted 2026-03-21) |
+  | Saveri | 8 | 3 demucs/stems + 5 varnams (Zenodo, extraction pending BUG-014) |
+  | Madhyamavati | 2-3 | demucs |
+  | Hamsadhvani | 1 | demucs |
+  **Total: 55 clips modeled (5 ragas), ~65+ features total, 5 ragas staged**
   Target: 15 clips per raga. Kamboji (3) and Mohanam (6) still below target.
   **Excluded clips** (moved to excluded/ folders, not deleted):
   - Munnu Ravana (Thodi): entropy 2.4, too concentrated, skewed model
@@ -48,7 +52,7 @@
 ## Aggregated Models
 - **36-bin models**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260310_085601\`
 - **72-bin models (v1.2.4)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260312_205842_72bins\`
-- **72-bin models (v1.2.5 current)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260320_222322\` (6 ragas, 61 clips, MIN_CLIPS=5)
+- **72-bin models (v1.3 current)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260321_135629\` (5 ragas, 55 clips, PCD=0.7/Dyad=0.3)
 - **ALPHA**: 0.01 (Phase 2 fix, was 0.5)
 - **Contents**:
   - `pcd_stats/{raga}_pcd_stats.npz` — mean_pcd, std_pcd
@@ -78,6 +82,10 @@
     | Mohanam | 4 (Evarura, Rakta Ganapatim, Mati Matiki, Shloka) | No |
     | Hamsadhvani | 1 (Sadabalarupapi Shlokam) | No |
 - **Carnatic Varnam Dataset** — https://zenodo.org/records/1257118
+  - Local zip: `D:\Swaragam\datasets\carnatic_varnam_1.0.zip` (28 recordings, 7 ragas)
+  - 7 ragas: Abhogi(5), Begada(3), Kalyani(4), Mohanam(4), Sahana(4), Saveri(5), Sri(3)
+  - Used: Kalyani(4), Mohanam(4), Abhogi(5 new), Saveri(5 new, pending BUG-014)
+  - Available for future: Begada(3), Sahana(4), Sri(3)
 - **Dunya Carnatic** — https://dunya.compmusic.upf.edu/carnatic/ (needs API key)
 - **MusicBrainz Carnatic** — https://musicbrainz.org/collection/f96e7215-b2bd-4962-b8c9-2b40c17a1ec6
 - **Saraga GitHub** — https://github.com/MTG/saraga
@@ -86,8 +94,39 @@
 
 ## Test Results Log
 
+### Run: 2026-03-21 -- v1.3 LOO (5 ragas, 55 clips, Harikambhoji cleaned)
+**Models**: run_20260321_135629 (5 ragas, 55 clips)
+**Weights**: PCD=0.7, Dyad=0.3
+**Scoring**: IDF x Variance, 72 bins, ALPHA=0.01
 
-### Run: 2026-03-21 -- v1.2.5 Batch Evaluation (6 ragas, 61 clips, 72 bins)
+**LOO Cross-Validation**:
+| Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
+|---|---|---|---|---|---|
+| Thodi | 11 | 5 | 1 | 5 | 83% |
+| Kalyani | 14 | 8 | 2 | 4 | 80% |
+| Bhairavi | 11 | 2 | 2 | 7 | 50% |
+| Shankarabharanam | 9 | 4 | 4 | 1 | 50% |
+| Mohanam | 10 | 1 | 5 | 4 | 17% |
+| **TOTAL** | **55** | **20** | **14** | **21** | **58.8%** |
+
+Sink analysis: Thodi=5, Kalyani=6, Bhairavi=2, Shankarabharanam=1
+
+**Per-raga dyad weight sandbox** (same session):
+| Config | Bhairavi | Kalyani | Thodi | Overall |
+|---|---|---|---|---|
+| Baseline 0.7/0.3 | 50% | 80% | 83% | 58.8% |
+| Bhairavi=0.5/0.5 | 90% | 89% | 43% | 61.5% |
+| Global 0.8/0.2 | 67% | 89% | 100% | 65.5% |
+
+**Key findings:**
+1. Harikambhoji removal dropped accuracy from 72% to 58.8% (honest)
+2. Thodi sink returns at 5 ragas (5/14 wrongs) vs 1/7 at 6 ragas
+3. Mohanam worst at 17% -- 5/10 clips go wrong
+4. Per-raga weight override is a trade not a fix (Bhairavi up = Thodi down)
+5. Carnatic Varnam zip had 5 Abhogi + 5 Saveri varnams ready to extract
+6. extract_new_clips.py bug skips Saveri varnams (BUG-014)
+
+
 **Models**: run_20260320_222322 (6 ragas, 61 clips, MIN_CLIPS_PER_RAGA=5)
 **Eval output**: run_20260321_004951
 **Scoring**: IDF x Variance, 72 bins, ALPHA=0.01, PER_FILE_TIMEOUT=360s
