@@ -1,7 +1,7 @@
 # Swarag -- Architecture (Current State)
 
 ## Version
-Swarag v1.2.5 -- Deterministic DSP Pipeline (72-bin PCD + IDF x Variance + MIN_CLIPS guardrail)
+Swarag v1.3 -- Deterministic DSP Pipeline (72-bin PCD + IDF x Variance + MIN_CLIPS guardrail)
 
 ## Pipeline
 
@@ -74,7 +74,7 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 | `sandbox_phase4_production.py` | Phase 4 production test |
 | `sandbox_hubness.py` | Hubness correction (PARKED for 15+ ragas) |
 
-## Trained Ragas (6 ragas, 61 clips)
+## Trained Ragas (5 ragas, 55 clips)
 
 | Raga | Clips | Batch Eval Acc (decided) |
 |---|---|---|
@@ -93,7 +93,7 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 
 ## Aggregation Data Location
 ```
-D:\Swaragam\pcd_results\aggregation\v1.2\run_20260320_222322\
+D:\Swaragam\pcd_results\aggregation\v1.2\run_20260321_135629\
   pcd_stats\    -> {raga}_pcd_stats.npz (6 ragas)
   dyad_stats\   -> {raga}_dyad_stats.npz (6 ragas)
   aggregation_metadata.json  (alpha=0.01, bins=72, 61 clips, min_clips=5)
@@ -115,8 +115,8 @@ D:\Swaragam\pcd_results\features_v12\excluded\  13 duplicates + 2 Thodi outliers
 | MIN_STABLE_FRAMES | 5 | Stable region threshold |
 | ALPHA | 0.01 | Laplace smoothing (Phase 2 fix) |
 | EPS | 1e-8 | Division safety |
-| PCD_WEIGHT | 0.6 | Scoring weight |
-| DYAD_WEIGHT | 0.4 | Scoring weight |
+| PCD_WEIGHT | 0.7 | Scoring weight |
+| DYAD_WEIGHT | 0.3 | Scoring weight |
 | GENERICNESS_WEIGHT | 0.0 | Disabled |
 | MARGIN_STRICT | 0.003 | HIGH confidence threshold |
 | MIN_MARGIN_FINAL | 0.001 | MODERATE confidence threshold |
@@ -128,7 +128,7 @@ D:\Swaragam\pcd_results\features_v12\excluded\  13 duplicates + 2 Thodi outliers
 { "final": str, "ranking": list, "margin": float, "confidence_tier": str }
 ```
 
-## Current Accuracy (v1.2.5)
+## Current Accuracy (v1.3)
 
 | Metric | LOO | Batch Eval |
 |---|---|---|
@@ -146,7 +146,7 @@ D:\Swaragam\pcd_results\features_v12\excluded\  13 duplicates + 2 Thodi outliers
 | v1.2.2 | 64% | ALPHA fix (0.5 to 0.01) |
 | v1.2.3 | 70% | IDF x Variance scoring |
 | v1.2.4 | 78.6% | 72-bin PCD (53 clips) |
-| v1.2.5 | 72.0% | Expanded to 61 clips, dedup, MIN_CLIPS guardrail |
+| v1.3 | 72.0% | Expanded to 61 clips, dedup, MIN_CLIPS guardrail |
 
 ## Remaining Issues
 1. Bhairavi: 33% batch eval accuracy (8/11 go UNKNOWN) -- model issue

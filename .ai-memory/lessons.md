@@ -479,3 +479,15 @@
   Use concurrent.futures.ThreadPoolExecutor with timeout, not signal-based
   approaches (which don't work on Windows threads).
 - **Impact**: Prevents infinite hangs on bad files.
+
+
+### L-040: Cross-Reference Raga Labels Against Authoritative Sources
+- **Date**: 2026-03-21
+- **Context**: 3/6 Kamboji clips were Harikambhoji. Parent vs janya confusion.
+- **Rule**: Always verify raga labels against Saraga/Dunya metadata before training.
+- **Impact**: Contamination hidden by apparent 66.7% accuracy.
+
+### L-041: Honest Baselines Beat Inflated Numbers
+- **Date**: 2026-03-21
+- **Context**: Cleaning bad data dropped accuracy from 72% to 58.8%.
+- **Rule**: Never keep bad data for better numbers. The honest number is the foundation.

@@ -11,8 +11,8 @@ from utils import estimate_tonic   # C1: single canonical tonic source
 
 SR               = 22050
 MAX_DURATION_SEC = 360   # 6-minute cap per file
-PCD_WEIGHT       = 0.6
-DYAD_WEIGHT      = 0.4
+PCD_WEIGHT       = 0.7
+DYAD_WEIGHT      = 0.3
 GENERICNESS_WEIGHT = 0.0   # BUG-004 fix: confirmed inert, removed
 N_BINS           = 72   # Phase 4: was 36 (finer microtonal resolution)
 

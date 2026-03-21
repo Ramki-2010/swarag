@@ -153,6 +153,14 @@
   left by previous cleanup attempts.
 - **Evidence**: 81 features -> 68 unique after dedup.
 
+
+### BUG-013: Harikambhoji Contamination in Kamboji Training Data
+- **Status**: RESOLVED (2026-03-21)
+- **Found**: 2026-03-21 (Saraga metadata cross-reference)
+- **Description**: 3/6 Kamboji clips were actually Harikambhoji (parent melakarta).
+- **Fix**: Moved to excluded/. Kamboji dropped below guardrail (3 clips remain).
+- **Impact**: Overall LOO dropped 72% to 58.8% (honest baseline).
+
 ## Resolved Bugs
 
 ### BUG-001: Missing Constants in recognize_raga_v12.py
