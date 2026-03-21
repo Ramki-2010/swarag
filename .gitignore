@@ -1,7 +1,8 @@
 # ========================
 # DATASETS
 # ========================
-datasets/
+datasets/*
+!datasets/README.md
 saraga/
 
 # ========================

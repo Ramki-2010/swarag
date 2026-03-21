@@ -54,8 +54,12 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for the full development workflow.
 - No mixing version artifacts
 - No dataset commits (datasets/ is gitignored)
 - All changes must be testable via `batch_evaluate.py`
-- Shared constants (N_BINS, MIN_STABLE_FRAMES, ALPHA, EPS) must match across all scripts
+- Shared constants must match across all scripts:
+  - `N_BINS=72`, `ALPHA=0.01`, `MIN_STABLE_FRAMES=5`, `EPS=1e-8`
+  - `PCD_WEIGHT=0.7`, `DYAD_WEIGHT=0.3`
+  - `MIN_CLIPS_PER_RAGA=5` (aggregation guardrail)
 - Never modify production scripts without sandbox validation first
+- Always cross-reference raga labels against authoritative sources (Saraga, Dunya)
 
 ---
 
@@ -74,7 +78,9 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for the full development workflow.
 
 ### Dataset Expansion
 - Curated Carnatic vocal recordings (vocal-only or with multitrack stems)
-- Clear raga labeling
+- Clear raga labeling (cross-referenced against Saraga/Dunya metadata)
+- Minimum 5 clips per raga to pass the MIN_CLIPS guardrail
+- Beware parent vs janya raga confusion (e.g., Harikambhoji vs Kamboji)
 - Performance context documentation
 
 ### Engineering

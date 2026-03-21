@@ -201,17 +201,21 @@ STEP F: DOCUMENT
 
 | Sandbox Script | Tests What |
 |---|---|
-| `test_recognize_fix.py` | Dyad fix (stable regions + Laplace + missing constants) |
-| (create as needed) | New fixes get their own test script |
+| `sandbox_loo_validation.py` | LOO cross-validation (36 vs 72 bins) |
+| `sandbox_hubness.py` | Hubness correction (PARKED for 15+ ragas) |
+| `sandbox_loo_9ragas.py` | LOO validation for 9 ragas |
+| `_sandbox_perraga_weights.py` | Per-raga dyad weight overrides |
+| `_sandbox_5raga_fixes.py` | Weight/margin sweep for 5-raga model |
+| Any new `sandbox_*.py` or `_sandbox_*.py` | New experiments |
 
 ---
 
 ## 6. Evaluation Protocol
 
 ### Before Evaluation
-1. Confirm BUG-001 is fixed (missing constants)
-2. Confirm virtual environment works
-3. Note the AGG_FOLDER path being used
+1. Confirm virtual environment works
+2. Note the AGG_FOLDER path being used
+3. Confirm AGG_FOLDER matches the latest aggregation run
 
 ### Running Evaluation
 ```powershell
@@ -364,6 +368,7 @@ current dataset size. Check this table when adding ragas.
 | Feature | Parked Since | Trigger | Sandbox Script | Bug Ref |
 |---|---|---|---|---|
 | Hubness correction (centered) | 2026-03-12 | Ragas >= 15 | sandbox_hubness.py | BUG-010 |
+| Per-raga dyad weight | 2026-03-21 | After 10+ ragas reduce trade-off | _sandbox_perraga_weights.py | L-042 |
 
 When adding ragas, check this table. If trigger condition is met,
 re-run the sandbox script with LOO validation before integrating.
