@@ -9,8 +9,8 @@ Most failures occur in data pipelines, not algorithms.
 1. FILE PATHS
    - Does the audio file exist?
    - Does the aggregation folder exist?
-     Current: pcd_results/aggregation/v1.2/run_20260320_222322/
-     Scoring: IDF x Variance weighted, 72 bins, MIN_CLIPS=5 (v1.2.5)
+     Current: pcd_results/aggregation/v1.2/run_20260321_135629/
+     Scoring: IDF x Variance weighted, 72 bins, MIN_CLIPS=5, PCD=0.7/Dyad=0.3 (v1.3)
    - Are pcd_stats/ and dyad_stats/ subfolders present?
    - Are .npz files loadable?
 

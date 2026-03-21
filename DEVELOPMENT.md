@@ -177,7 +177,8 @@ Never skip a higher priority to work on a lower one.
 
 ## 7. Adding a New Raga
 
-1. **Collect audio** — minimum 15 vocal-only clips recommended
+1. **Collect audio** -- minimum 5 vocal-only clips required (MIN_CLIPS_PER_RAGA guardrail)
+   - 15+ clips recommended for stable models
    - Check Saraga dataset first (multitrack vocal stems)
    - Use Demucs for mix-only recordings
    - Carnatic Varnam dataset has clean solo vocals
@@ -195,11 +196,16 @@ These must be identical across `aggregate_all_v12.py`, `recognize_raga_v12.py`, 
 
 | Constant | Value | Purpose |
 |---|---|---|
-| `N_BINS` | 36 | PCD histogram bins |
+| `N_BINS` | 72 | PCD histogram bins (17 cents each) |
 | `MIN_STABLE_FRAMES` | 5 | Stable region detection |
-| `ALPHA` | 0.5 | Laplace smoothing |
+| `ALPHA` | 0.01 | Laplace smoothing (scaled for 72x72 matrix) |
 | `EPS` | 1e-8 | Numerical stability |
 | `MAX_DURATION_SEC` | 360 | Audio duration cap (6 min) |
+| `PCD_WEIGHT` | 0.7 | PCD scoring weight |
+| `DYAD_WEIGHT` | 0.3 | Dyad scoring weight |
+| `MARGIN_STRICT` | 0.003 | HIGH confidence threshold |
+| `MIN_MARGIN_FINAL` | 0.001 | MODERATE confidence threshold |
+| `MIN_CLIPS_PER_RAGA` | 5 | Aggregation guardrail |
 
 Changing any of these requires re-extraction and re-aggregation of all features.
 

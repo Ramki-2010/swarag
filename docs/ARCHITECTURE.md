@@ -25,7 +25,7 @@ Tonic (Sa) Estimation & Normalization
   |
   v
 Feature Modeling
-  |-- Pitch Class Distribution (PCD, 36-bin)
+  |-- Pitch Class Distribution (PCD, 72-bin)
   +-- Directional Dyad Transitions (mean_up / mean_down)
   |
   v
@@ -33,8 +33,9 @@ Aggregation --> Versioned Raga Signatures (pcd_stats/ + dyad_stats/)
   |
   v
 Raga Scoring & Ranking
-  |-- Dot-product similarity (PCD + Dyads)
-  |-- Weighted fusion (PCD=0.6, Dyad=0.4)
+  |-- IDF x Variance weighted dot-product (PCD + Dyads)
+  |-- Weighted fusion (PCD=0.7, Dyad=0.3)
+  |-- MIN_CLIPS_PER_RAGA=5 guardrail
   +-- Tiered confidence: HIGH / MODERATE / UNKNOWN
   |
   v
@@ -107,7 +108,7 @@ Swarag models ragas as *statistical musical behavior* rather than symbolic rules
 ### 3.1 Pitch Class Distribution (PCD)
 
 **Representation**
-- 36-bin folded octave (0–1200 cents)
+- 72-bin folded octave (0–1200 cents, 17 cents per bin)
 - Tonic-normalized
 - Length-independent probability distribution
 
@@ -117,6 +118,12 @@ Swarag models ragas as *statistical musical behavior* rather than symbolic rules
 - Broad gamaka influence without destroying detail
 
 PCD serves as the **baseline feature** for raga identity.
+
+**IDF x Variance Weighting** (v1.2.3+)
+- Each PCD bin is weighted by IDF (inverse document frequency) times 1/std
+- Downweights common swaras (Sa, Pa) shared by all ragas
+- Upweights distinctive swaras that differentiate ragas
+- This is the MIR equivalent of TF-IDF for pitch distributions
 
 ---
 
@@ -136,7 +143,8 @@ arohanam is not equal to avarohanam.
 - Split into two directed matrices:
   - `mean_up` -- ascending transitions (arohanam character)
   - `mean_down` -- descending transitions (avarohanam character)
-- Each represented as a 36 × 36 transition matrix
+- Each represented as a 72 x 72 transition matrix
+- Laplace smoothing with ALPHA=0.01 (scaled for matrix size)
 
 **Why “Stable” Dyads**
 - Avoids noise from rapid pitch jitter
@@ -174,9 +182,9 @@ This produces a **raga signature**, not a single exemplar.
 - Compare against aggregated raga signatures
 
 **Scoring**
-- Dot-product similarity for PCD
+- IDF x Variance weighted dot-product for PCD
 - Dot-product similarity for directional dyads (up + down averaged)
-- Weighted combination: `score = 0.6 * pcd_sim + 0.4 * dyad_sim`
+- Weighted combination: `score = 0.7 * pcd_sim + 0.3 * dyad_sim`
 
 **Tiered Confidence System**
 
@@ -224,12 +232,18 @@ Every feature must first prove **musical validity** before optimization.
 
 ---
 
-## Current Scope (v1.2.1)
+## Current Scope (v1.3)
 
-- 6 ragas modeled: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Kamboji
-- 50 vocal-isolated training clips
+- 5 ragas modeled: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi
+- 55 vocal-isolated training clips
+- 72-bin PCD with IDF x Variance weighting
+- Directional dyads with ALPHA=0.01 Laplace smoothing
+- MIN_CLIPS_PER_RAGA=5 guardrail
 - Monophonic vocal audio (vocal-isolated)
 - Medium-length excerpts (capped at 6 minutes)
+- Staged ragas (below guardrail): Kamboji(3), Abhogi(7*), Saveri(8*), Madhyamavati(2-3), Hamsadhvani(1)
+  (*pending feature extraction)
+- LOO accuracy: 58.8% decided (honest baseline)
 
 ---
 

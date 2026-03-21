@@ -388,7 +388,8 @@ Pipeline:
   Audio -> Pitch Extraction -> Tonic Estimation -> Normalization
   -> PCD + Directional Dyads -> Scoring -> Guardrails -> Prediction
 
-Current: 3 ragas trained (Bhairavi, Kalyani, Shankarabharanam)
+Current: 5 ragas trained (Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi)
+         55 clips, 72-bin PCD, IDF x Variance scoring, v1.3
 Goal: Full Melakarta coverage, janya ragas, gamaka modeling,
       phrase detection, live inference, Android deployment
 
