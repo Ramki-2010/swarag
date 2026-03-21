@@ -1,6 +1,8 @@
 import os
 import csv
+import time
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from datetime import datetime
 from recognize_raga_v12 import recognize_raga, load_aggregated_models
 
@@ -23,19 +25,21 @@ SUMMARY_TXT  = os.path.join(RUN_DIR, "summary.txt")
 
 SUPPORTED_EXTS = (".wav", ".mp3", ".flac")
 
+PER_FILE_TIMEOUT = 360  # 6-minute timeout per file
+
 
 # =========================
 # EVALUATION
 # =========================
 def evaluate():
 
-    # Pre-load model once — avoid re-loading for every file
+    # Pre-load model once -- avoid re-loading for every file
     models = load_aggregated_models(AGG_FOLDER)
     if not models:
-        print(f"✗ No models found in: {AGG_FOLDER}")
+        print(f"No models found in: {AGG_FOLDER}")
         return
 
-    print(f"\nSwarag v1.2 — Seed Dataset Evaluation")
+    print(f"\nSwarag v1.2.5 -- Seed Dataset Evaluation")
     print(f"AGG folder : {AGG_FOLDER}")
     print(f"Dataset    : {DATASET_DIR}")
     print(f"Run output : {RUN_DIR}\n")
@@ -61,9 +65,19 @@ def evaluate():
 
             total_files += 1
             audio_path  = os.path.join(raga_path, file)
+            t0 = time.time()
 
-            # C2: use v1.2 API — (audio_path, aggregation_folder, models)
-            result = recognize_raga(audio_path, AGG_FOLDER, models=models)
+            # Per-file timeout to prevent hangs
+            try:
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(recognize_raga, audio_path, AGG_FOLDER, models)
+                    result = future.result(timeout=PER_FILE_TIMEOUT)
+            except TimeoutError:
+                print(f"T [{total_files:2d}] {file:<35} | TIMEOUT after {time.time()-t0:.0f}s")
+                result = {"final": "UNKNOWN / LOW CONFIDENCE", "ranking": [], "margin": 0.0, "confidence_tier": "UNKNOWN"}
+            except Exception as e:
+                print(f"E [{total_files:2d}] {file:<35} | ERROR: {str(e)[:40]}")
+                result = {"final": "UNKNOWN / LOW CONFIDENCE", "ranking": [], "margin": 0.0, "confidence_tier": "UNKNOWN"}
 
             final           = result["final"]
             ranking         = result["ranking"]
@@ -100,9 +114,10 @@ def evaluate():
             if final == "UNKNOWN / LOW CONFIDENCE":
                 stats["unknown"] += 1
 
+            elapsed = time.time() - t0
             status_sym = "+" if is_correct else ("?" if "UNKNOWN" in final else "X")
-            print(f"{status_sym} {file:<35} | True={raga_folder:<20} | Pred={final:<25} "
-                  f"| Tier={confidence_tier:<10} | Margin={round(margin, 4)}")
+            print(f"{status_sym} [{total_files:2d}] {file:<35} | True={raga_folder:<18} | Pred={final:<25} "
+                  f"| Tier={confidence_tier:<8} | M={round(margin, 4)} ({elapsed:.0f}s)")
 
     # =========================
     # SAVE PER FILE CSV
@@ -144,7 +159,7 @@ def evaluate():
     unknown_rate     = unknown_count / total_files if total_files > 0 else 0
 
     summary_lines = [
-        f"Swarag v1.2 Evaluation — {timestamp}",
+        f"Swarag v1.2 Evaluation -- {timestamp}",
         f"AGG Folder  : {AGG_FOLDER}",
         f"",
         f"Total files  : {total_files}",
