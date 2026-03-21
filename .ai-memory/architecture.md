@@ -1,7 +1,7 @@
-# Swarag — Architecture (Current State)
+# Swarag -- Architecture (Current State)
 
 ## Version
-Swarag v1.2.4 — Deterministic DSP Pipeline (Phase 4: 72-bin PCD + IDF x Variance + hubness parked)
+Swarag v1.2.5 -- Deterministic DSP Pipeline (72-bin PCD + IDF x Variance + MIN_CLIPS guardrail)
 
 ## Pipeline
 
@@ -22,18 +22,22 @@ Pitch Normalization (cents relative to Sa, folded to 0-1200)
   |
   v
 Feature Computation
-  |-- PCD: 72-bin pitch class distribution (Phase 4: was 36)
+  |-- PCD: 72-bin pitch class distribution (17 cents per bin)
   +-- Directional Dyads: stable-region detection + Laplace smoothing
       |-- mean_up   (ascending transitions, 72x72 matrix)
-      +-- mean_down (descending transitions, 36x36 matrix)
-      |-- ALPHA=0.01 (Phase 2 fix: was 0.5, which destroyed dyad signal)
+      +-- mean_down (descending transitions, 72x72 matrix)
+      |-- ALPHA=0.01 (Phase 2 fix: was 0.5)
   |
   v
-Raga Scoring
+Aggregation (aggregate_all_v12.py)
+  |-- MIN_CLIPS_PER_RAGA=5 guardrail (excludes thin-data ragas)
+  |-- Mean PCD + mean dyads per raga
+  v
+Raga Scoring (recognize_raga_v12.py)
   |-- IDF x Variance weighted dot-product (PCD + Dyads)
   |-- Weighted fusion (PCD_WEIGHT=0.6, DYAD_WEIGHT=0.4)
-  |-- Genericness penalty REMOVED (GENERICNESS_WEIGHT=0.0, BUG-004)
-  |-- Escalation DISABLED (BUG-007: crushed margins 5x)
+  |-- Genericness penalty REMOVED (GENERICNESS_WEIGHT=0.0)
+  |-- Escalation DISABLED
   +-- Tiered confidence:
       |-- HIGH:     margin >= 0.003 (MARGIN_STRICT)
       |-- MODERATE: margin >= 0.001 (MIN_MARGIN_FINAL)
@@ -43,65 +47,62 @@ Raga Scoring
 Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str }
 ```
 
-## Core Scripts (6 active files in scripts/)
+## Core Scripts
 
 | Script | Responsibility |
 |---|---|
+| `recognize_raga_v12.py` | Inference engine (72-bin, IDF x Variance) |
+| `aggregate_all_v12.py` | Build raga models (with MIN_CLIPS guardrail) |
 | `extract_pitch_batch_v12.py` | Pitch extraction + feature creation |
-| `aggregate_all_v12.py` | Builds raga statistical models |
-| `recognize_raga_v12.py` | Inference engine |
-| `batch_evaluate.py` | Evaluation on known (seed) dataset |
-| `batch_evaluate_random.py` | Evaluation on unknown/random clips |
+| `batch_evaluate.py` | Evaluation on seed dataset (with per-file timeout) |
+| `batch_evaluate_random.py` | Evaluation on unknown clips |
 | `utils.py` | Shared utilities (tonic estimation) |
 
-## Sandbox Scripts (Phase 1-2 investigation)
+## Support Scripts
 
 | Script | Purpose |
 |---|---|
-| `sandbox_phase1_fast.py` | PCD-only scoring test (cached features) |
-| `sandbox_phase2_alpha.py` | ALPHA comparison (0.5 vs 0.01), weight grid |
-| `sandbox_phase1_pcd_only.py` | Original PCD-only sandbox (full extraction) |
-| `diag_scores.py` | Score breakdown per raga per test file |
-| `diag_alpha.py` | Laplace ALPHA impact analysis (transition counts) |
-| `sandbox_phase3_thodi_sink.py` | Phase 3: IDF vs mean-sub vs cosine scoring |
-| `sandbox_phase3b_variance.py` | Phase 3b: IDF vs variance vs combined (Method E) |
-| `sandbox_phase4_bins.py` | Phase 4: PCD bin resolution (36/48/60/72/96/120) |
-| `sandbox_phase4_production.py` | Phase 4: 72-bin production test (cached features) |
+| `extract_new_clips.py` | Feature extraction for new clips |
+| `extract_saraga_vocals.py` | Saraga vocal stem extraction |
+| `run_demucs_batch.py` | Demucs batch vocal isolation |
+| `sandbox_loo_9ragas.py` | LOO validation for 9 ragas |
 | `sandbox_loo_validation.py` | LOO cross-validation (36 vs 72 bins) |
-| `sandbox_hubness.py` | Hubness correction test (LOO, PARKED) |
-| `extract_new_thodi.py` | Feature extraction for 5 new Thodi clips |
+| `sandbox_phase2_alpha.py` | Phase 2 ALPHA tuning |
+| `sandbox_phase3_thodi_sink.py` | Phase 3 IDF scoring |
+| `sandbox_phase3b_variance.py` | Phase 3b variance weighting |
+| `sandbox_phase4_bins.py` | Phase 4 bin resolution |
+| `sandbox_phase4_production.py` | Phase 4 production test |
+| `sandbox_hubness.py` | Hubness correction (PARKED for 15+ ragas) |
 
-## Legacy Support Scripts (in scripts/ or scripts/archive/)
+## Trained Ragas (6 ragas, 61 clips)
 
-| Script | Purpose |
-|---|---|
-| `test_recognize_fix.py` | Baseline validation of dyad fix |
-| `test_bug004_genericness.py` | BUG-004 fix attempt 1 — REJECTED |
-| `test_bug004_no_genericness.py` | BUG-004 fix attempt 2 — APPLIED |
-| `test_dyad_weights.py` | Weight tuning test (baseline vs dyad-heavy vs dyad-only) |
-
-## Trained Ragas (6 ragas, 53 clips)
-
-| Raga | Clips | Sources |
+| Raga | Clips | Batch Eval Acc (decided) |
 |---|---|---|
-| Bhairavi | 11 | 6 clean wav + 1 stem + 4 demucs |
-| Kalyani | 14 | 6 clean wav + 4 varnam + 2 stems + 2 demucs |
-| Shankarabharanam | 9 | 6 clean wav + 1 stem + 2 demucs |
-| Thodi | 10 | 3 stems + 2 demucs (old) + 5 demucs (new external) |
-| Mohanam | 6 | 4 varnam + 2 demucs |
-| Kamboji | 3 | 3 demucs |
+| Bhairavi | 11 | 33% |
+| Kalyani | 14 | 100% |
+| Shankarabharanam | 9 | 87.5% |
+| Mohanam | 11 | 50% |
+| Thodi | 11 | 100% |
+| Kamboji | 5 | 66.7% |
 
-Note: 2 Thodi outliers excluded (Munnu Ravana, Koluvamaregatha) —
-moved to features_v12/excluded/ and seed_carnatic/Thodi/excluded/.
-Munnu Ravana: entropy 2.4 (too concentrated, skewed model).
-Koluvamaregatha: low consistency with other Thodi clips (sim_to_mean=0.050).
+### Staged Ragas (excluded by MIN_CLIPS_PER_RAGA=5 guardrail)
+- Abhogi: 2 clips (needs 3 more)
+- Madhyamavati: 2 clips (needs 3 more)
+- Saveri: 3 clips (needs 2 more)
+- Hamsadhvani: 1 clip (needs 4 more)
 
 ## Aggregation Data Location
 ```
-D:\Swaragam\pcd_results\aggregation\v1.2\run_20260312_205842_72bins\
-  pcd_stats\    -> {raga}_pcd_stats.npz
-  dyad_stats\   -> {raga}_dyad_stats.npz
-  aggregation_metadata.json  (alpha=0.01, bins=72, 53 files)
+D:\Swaragam\pcd_results\aggregation\v1.2\run_20260320_222322\
+  pcd_stats\    -> {raga}_pcd_stats.npz (6 ragas)
+  dyad_stats\   -> {raga}_dyad_stats.npz (6 ragas)
+  aggregation_metadata.json  (alpha=0.01, bins=72, 61 clips, min_clips=5)
+```
+
+## Feature Storage
+```
+D:\Swaragam\pcd_results\features_v12\           68 unique .npz files
+D:\Swaragam\pcd_results\features_v12\excluded\  13 duplicates + 2 Thodi outliers
 ```
 
 ## Shared Constants (must be identical in aggregate + recognize)
@@ -110,69 +111,52 @@ D:\Swaragam\pcd_results\aggregation\v1.2\run_20260312_205842_72bins\
 |---|---|---|
 | SR | 22050 | Sample rate |
 | MAX_DURATION_SEC | 360 | 6-minute cap per file |
-| N_BINS | **72** | PCD and dyad bins |
+| N_BINS | 72 | PCD and dyad bins |
 | MIN_STABLE_FRAMES | 5 | Stable region threshold |
-| ALPHA | **0.01** | **Phase 2 fix: was 0.5** |
+| ALPHA | 0.01 | Laplace smoothing (Phase 2 fix) |
 | EPS | 1e-8 | Division safety |
 | PCD_WEIGHT | 0.6 | Scoring weight |
 | DYAD_WEIGHT | 0.4 | Scoring weight |
-| GENERICNESS_WEIGHT | 0.0 | Disabled (BUG-004 fix) |
+| GENERICNESS_WEIGHT | 0.0 | Disabled |
 | MARGIN_STRICT | 0.003 | HIGH confidence threshold |
 | MIN_MARGIN_FINAL | 0.001 | MODERATE confidence threshold |
+| MIN_CLIPS_PER_RAGA | 5 | Aggregation guardrail (BUG-011) |
+| PER_FILE_TIMEOUT | 360 | Batch eval per-file timeout |
 
 ## Frozen Output Schema
 ```python
-{ "final": str, "ranking": list, "margin": float }
+{ "final": str, "ranking": list, "margin": float, "confidence_tier": str }
 ```
-Plus optional `"confidence_tier": str` added in v1.2.
 
-## Resolved Architectural Issues
-- BUG-004: Genericness penalty removed (GENERICNESS_WEIGHT=0.0)
-- BUG-005: Escalation disabled entirely
-- BUG-006: Thresholds recalibrated (0.003/0.001)
-- BUG-007: Escalation disabled (was crushing margins 5x)
+## Current Accuracy (v1.2.5)
 
-## Remaining Architectural Issues
-1. BUG-008: Thodi sink — Thodi model attracts other ragas (10/18 wrongs)
-2. BUG-003: Score compression (improved but not eliminated)
-3. Bhairavi test file misclassifies as Thodi (shared komal swaras)
-4. Kamboji has only 3 clips (below 15-clip target)
-5. No OOD score floor (margin-only detection, Phase 3 planned)
+| Metric | LOO | Batch Eval |
+|---|---|---|
+| Accuracy (decided) | 72.0% | 72.7% |
+| Correct | 18/61 | 32/81 |
+| Unknown | 36 (59%) | 37 (45.7%) |
+| Wrongs | 7 | 12 |
 
-## Phase 2 Key Finding: ALPHA Impact on Dyad Discrimination
-| ALPHA | Discrimination Ratio | Dyad Sim Range | Status |
-|---|---|---|---|
-| 0.5 (old) | 1.24x avg | 0.0009 - 0.0016 | Essentially noise |
-| **0.01 (new)** | **1.73x avg** | **0.005 - 0.023** | **Real signal** |
+## Accuracy Evolution
 
+| Version | LOO Acc | Key Change |
+|---|---|---|
+| v1.2 | 25% | Baseline (3 ragas) |
+| v1.2.1 | -- | 6 ragas, vocal isolation |
+| v1.2.2 | 64% | ALPHA fix (0.5 to 0.01) |
+| v1.2.3 | 70% | IDF x Variance scoring |
+| v1.2.4 | 78.6% | 72-bin PCD (53 clips) |
+| v1.2.5 | 72.0% | Expanded to 61 clips, dedup, MIN_CLIPS guardrail |
 
+## Remaining Issues
+1. Bhairavi: 33% batch eval accuracy (8/11 go UNKNOWN) -- model issue
+2. Mohanam: 50% accuracy (9/13 go UNKNOWN) -- model issue
+3. Kamboji: 66.7% (5/8 go UNKNOWN) -- needs more clips
+4. Score compression for sibling ragas
+5. No OOD score floor (margin-only detection)
+6. BUG-009: Mix audio causes OOD false positives
 
-## Phase 4 Key Finding: 72-bin PCD Resolution
-- 36 bins (33 cents/bin) too coarse: shuddha Ma and prati Ma only 2-3 bins apart
-- 72 bins (17 cents/bin): Ma1 and Ma2 are 6 bins apart -> separates Kalyani/Shankarabharanam
-- LOO accuracy: 66.7% (36-bin) -> 78.6% (72-bin) = +11.9%
-- Wrongs halved: 14 -> 6. Thodi sink: 5/14 -> 1/6
-- 96+ bins causes margin collapse (too sparse for 53 clips)
-- Pure code change, no new data needed
-
-## Hubness Correction (PARKED for 15+ ragas)
-- Centered correction: score = raw - avg_sim[raga] + global_mean
-- Eliminates Thodi sink (0/8) but drops LOO accuracy 78.6% -> 74.2%
-- Multi-agent analysis: unanimously park (bias values below noise floor at 6 ragas)
-- Trigger: re-test when raga count >= 15 (sandbox_hubness.py ready)
-
-## Phase 3 Key Finding: IDF x Variance PCD Weighting
-- Common swaras (Sa, Pa, Ni) downweighted by IDF (present in all ragas)
-- Low-variance bins downweighted (ragas agree -> not distinctive)
-- High-variance bins upweighted (ragas differ -> distinctive swaras)
-- Formula: weight = idf / (std + eps), normalized to sum = N_BINS
-- Thodi sink: 93% -> 38% of wrongs
-- Kamboji: 50% -> 100%, Kalyani: 62% -> 75%
-- Sandbox predicted 83% (self-eval), production got 70% (real)
-## Current Accuracy (Phase 2 sandbox, ALPHA=0.01, 0.6/0.4)
-- 53 seed clips: 27 HIGH + 2 MOD = 29 correct, 16 WRONG, 8 UNKNOWN
-- Accuracy (excl UNKNOWN): **78.6% LOO** (72-bin IDF x Variance)
-- OOD: Both Hamsadwani and Mohanam correctly return UNKNOWN
-- Phase 3 Method E (IDF x Variance) applied: 64% -> 70%
-- Blind test (mix audio): 38% known, 25% OOD rejection (BUG-009)
-- Vocal isolation is mandatory for reliable results (L-028)
+## Parked Features
+| Feature | Trigger | Sandbox Script |
+|---|---|---|
+| Hubness correction | Ragas >= 15 | sandbox_hubness.py |

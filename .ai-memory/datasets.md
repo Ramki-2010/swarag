@@ -15,7 +15,7 @@
   | Thodi | 10 | 3 stems + 2 demucs (old) + 5 demucs (new external) |
   | Mohanam | 6 | 4 varnam + 2 demucs |
   | Kamboji | 3 | 3 demucs |
-  **Total: 53 clips across 6 ragas**
+  **Total: 61 clips across 6 modeled ragas (68 features total, 3 ragas staged)**
   Target: 15 clips per raga. Kamboji (3) and Mohanam (6) still below target.
   **Excluded clips** (moved to excluded/ folders, not deleted):
   - Munnu Ravana (Thodi): entropy 2.4, too concentrated, skewed model
@@ -47,7 +47,8 @@
 
 ## Aggregated Models
 - **36-bin models**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260310_085601\`
-- **72-bin models (current)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260312_205842_72bins\`
+- **72-bin models (v1.2.4)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260312_205842_72bins\`
+- **72-bin models (v1.2.5 current)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260320_222322\` (6 ragas, 61 clips, MIN_CLIPS=5)
 - **ALPHA**: 0.01 (Phase 2 fix, was 0.5)
 - **Contents**:
   - `pcd_stats/{raga}_pcd_stats.npz` — mean_pcd, std_pcd
@@ -84,6 +85,46 @@
 - **Essentia algorithms** — https://essentia.upf.edu/algorithms_overview.html
 
 ## Test Results Log
+
+
+### Run: 2026-03-21 -- v1.2.5 Batch Evaluation (6 ragas, 61 clips, 72 bins)
+**Models**: run_20260320_222322 (6 ragas, 61 clips, MIN_CLIPS_PER_RAGA=5)
+**Eval output**: run_20260321_004951
+**Scoring**: IDF x Variance, 72 bins, ALPHA=0.01, PER_FILE_TIMEOUT=360s
+
+**Seed Dataset (81 audio files, all ragas including non-modeled)**:
+| Raga | Has Model | Total | Correct | Unknown | Acc (decided) |
+|---|---|---|---|---|---|
+| Kalyani | Y | 14 | 10 | 4 | 100% |
+| Thodi | Y | 10 | 10 | 0 | 100% |
+| Shankarabharanam | Y | 9 | 7 | 1 | 87.5% |
+| Kamboji | Y | 8 | 2 | 5 | 66.7% |
+| Mohanam | Y | 13 | 2 | 9 | 50% |
+| Bhairavi | Y | 11 | 1 | 8 | 33.3% |
+| Abhogi | N | 4 | 0 | 3 | 0% (no model) |
+| Madhyamavati | N | 4 | 0 | 4 | 0% (all UNKNOWN, correct) |
+| Saveri | N | 7 | 0 | 3 | 0% (4 -> Thodi) |
+| Hamsadhvani | N | 1 | 0 | 0 | 0% (-> Kalyani) |
+| **TOTAL** | | **81** | **32** | **37** | **72.7%** |
+
+**LOO Cross-Validation (6 ragas, 61 clips)**:
+| Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
+|---|---|---|---|---|---|
+| Bhairavi | 11 | 2 | 1 | 8 | 67% |
+| Kalyani | 14 | 7 | 1 | 6 | 88% |
+| Kamboji | 5 | 0 | 1 | 4 | 0% |
+| Mohanam | 11 | 1 | 3 | 7 | 25% |
+| Shankarabharanam | 9 | 3 | 1 | 5 | 75% |
+| Thodi | 11 | 5 | 0 | 6 | 100% |
+| **TOTAL** | **61** | **18** | **7** | **36** | **72.0%** |
+
+**Key findings:**
+1. Thodi: PERFECT (10/10 batch, 100% LOO) -- sink completely fixed
+2. Kalyani: PERFECT decided (10/10 batch, 88% LOO)
+3. Bhairavi: WEAK (33% batch, 67% LOO) -- most clips go UNKNOWN, model issue
+4. Mohanam: WEAK (50% batch, 25% LOO) -- most clips go UNKNOWN
+5. Non-modeled ragas: Madhyamavati correctly all UNKNOWN; Saveri leaks to Thodi
+6. Hamsadhvani -> Kalyani false positive (subset raga, expected)
 
 ### Run: 2026-03-10 -- Phase 2 ALPHA fix (sandbox_phase2_alpha.py)
 **Models**: ALPHA=0.01 in-memory aggregation (53 clips, 6 ragas)

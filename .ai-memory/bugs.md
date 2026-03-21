@@ -71,7 +71,7 @@
   Kalyani margin improved from 0.000227 (escalated) to 0.008833 (HIGH).
 
 ### BUG-008: Thodi Sink (Cross-Raga Leakage)
-- **Status**: MOSTLY RESOLVED (Phase 3+4: IDF x Variance + 72 bins)
+- **Status**: RESOLVED (Phase 3+4+5: IDF x Variance + 72 bins + MIN_CLIPS guardrail) (Phase 3+4: IDF x Variance + 72 bins)
 - **Found**: 2026-03-10 (sandbox_phase1_fast.py / sandbox_phase2_alpha.py)
 - **Description**:
   Thodi model attracts many non-Thodi clips. 10/18 seed misclassifications
@@ -119,6 +119,39 @@
   4. Train on mix audio too (but degrades model quality)
 
 ---
+
+
+### BUG-011: Thin-Data Ragas Poison Model (Saveri/Abhogi Sink)
+- **Status**: RESOLVED (2026-03-20)
+- **Found**: 2026-03-20 (sandbox_loo_9ragas.py)
+- **Description**:
+  When ragas with <5 training clips (Abhogi=2, Madhyamavati=2, Saveri=3)
+  are included in aggregation, they become attractors (sinks) that absorb
+  wrongs from other ragas. Saveri absorbed 12/21 wrongs, Abhogi absorbed 5/21.
+  LOO accuracy dropped from 72.0% (6 ragas) to 41.7% (9 ragas).
+- **Root Cause**: Thin-data raga models are unstable -- their mean PCD/dyads
+  are dominated by 1-2 clips and do not represent the raga reliably.
+  IDF weighting amplifies their distinctive bins, making them "attractive"
+  to other ragas' clips.
+- **Fix**: Added MIN_CLIPS_PER_RAGA=5 guardrail to aggregate_all_v12.py.
+  Ragas below threshold are excluded from aggregation with a warning.
+  Features are kept (not deleted) so they can be activated when more data arrives.
+- **Evidence**:
+  - 9-raga LOO: 41.7% (15c/21w/32u). Saveri=12 wrongs, Abhogi=5 wrongs.
+  - 6-raga LOO: 72.0% (18c/7w/36u). No sink ragas.
+- **Verified**: Re-aggregation with guardrail excludes 3 ragas, accuracy restored.
+
+### BUG-012: Duplicate Features Inflate Clip Counts
+- **Status**: RESOLVED (2026-03-20)
+- **Found**: 2026-03-20 (feature audit)
+- **Description**:
+  13 feature files had duplicates (same audio processed twice with different
+  timestamps). Inflated total from 68 unique to 81. Some ragas appeared to
+  have more data than they actually did.
+- **Fix**: Identified duplicates by matching raga + source filename prefix.
+  Moved 13 duplicates to features_v12/excluded/. Also removed 25 .dup files
+  left by previous cleanup attempts.
+- **Evidence**: 81 features -> 68 unique after dedup.
 
 ## Resolved Bugs
 

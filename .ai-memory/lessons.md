@@ -433,3 +433,49 @@
   ambiguity. Reserve it for genuinely hard decisions (not routine fixes).
 - **Impact**: Prevented both premature adoption (would have hurt accuracy) and
   premature rejection (would have lost a valuable future feature).
+
+
+### L-036: Thin-Data Ragas Are Poison, Not Just Weak
+- **Date**: 2026-03-20
+- **Context**: Adding 3 new ragas (Abhogi=2, Saveri=3, Madhyamavati=2 clips)
+  dropped LOO accuracy from 72.0% to 41.7%. They didn't just fail to recognize
+  themselves -- they actively absorbed wrongs from established ragas.
+  Saveri became a mega-sink (12/21 wrongs).
+- **Rule**: Never include a raga in aggregation with fewer than 5 clips.
+  Thin-data models are unstable and their IDF-amplified distinctive bins
+  become false attractors. Use MIN_CLIPS_PER_RAGA guardrail.
+  Keep the features staged; activate when data threshold is met.
+- **Impact**: Without the guardrail, every new raga added with 1-3 clips
+  would degrade the entire system.
+
+### L-037: Duplicate Features Silently Inflate Accuracy
+- **Date**: 2026-03-20
+- **Context**: Feature extraction ran twice on some audio files, producing
+  duplicate .npz files with different timestamps. This inflated clip counts
+  (81 vs 68 actual) and biased mean models toward duplicated clips.
+- **Rule**: Before aggregation, always audit for duplicates by matching
+  raga + source filename prefix. The timestamp portion of .npz filenames
+  varies between runs, so match on the content identifier only.
+- **Impact**: Inflated confidence in model stability. Some ragas appeared
+  to have more diverse training data than they actually did.
+
+### L-038: Don't Kill Long-Running Processes at 80%
+- **Date**: 2026-03-20
+- **Context**: Killed a batch_evaluate.py run after 2 hours (80% complete)
+  because it was using the wrong model. Should have let it finish since it
+  only had ~20 min remaining, then discarded the results.
+- **Rule**: If a long process is >50% complete, let it finish unless it's
+  actively harmful (not just using wrong params). The cost of restarting
+  from zero always exceeds the cost of waiting for completion.
+- **Impact**: Wasted 2 hours of compute. Had to restart from scratch.
+
+### L-039: Add Per-File Timeouts to Batch Processing
+- **Date**: 2026-03-20
+- **Context**: batch_evaluate.py had no per-file timeout. If pYIN hangs on
+  a corrupted or very long audio file, the entire batch blocks indefinitely.
+  Added ThreadPoolExecutor with PER_FILE_TIMEOUT=360s per file.
+- **Rule**: Any batch processing script that runs external algorithms (pYIN,
+  Demucs, etc.) on user-provided audio must have a per-file timeout.
+  Use concurrent.futures.ThreadPoolExecutor with timeout, not signal-based
+  approaches (which don't work on Windows threads).
+- **Impact**: Prevents infinite hangs on bad files.

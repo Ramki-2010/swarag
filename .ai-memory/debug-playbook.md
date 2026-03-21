@@ -9,8 +9,8 @@ Most failures occur in data pipelines, not algorithms.
 1. FILE PATHS
    - Does the audio file exist?
    - Does the aggregation folder exist?
-     Current: pcd_results/aggregation/v1.2/run_20260312_205842_72bins/
-     Scoring: IDF x Variance weighted, 72 bins (Phase 4, v1.2.4)
+     Current: pcd_results/aggregation/v1.2/run_20260320_222322/
+     Scoring: IDF x Variance weighted, 72 bins, MIN_CLIPS=5 (v1.2.5)
    - Are pcd_stats/ and dyad_stats/ subfolders present?
    - Are .npz files loadable?
 
@@ -83,6 +83,7 @@ Most failures occur in data pipelines, not algorithms.
 | Sandbox accuracy much higher than LOO | Self-evaluation bias -- use LOO for true accuracy |
 | Accuracy drops when adding scoring layer | Feature too weak for current dataset size (see BUG-010) |
 | && syntax error | Using PowerShell — use `;` instead |
+| New raga tanks accuracy | Thin-data raga sink (need 5+ clips) -- BUG-011 |
 | UnicodeEncodeError (checkmark) | aggregate_all_v12.py print statement — cosmetic, aggregation completed |
 
 ## Quick Diagnostic Commands
