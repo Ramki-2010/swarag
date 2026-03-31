@@ -518,3 +518,31 @@
   have. Audit existing downloads, zips, and datasets for ragas you need.
   The cheapest data is data you already downloaded but forgot about.
 - **Impact**: Activated 2 new ragas (Abhogi + Saveri) with zero download time.
+
+### L-044: Janya Ragas Get Absorbed by Their Parent Melakarta
+- **Date**: 2026-03-31
+- **Context**: Abhogi (janya of Kalyani via Mela 65 Mechakalyani) activated
+  with 7 clips but scored 0% LOO -- all 4 wrongs went to Kalyani. Abhogi
+  uses a subset of Kalyani's swaras (S R2 G2 M2 D2 S), so its PCD is a
+  subset of Kalyani's PCD. IDF weighting cannot separate them because
+  Abhogi's distinctive bins are also present in Kalyani.
+- **Rule**: When adding a janya raga whose parent melakarta is already modeled,
+  expect PCD-based scoring to fail. Janya identification requires features
+  that capture what's ABSENT (omitted swaras) or unique phrase patterns,
+  not just what's present. Dyad weight override or phrase-level features
+  may be needed.
+- **Impact**: Adding more Abhogi clips alone won't fix this -- it's a
+  structural limitation of PCD-only scoring for subset ragas.
+
+### L-045: PCD-Heavy Weights (0.8/0.2) Give Fewest Wrongs at 7+ Ragas
+- **Date**: 2026-03-31
+- **Context**: Tested 4 weight configs on 7 ragas / 70 clips:
+  0.6/0.4 -> 51.0% (24 wrongs), 0.7/0.3 -> 57.5% (17 wrongs),
+  0.8/0.2 -> 64.9% (13 wrongs), 0.7/0.3 M=0.002 -> 66.7% (9 wrongs, 61% unknown).
+  0.8/0.2 won: highest decided accuracy with fewest wrongs.
+  At 7 ragas, dyads add more noise than signal because the 72x72 matrices
+  are still sparse with 7-14 clips per raga.
+- **Rule**: As ragas increase, PCD-heavy weights are safer because PCD
+  is more stable with limited data. Increase dyad weight only when per-raga
+  clip counts reach 15-20+ and dyad discrimination ratio exceeds 2.0x.
+- **Impact**: +6.1% accuracy over 0.7/0.3. Locked as production default.

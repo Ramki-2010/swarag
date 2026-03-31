@@ -11,7 +11,7 @@ from recognize_raga_v12 import recognize_raga, load_aggregated_models
 # =========================
 BASE_DIR     = r"D:\Swaragam"
 DATASET_DIR  = os.path.join(BASE_DIR, "datasets", "seed_carnatic")
-AGG_FOLDER   = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260321_135629"  # v1.3: 5 ragas, 55 clips
+AGG_FOLDER   = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260331_232228"  # v1.3.1: 7 ragas, 70 clips
 
 EVAL_BASE_DIR = os.path.join(BASE_DIR, "pcd_results", "evaluation")
 timestamp     = datetime.now().strftime("%Y%m%d_%H%M%S")

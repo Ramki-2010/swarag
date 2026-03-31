@@ -2,15 +2,15 @@
 
 Swarag is a deterministic Carnatic raga recognition engine built using interpretable signal processing and structured statistical modeling. It emphasizes explainability, musical grammar, and bias correction over black-box learning.
 
-## Version: v1.3
+## Version: v1.3.1
 
-v1.3 introduces:
-- **Harikambhoji contamination removed** from Kamboji (3/6 clips were wrong raga)
-- **PCD-heavy weights** (0.7/0.3) -- fewer wrongs, better decided accuracy
-- **5 active ragas** with **55 deduplicated clips** (Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi)
-- Kamboji dropped below MIN_CLIPS=5 guardrail (needs 2+ real clips to reactivate)
-- Short/weak clips removed (Shloka Sri Ramachandra, 936 frames)
-- LOO accuracy: ~58.8% decided (honest baseline, 5 ragas)
+v1.3.1 introduces:
+- **Abhogi + Saveri activated** (5 Zenodo varnams each, total 7 ragas, 70 clips)
+- **PCD-heavy weights** (0.8/0.2) -- fewest wrongs (13), best decided accuracy
+- **Saveri debuts at 75% LOO** -- strong first showing
+- **Thodi: 100% LOO** -- zero wrongs
+- LOO accuracy: ~64.9% decided (7 ragas, honest baseline)
+- Abhogi struggles (0% LOO -- janya of Kalyani, absorbed by parent)
 
 ### Version History
 
@@ -23,6 +23,7 @@ v1.3 introduces:
 | v1.2.4 | 78.6% | 6 | 72-bin PCD |
 | v1.2.5 | 72.0% | 6 | Expanded data, dedup, MIN_CLIPS guardrail |
 | v1.3 | 58.8% | 5 | Harikambhoji removed, weights 0.7/0.3, honest baseline |
+| v1.3.1 | 64.9% | 7 | Abhogi+Saveri activated, weights 0.8/0.2 |
 
 ## Core Philosophy
 
@@ -58,7 +59,7 @@ Feature Computation
   v
 Raga Scoring
   |-- IDF x Variance weighted dot-product (PCD + Dyads)
-  |-- Weighted fusion (PCD=0.7, Dyad=0.3)
+  |-- Weighted fusion (PCD=0.8, Dyad=0.2)
   |-- MIN_CLIPS_PER_RAGA guardrail (excludes thin-data ragas)
   +-- Tiered confidence: HIGH / MODERATE / UNKNOWN
   |
@@ -70,27 +71,27 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 
 | Raga | Training Clips | LOO Accuracy |
 |---|---|---|
-| Thodi | 11 | 83% |
-| Kalyani | 14 | 80% |
-| Shankarabharanam | 9 | 50% |
-| Bhairavi | 11 | 50% |
-| Mohanam | 10 | 17% |
+| Thodi | 11 | 100% |
+| Bhairavi | 11 | 100% (mostly UNKNOWN) |
+| Kalyani | 14 | 88% |
+| Saveri | 8 | 75% |
+| Shankarabharanam | 9 | 67% |
+| Mohanam | 10 | 20% |
+| Abhogi | 7 | 0% |
 
 ### Staged / Excluded (need more data)
 
 | Raga | Current Clips | Status |
 |---|---|---|
 | Kamboji | 3 | Needs 2+ real clips (Harikambhoji removed) |
-| Saveri | 3 | Needs 2 more |
-| Abhogi | 2 | Needs 3 more |
 | Madhyamavati | 2 | Needs 3 more |
 | Hamsadhvani | 1 | Needs 4 more |
 
 ## Repository Structure
 
 ```
-scripts/                        Active v1.3 pipeline
-  recognize_raga_v12.py             Inference engine (72-bin, IDF x Variance, 0.7/0.3)
+scripts/                        Active v1.3.1 pipeline
+  recognize_raga_v12.py             Inference engine (72-bin, IDF x Variance, 0.8/0.2)
   aggregate_all_v12.py              Build raga models (with MIN_CLIPS guardrail)
   extract_pitch_batch_v12.py        Feature extraction (with 6-min cap)
   batch_evaluate.py                 Evaluation on seed dataset (per-file timeout)

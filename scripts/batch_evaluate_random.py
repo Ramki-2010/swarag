@@ -8,7 +8,7 @@ from recognize_raga_v12 import recognize_raga, load_aggregated_models
 # =========================
 
 RANDOM_TEST_FOLDER = r"D:\Swaragam\datasets\audio test"
-AGG_FOLDER   = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260321_135629"  # v1.3: 5 ragas, 55 clips
+AGG_FOLDER   = r"D:\Swaragam\pcd_results\aggregation\v1.2\run_20260331_232228"  # v1.3.1: 7 ragas, 70 clips
 OUTPUT_BASE        = r"D:\Swaragam\pcd_results\random_evaluations_v12"
 
 SUPPORTED_EXTS = (".wav", ".mp3", ".flac")

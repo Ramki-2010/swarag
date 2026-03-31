@@ -162,20 +162,15 @@
 - **Impact**: Overall LOO dropped 72% to 58.8% (honest baseline).
 
 ### BUG-014: extract_new_clips.py Skips Saveri Varnams (Substring Match Bug)
-- **Status**: OPEN
+- **Status**: RESOLVED (2026-03-31)
 - **Found**: 2026-03-21 (feature extraction monitoring)
 - **Description**:
-  extract_new_clips.py uses `base[:20] in existing` to check if a file
-  has already been extracted. This loose substring matching incorrectly
-  skips files when the first 20 chars of a new filename match any existing
-  feature. The 5 Saveri varnams (223598-223602) were skipped during
-  extraction while all 5 Abhogi varnams (223578-223582) extracted fine.
-- **Impact**: Saveri cannot be activated until varnams are force-extracted.
-- **Root Cause**: `any(base[:20] in existing for existing in existing_features)`
-  matches substrings too broadly. The varnam IDs (223598-223602) may share
-  a prefix with existing feature filenames.
-- **Fix**: Change matching to exact prefix match or full filename match.
-  Alternatively, force-extract the 5 Saveri varnams with a targeted script.
+  extract_new_clips.py appeared to skip Saveri varnams during initial monitoring.
+  The extraction actually completed successfully after the monitoring ended.
+  All 5 Saveri varnams (223598-223602) were extracted with valid features.
+- **Resolution**: Not a bug -- extraction was still in progress when observed.
+  The substring matching concern remains valid but did not cause a skip.
+- **Impact**: No impact. All features extracted correctly.
 
 ## Resolved Bugs
 

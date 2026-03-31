@@ -1,10 +1,10 @@
-Swarag v1.3 -- Project Dossier
+Swarag v1.3.1 -- Project Dossier
 =========================================================
 
 Author:   Ram Krishna
 Project:  Swarag (AI-based Carnatic Raga Recognition Engine)
-Version:  v1.3
-Updated:  2026-03-21 (Harikambhoji cleaned, honest baseline)
+Version:  v1.3.1
+Updated:  2026-03-31 (Abhogi+Saveri activated, 0.8/0.2 locked)
 
 =========================================================
 1. WHAT IS SWARAG
@@ -17,7 +17,7 @@ matches them against known raga signatures.
 The goal is to codify Carnatic musical grammar into computation.
 Raga identity is structured grammar, not statistical coincidence.
 
-Current: 5 ragas modeled (55 clips), 2 more pending activation.
+Current: 7 ragas modeled (70 clips), 2 more staged.
 Target: 72 Melakartas, janya ragas, live inference, Android app.
 
 =========================================================
@@ -32,79 +32,65 @@ Key parameters:
   - 72-bin PCD (17 cents per bin)
   - Directional dyads with ALPHA=0.01 Laplace smoothing
   - IDF x Variance weighted dot-product
-  - PCD_WEIGHT=0.7, DYAD_WEIGHT=0.3
+  - PCD_WEIGHT=0.8, DYAD_WEIGHT=0.2
   - MIN_CLIPS_PER_RAGA=5 guardrail
   - MAX_DURATION_SEC=360 (6-minute cap)
 
 Details: .ai-memory/architecture.md
 
 =========================================================
-3. CURRENT STATE (2026-03-21, v1.3)
+3. CURRENT STATE (2026-03-31, v1.3.1)
 =========================================================
 
 Working:
-  - Full pipeline, 5 ragas, 55 clips, 72-bin PCD + dyads
+  - Full pipeline, 7 ragas, 70 clips, 72-bin PCD + dyads
   - IDF x Variance PCD weighting
   - MIN_CLIPS_PER_RAGA=5 guardrail prevents thin-data sinks
-  - Harikambhoji contamination removed from Kamboji (BUG-013)
-  - Audio duplicates cleaned (Mohanam, Kamboji)
+  - Abhogi + Saveri activated from Zenodo varnams
   - All audio vocal-isolated (Saraga stems + Demucs)
-  - LOO accuracy: 58.8% decided (honest baseline)
-  - Thodi: 83% LOO, Kalyani: 80% LOO
-  - Abhogi + Saveri varnams extracted from Zenodo (pending activation)
+  - LOO accuracy: 64.9% decided (0.8/0.2 weights)
+  - Thodi + Bhairavi: 100% decided (0 wrongs)
+  - Saveri: 75% on first activation
 
-Modeled ragas (v1.3):
+Modeled ragas (v1.3.1):
   | Raga             | Clips | LOO Acc |
-  | Thodi            | 11    | 83%     |
-  | Kalyani          | 14    | 80%     |
-  | Shankarabharanam | 9     | 50%     |
-  | Bhairavi         | 11    | 50%     |
-  | Mohanam          | 10    | 17%     |
+  | Thodi            | 11    | 100%    |
+  | Bhairavi         | 11    | 100%    |
+  | Kalyani          | 14    | 88%     |
+  | Saveri           | 8     | 75%     |
+  | Shankarabharanam | 9     | 67%     |
+  | Mohanam          | 10    | 20%     |
+  | Abhogi           | 7     | 0%      |
 
 Staged ragas (below guardrail):
-  - Abhogi: 7 clips (5 new varnams extracted) -> ready to activate
-  - Saveri: 8 clips (5 new varnams pending BUG-014) -> almost ready
   - Kamboji: 3 clips (needs 2+ real clips, non-Harikambhoji)
-  - Madhyamavati: 2-3 clips
+  - Madhyamavati: 2 clips
   - Hamsadhvani: 1 clip
 
-Resolved this session:
-  - BUG-011: Thin-data raga sink (MIN_CLIPS guardrail)
-  - BUG-012: Duplicate features (81->68 unique)
-  - BUG-013: Harikambhoji contamination in Kamboji (3/6 wrong raga)
-
 Open issues:
-  - BUG-014: extract_new_clips.py skips Saveri varnams (substring bug)
+  - Abhogi: 0% LOO (janya of Kalyani, all wrongs absorbed by parent)
+  - Mohanam: 20% LOO (needs diverse clips from different songs)
+  - Kalyani is new sink (7/13 wrongs, mostly from Abhogi)
   - BUG-009: Mix audio causes OOD false positives
-  - Mohanam: 17% LOO (worst raga, needs diverse clips)
-  - Bhairavi: 50% LOO (PCD overlaps 78% with Thodi)
   - No OOD score floor (margin-only detection)
-
-Key findings this session:
-  - 3/6 Kamboji clips were Harikambhoji (parent melakarta confusion)
-  - Per-raga dyad weight override is a trade not a fix
-    (Bhairavi 50%->90% but Thodi 83%->43%)
-  - Carnatic Varnam zip had untapped Abhogi + Saveri data
-  - Honest baseline (58.8%) after cleaning dirty data (was 72%)
 
 =========================================================
 4. NEXT STEPS
 =========================================================
 
 Immediate:
-  1. Fix BUG-014 -> force-extract 5 Saveri varnams
-  2. Re-aggregate -> 7 ragas (Abhogi + Saveri activated)
-  3. Run LOO on 7 ragas
+  1. Add 5-7 real Kamboji clips (YouTube/Rasikas, non-Saraga)
+  2. Add 4-6 diverse Mohanam clips (different songs/artists)
+  3. Test Abhogi/Bhairavi dyad weight override (0.4/0.6)
 
-Short-term (highest ROI):
-  - Add 4-6 diverse Mohanam clips (different songs/artists)
-  - Source 5-7 real Kamboji clips (YouTube/Rasikas, non-Saraga)
-  - Target: 70-80% LOO after data fixes
+Short-term:
+  - Do NOT add more new ragas until weak ones > 60%
+  - Target: 72-78% decided accuracy with 7-8 ragas
+  - Re-test hubness correction at 15+ ragas (BUG-010)
 
 Medium-term:
-  - Per-raga Bhairavi dyad weight (only after more ragas reduce trade-off)
   - OOD score floor (absolute threshold, not just margin)
-  - Re-test hubness correction at 15+ ragas (BUG-010)
+  - Phrase-level features for janya/parent separation
 
 Long-term:
   - 72 Melakartas -> janya ragas -> phrase modeling
@@ -147,6 +133,7 @@ Details: .ai-memory/architecture.md
 - Deterministic DSP (small dataset, explainability, control)
 - 72-bin PCD (17 cents/bin resolves microtonal swaras)
 - IDF x Variance weighting (downweights common swaras)
+- PCD-heavy weights 0.8/0.2 (PCD more stable than dyads at current data)
 - Directional dyads (Carnatic ragas are asymmetric)
 - MIN_CLIPS_PER_RAGA=5 guardrail (thin-data ragas poison models)
 - Sandbox-first workflow (never edit production untested)
@@ -157,14 +144,13 @@ Details: .ai-memory/architecture.md
 8. RISKS
 =========================================================
 
-- Bhairavi/Thodi PCD overlap (78%) makes PCD-only separation hard
-- Mohanam model weak (17% LOO) -- needs diverse clips
+- Abhogi/Kalyani parent-janya overlap makes PCD-only separation impossible
+- Mohanam model weak (20% LOO) -- needs diverse clips
 - Kamboji only 3 real clips after Harikambhoji cleanup
 - Harikambhoji/Kamboji parent-janya confusion can recur with other ragas
 - No absolute OOD score floor (margin-only detection)
 - Silent failures: except-Exception hides crashes as UNKNOWN
 - Constants must stay synchronized across scripts
-- extract_new_clips.py has loose substring matching (BUG-014)
 
 Details: .ai-memory/bugs.md, .ai-memory/lessons.md
 
@@ -181,6 +167,7 @@ Details: .ai-memory/bugs.md, .ai-memory/lessons.md
 | 2026-03-12 | v1.2.4  | 6     | 53    | 78.6% LOO    | 72-bin PCD |
 | 2026-03-20 | v1.2.5  | 6     | 61    | 72.0% LOO    | Dedup, MIN_CLIPS guardrail |
 | 2026-03-21 | v1.3    | 5     | 55    | 58.8% LOO    | Harikambhoji cleaned, 0.7/0.3 |
+| 2026-03-31 | v1.3.1  | 7     | 70    | 64.9% LOO    | Abhogi+Saveri activated, 0.8/0.2 |
 
 =========================================================
 10. ORIGIN
@@ -195,9 +182,9 @@ intelligence into algorithmic form.
 WHERE TO LOOK
 =========================================================
 
-  architecture.md    Pipeline, scripts, constants (v1.3)
-  bugs.md            Active bugs (3) and resolved bugs (10)
-  lessons.md         Lessons learned (43)
+  architecture.md    Pipeline, scripts, constants (v1.3.1)
+  bugs.md            Active bugs (2) and resolved bugs (12)
+  lessons.md         Lessons learned (45)
   datasets.md        Data locations, test results, external sources
   workflow.md        Development process
   debug-playbook.md  Debugging guide

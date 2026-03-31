@@ -16,10 +16,10 @@
   | Mohanam | 6 | 4 varnam + 2 demucs |
   | Kamboji | 3 | 3 real Kamboji (3 Harikambhoji removed to excluded/, BUG-013) |
   | Abhogi | 7 | 2 demucs + 5 varnams (Zenodo, extracted 2026-03-21) |
-  | Saveri | 8 | 3 demucs/stems + 5 varnams (Zenodo, extraction pending BUG-014) |
+  | Saveri | 8 | 3 demucs/stems + 5 varnams (Zenodo, extracted 2026-03-21) |
   | Madhyamavati | 2-3 | demucs |
   | Hamsadhvani | 1 | demucs |
-  **Total: 55 clips modeled (5 ragas), ~65+ features total, 5 ragas staged**
+  **Total: 70 clips modeled (7 ragas), 75 features total, 2 ragas staged**
   Target: 15 clips per raga. Kamboji (3) and Mohanam (6) still below target.
   **Excluded clips** (moved to excluded/ folders, not deleted):
   - Munnu Ravana (Thodi): entropy 2.4, too concentrated, skewed model
@@ -52,7 +52,7 @@
 ## Aggregated Models
 - **36-bin models**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260310_085601\`
 - **72-bin models (v1.2.4)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260312_205842_72bins\`
-- **72-bin models (v1.3 current)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260321_135629\` (5 ragas, 55 clips, PCD=0.7/Dyad=0.3)
+- **72-bin models (v1.3.1 current)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260331_232228\` (7 ragas, 70 clips, PCD=0.8/Dyad=0.2)
 - **ALPHA**: 0.01 (Phase 2 fix, was 0.5)
 - **Contents**:
   - `pcd_stats/{raga}_pcd_stats.npz` — mean_pcd, std_pcd
@@ -84,7 +84,7 @@
 - **Carnatic Varnam Dataset** — https://zenodo.org/records/1257118
   - Local zip: `D:\Swaragam\datasets\carnatic_varnam_1.0.zip` (28 recordings, 7 ragas)
   - 7 ragas: Abhogi(5), Begada(3), Kalyani(4), Mohanam(4), Sahana(4), Saveri(5), Sri(3)
-  - Used: Kalyani(4), Mohanam(4), Abhogi(5 new), Saveri(5 new, pending BUG-014)
+  - Used: Kalyani(4), Mohanam(4), Abhogi(5), Saveri(5)
   - Available for future: Begada(3), Sahana(4), Sri(3)
 - **Dunya Carnatic** — https://dunya.compmusic.upf.edu/carnatic/ (needs API key)
 - **MusicBrainz Carnatic** — https://musicbrainz.org/collection/f96e7215-b2bd-4962-b8c9-2b40c17a1ec6
@@ -93,6 +93,41 @@
 - **Essentia algorithms** — https://essentia.upf.edu/algorithms_overview.html
 
 ## Test Results Log
+
+### Run: 2026-03-31 -- v1.3.1 LOO (7 ragas, 70 clips, Abhogi+Saveri activated)
+**Models**: run_20260331_232228 (7 ragas, 70 clips)
+**Weights**: PCD=0.8, Dyad=0.2 (locked as best)
+**Scoring**: IDF x Variance, 72 bins, ALPHA=0.01
+
+**LOO Cross-Validation (0.8/0.2)**:
+| Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
+|---|---|---|---|---|---|
+| Thodi | 11 | 5 | 0 | 6 | 100% |
+| Bhairavi | 11 | 1 | 0 | 10 | 100% |
+| Kalyani | 14 | 7 | 1 | 6 | 88% |
+| Saveri | 8 | 6 | 2 | 0 | 75% |
+| Shankarabharanam | 9 | 4 | 2 | 3 | 67% |
+| Mohanam | 10 | 1 | 4 | 5 | 20% |
+| Abhogi | 7 | 0 | 4 | 3 | 0% |
+| **TOTAL** | **70** | **24** | **13** | **33** | **64.9%** |
+
+Sink analysis: Kalyani=7, Thodi=4, Shankarabharanam=1, Saveri=1
+
+**Weight sweep (same 7 ragas, 70 clips)**:
+| Config | C | W | U | Acc |
+|---|---|---|---|---|
+| 0.6/0.4 M=0.001 | 25 | 24 | 21 | 51.0% |
+| 0.7/0.3 M=0.001 | 23 | 17 | 30 | 57.5% |
+| **0.8/0.2 M=0.001** | **24** | **13** | **33** | **64.9%** |
+| 0.7/0.3 M=0.002 | 18 | 9 | 43 | 66.7% |
+
+**Key findings:**
+1. Saveri debuts at 75% -- strong first showing
+2. Thodi + Bhairavi both 100% decided (0 wrongs)
+3. Abhogi 0% -- all wrongs go to Kalyani (janya of parent melakarta)
+4. Kalyani becomes new sink (7/13 wrongs, mostly Abhogi)
+5. 0.8/0.2 is best: fewest wrongs (13), highest decided accuracy (64.9%)
+6. Duplicates cleaned: kamalambike(Thodi), Rama Namam(Madhyamavati), Nannu Brova(Abhogi)
 
 ### Run: 2026-03-21 -- v1.3 LOO (5 ragas, 55 clips, Harikambhoji cleaned)
 **Models**: run_20260321_135629 (5 ragas, 55 clips)
