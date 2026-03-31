@@ -14,6 +14,13 @@ MAX_DURATION_SEC = 360   # 6-minute cap per file
 PCD_WEIGHT       = 0.8
 DYAD_WEIGHT      = 0.2
 GENERICNESS_WEIGHT = 0.0   # BUG-004 fix: confirmed inert, removed
+
+# Per-raga weight overrides: ragas whose identity depends more on transitions
+# than pitch distribution get heavier dyad weight. Validated via LOO sandbox.
+PER_RAGA_WEIGHTS = {
+    "Bhairavi": (0.5, 0.5),   # v1.3.1: komal swaras overlap with Thodi, dyads help
+}
+# All other ragas use (PCD_WEIGHT, DYAD_WEIGHT) = (0.8, 0.2)
 N_BINS           = 72   # Phase 4: was 36 (finer microtonal resolution)
 
 # Shared constants — must match aggregate_all_v12.py exactly
@@ -191,6 +198,9 @@ def _score_models(pcd, test_up, test_down, models, pcd_w, dyad_w,
 
     for raga, model in models.items():
 
+        # Per-raga weight override (v1.3.1: Bhairavi gets heavier dyads)
+        r_pcd_w, r_dyad_w = PER_RAGA_WEIGHTS.get(raga, (pcd_w, dyad_w))
+
         if pcd_weights is not None:
             model_w = model["pcd"] * pcd_weights
             model_w = model_w / (np.sum(model_w) + EPS)
@@ -203,7 +213,7 @@ def _score_models(pcd, test_up, test_down, models, pcd_w, dyad_w,
 
         dyad_sim = 0.5 * (up_sim + down_sim)
 
-        scores[raga] = pcd_w * pcd_sim + dyad_w * dyad_sim
+        scores[raga] = r_pcd_w * pcd_sim + r_dyad_w * dyad_sim
 
     return scores
 

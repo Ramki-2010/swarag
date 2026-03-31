@@ -115,8 +115,9 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 | MIN_STABLE_FRAMES | 5 | Stable region threshold |
 | ALPHA | 0.01 | Laplace smoothing (Phase 2 fix) |
 | EPS | 1e-8 | Division safety |
-| PCD_WEIGHT | 0.8 | Scoring weight (v1.3.1: was 0.7) |
-| DYAD_WEIGHT | 0.2 | Scoring weight (v1.3.1: was 0.3) |
+| PCD_WEIGHT | 0.8 | Global default (v1.3.1: was 0.7) |
+| DYAD_WEIGHT | 0.2 | Global default (v1.3.1: was 0.3) |
+| PER_RAGA_WEIGHTS | Bhairavi=(0.5,0.5) | Per-raga override for transition-heavy ragas |
 | GENERICNESS_WEIGHT | 0.0 | Disabled |
 | MARGIN_STRICT | 0.003 | HIGH confidence threshold |
 | MIN_MARGIN_FINAL | 0.001 | MODERATE confidence threshold |
