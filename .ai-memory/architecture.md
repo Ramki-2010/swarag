@@ -79,12 +79,12 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 | Raga | Clips | LOO Acc (decided) |
 |---|---|---|
 | Thodi | 11 | 100% |
-| Bhairavi | 11 | 100% (1c, 0w, 10u) |
-| Kalyani | 14 | 88% |
-| Saveri | 8 | 75% |
-| Shankarabharanam | 9 | 67% |
-| Mohanam | 10 | 20% |
-| Abhogi | 7 | 0% (all wrongs -> Kalyani) |
+| Saveri | 8 | 88% |
+| Shankarabharanam | 9 | 86% |
+| Kalyani | 14 | 67% |
+| Bhairavi | 11 | 40% (0.5/0.5 override) |
+| Mohanam | 10 | 33% |
+| Abhogi | 7 | 25% |
 
 ### Staged Ragas (excluded by MIN_CLIPS_PER_RAGA=5 guardrail)
 - Kamboji: 3 clips (needs 2 more; 3 Harikambhoji removed, BUG-013)
@@ -129,16 +129,16 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 { "final": str, "ranking": list, "margin": float, "confidence_tier": str }
 ```
 
-## Current Accuracy (v1.3.1, LOO, 7 ragas, 70 clips)
+## Current Accuracy (v1.3.1, LOO, 7 ragas, 70 clips, with Bhairavi override)
 
 | Metric | Value |
 |---|---|
-| Accuracy (decided) | 64.9% |
-| Correct | 24 |
-| Wrong | 13 |
-| Unknown | 33 (47%) |
-| Kalyani sink | 7/13 wrongs |
-| Thodi sink | 4/13 wrongs |
+| Accuracy (decided) | 67.4% |
+| Correct | 29 |
+| Wrong | 14 |
+| Unknown | 27 (39%) |
+| Kalyani sink | 6/14 wrongs |
+| Saveri sink | 4/14 wrongs |
 
 ## Accuracy Evolution
 
@@ -151,23 +151,30 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 | v1.2.4 | 78.6% | 72-bin PCD (53 clips) |
 | v1.2.5 | 72.0% | Expanded to 61 clips, dedup, MIN_CLIPS guardrail |
 | v1.3 | 58.8% | Harikambhoji removed, weights 0.7/0.3, honest 5-raga baseline |
-| v1.3.1 | 64.9% | Abhogi+Saveri activated (7 ragas, 70 clips), weights 0.8/0.2 |
+| v1.3.1 | 67.4% | Abhogi+Saveri activated, 0.8/0.2, Bhairavi 0.5/0.5 override |
 
 ## Remaining Issues
-1. Abhogi: 0% LOO -- all wrongs go to Kalyani (janya of Kalyani, shared swaras)
-2. Mohanam: 20% LOO -- needs diverse clips (different songs/artists)
-3. Bhairavi: 100% decided but 10/11 go UNKNOWN -- needs more decisive features
-4. Kamboji: excluded (only 3 real clips, need 2+ more from non-Saraga sources)
-5. No OOD score floor (margin-only detection)
-6. BUG-009: Mix audio causes OOD false positives
+1. Abhogi: 25% LOO -- STRUCTURAL: janya of Kalyani, PCD is strict subset (L-044)
+   Weight overrides tested at 0.6/0.4, 0.5/0.5, 0.4/0.6 -- all 0% for Abhogi.
+   Only improved to 25% as side-effect of Bhairavi override.
+   Needs absent-swara penalty or phrase-level features.
+2. Mohanam: 33% LOO -- needs diverse clips (different songs/artists)
+   Dyad overrides tested (0.6/0.4, 0.5/0.5) -- no improvement. Data problem.
+3. Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
+4. No OOD score floor (margin-only detection)
+5. BUG-009: Mix audio causes OOD false positives
 
-## LOO Results by Weight (7 ragas, 70 clips, 2026-03-31)
-| Config | C | W | U | Acc | Notes |
-|---|---|---|---|---|---|
-| 0.7/0.3 M=0.001 | 23 | 17 | 30 | 57.5% | Baseline |
-| 0.6/0.4 M=0.001 | 25 | 24 | 21 | 51.0% | More wrongs |
-| **0.8/0.2 M=0.001** | **24** | **13** | **33** | **64.9%** | **Fewest wrongs, locked** |
-| 0.7/0.3 M=0.002 | 18 | 9 | 43 | 66.7% | 61% unknown |
+## Proven Dead Ends (do not re-attempt)
+- Abhogi per-raga weight overrides: 0% at all tested weights (L-044)
+- Mohanam per-raga weight overrides: no improvement at 0.6/0.4, 0.5/0.5
+- Genericness penalty from model PCD: made things worse (L-016)
+- Escalation / dyad-heavy re-scoring: crushes margins 5x (L-017)
+
+## Next Architectural Step
+Absent-swara penalty: penalize raga scores when expected swaras are
+absent in the test clip. Directly addresses Abhogi/Kalyani separation.
+Abhogi lacks Pa and Ni; if test clip has no Pa/Ni, Kalyani score drops.
+~10-15 lines in _score_models(). Sandbox first.
 
 ## Parked Features
 | Feature | Trigger | Sandbox Script |

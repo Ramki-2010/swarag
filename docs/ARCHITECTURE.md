@@ -184,7 +184,8 @@ This produces a **raga signature**, not a single exemplar.
 **Scoring**
 - IDF x Variance weighted dot-product for PCD
 - Dot-product similarity for directional dyads (up + down averaged)
-- Weighted combination: `score = 0.7 * pcd_sim + 0.3 * dyad_sim`
+- Weighted combination: `score = 0.8 * pcd_sim + 0.2 * dyad_sim`
+  (Bhairavi override: `score = 0.5 * pcd_sim + 0.5 * dyad_sim`)
 
 **Tiered Confidence System**
 
@@ -232,18 +233,22 @@ Every feature must first prove **musical validity** before optimization.
 
 ---
 
-## Current Scope (v1.3)
+## Current Scope (v1.3.1)
 
-- 5 ragas modeled: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi
-- 55 vocal-isolated training clips
+- 7 ragas modeled: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Abhogi, Saveri
+- 70 vocal-isolated training clips
 - 72-bin PCD with IDF x Variance weighting
 - Directional dyads with ALPHA=0.01 Laplace smoothing
+- Global weights: PCD=0.8, Dyad=0.2 (per-raga: Bhairavi=0.5/0.5)
 - MIN_CLIPS_PER_RAGA=5 guardrail
 - Monophonic vocal audio (vocal-isolated)
 - Medium-length excerpts (capped at 6 minutes)
-- Staged ragas (below guardrail): Kamboji(3), Abhogi(7*), Saveri(8*), Madhyamavati(2-3), Hamsadhvani(1)
-  (*pending feature extraction)
-- LOO accuracy: 58.8% decided (honest baseline)
+- LOO accuracy: 67.4% decided (honest baseline)
+
+### Known Structural Limitation
+Janya ragas whose swaras are a strict subset of their parent melakarta
+(e.g., Abhogi ⊂ Kalyani) cannot be separated by PCD alone.
+Absent-swara penalty or phrase-level features are needed.
 
 ---
 
@@ -251,6 +256,7 @@ Every feature must first prove **musical validity** before optimization.
 
 - Expand to full 72 Melakarta raga set
 - Add janya ragas
+- Absent-swara penalty for janya/parent raga separation
 - Phrase motif detection
 - Improved Sa drift handling
 - Gamaka modeling via micro-contour analysis

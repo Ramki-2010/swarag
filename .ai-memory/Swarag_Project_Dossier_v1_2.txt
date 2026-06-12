@@ -4,7 +4,7 @@ Swarag v1.3.1 -- Project Dossier
 Author:   Ram Krishna
 Project:  Swarag (AI-based Carnatic Raga Recognition Engine)
 Version:  v1.3.1
-Updated:  2026-03-31 (Abhogi+Saveri activated, 0.8/0.2 locked)
+Updated:  2026-04 (Bhairavi override locked, absent-swara analysis)
 
 =========================================================
 1. WHAT IS SWARAG
@@ -32,7 +32,8 @@ Key parameters:
   - 72-bin PCD (17 cents per bin)
   - Directional dyads with ALPHA=0.01 Laplace smoothing
   - IDF x Variance weighted dot-product
-  - PCD_WEIGHT=0.8, DYAD_WEIGHT=0.2
+  - PCD_WEIGHT=0.8, DYAD_WEIGHT=0.2 (global default)
+  - PER_RAGA_WEIGHTS: Bhairavi=(0.5, 0.5)
   - MIN_CLIPS_PER_RAGA=5 guardrail
   - MAX_DURATION_SEC=360 (6-minute cap)
 
@@ -48,19 +49,19 @@ Working:
   - MIN_CLIPS_PER_RAGA=5 guardrail prevents thin-data sinks
   - Abhogi + Saveri activated from Zenodo varnams
   - All audio vocal-isolated (Saraga stems + Demucs)
-  - LOO accuracy: 64.9% decided (0.8/0.2 weights)
-  - Thodi + Bhairavi: 100% decided (0 wrongs)
-  - Saveri: 75% on first activation
+  - LOO accuracy: 67.4% decided (with Bhairavi 0.5/0.5 override)
+  - Bhairavi override: 0.5/0.5 dyad weight -> 40% LOO (up from 17%)
+  - Thodi: 100% decided (0 wrongs), Saveri: 88%
 
 Modeled ragas (v1.3.1):
   | Raga             | Clips | LOO Acc |
   | Thodi            | 11    | 100%    |
-  | Bhairavi         | 11    | 100%    |
-  | Kalyani          | 14    | 88%     |
-  | Saveri           | 8     | 75%     |
-  | Shankarabharanam | 9     | 67%     |
-  | Mohanam          | 10    | 20%     |
-  | Abhogi           | 7     | 0%      |
+  | Saveri           | 8     | 88%     |
+  | Shankarabharanam | 9     | 86%     |
+  | Kalyani          | 14    | 67%     |
+  | Bhairavi         | 11    | 40% (0.5/0.5 override) |
+  | Mohanam          | 10    | 33%     |
+  | Abhogi           | 7     | 25%     |
 
 Staged ragas (below guardrail):
   - Kamboji: 3 clips (needs 2+ real clips, non-Harikambhoji)
@@ -68,9 +69,11 @@ Staged ragas (below guardrail):
   - Hamsadhvani: 1 clip
 
 Open issues:
-  - Abhogi: 0% LOO (janya of Kalyani, all wrongs absorbed by parent)
-  - Mohanam: 20% LOO (needs diverse clips from different songs)
-  - Kalyani is new sink (7/13 wrongs, mostly from Abhogi)
+  - Abhogi: 25% LOO (janya of Kalyani -- STRUCTURAL problem, L-044)
+    PCD is a strict subset of Kalyani's. Weight overrides cannot fix this.
+    Needs absent-swara penalty or phrase-level features.
+  - Mohanam: 33% LOO (needs diverse clips from different songs)
+  - Saraga exhausted for Kamboji (0 new sources, confirmed 2026-03-31)
   - BUG-009: Mix audio causes OOD false positives
   - No OOD score floor (margin-only detection)
 
@@ -79,9 +82,11 @@ Open issues:
 =========================================================
 
 Immediate:
-  1. Add 5-7 real Kamboji clips (YouTube/Rasikas, non-Saraga)
-  2. Add 4-6 diverse Mohanam clips (different songs/artists)
-  3. Test Abhogi/Bhairavi dyad weight override (0.4/0.6)
+  1. Absent-swara penalty (sandbox): penalize raga scores when expected
+     swaras are absent in the test clip. Directly addresses Abhogi/Kalyani
+     separation. ~10-15 lines in _score_models().
+  2. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga exhausted)
+  3. Add 4-6 diverse Mohanam clips (different songs/artists)
 
 Short-term:
   - Do NOT add more new ragas until weak ones > 60%
@@ -89,12 +94,16 @@ Short-term:
   - Re-test hubness correction at 15+ ragas (BUG-010)
 
 Medium-term:
-  - OOD score floor (absolute threshold, not just margin)
   - Phrase-level features for janya/parent separation
+  - OOD score floor (absolute threshold, not just margin)
 
 Long-term:
   - 72 Melakartas -> janya ragas -> phrase modeling
   - Gamaka analysis -> live inference -> Android
+
+DO NOT PURSUE (proven dead ends):
+  - Per-raga dyad weight overrides for Abhogi (L-042, L-044: 0% at all weights)
+  - Mohanam dyad overrides (tested 0.6/0.4, 0.5/0.5: no improvement)
 
 =========================================================
 5. DEVELOPMENT PROCESS
@@ -138,7 +147,10 @@ Details: .ai-memory/architecture.md
 - MIN_CLIPS_PER_RAGA=5 guardrail (thin-data ragas poison models)
 - Sandbox-first workflow (never edit production untested)
 - UNKNOWN over wrong certainty (margin guardrails)
+- Per-raga weight override for Bhairavi (0.5/0.5) -- validated, locked
 - Honest baselines over inflated numbers (L-041)
+- Per-raga weight overrides are a trade for most ragas (L-042)
+  Exception: Bhairavi override works because its dyads ARE distinctive
 
 =========================================================
 8. RISKS
@@ -167,7 +179,7 @@ Details: .ai-memory/bugs.md, .ai-memory/lessons.md
 | 2026-03-12 | v1.2.4  | 6     | 53    | 78.6% LOO    | 72-bin PCD |
 | 2026-03-20 | v1.2.5  | 6     | 61    | 72.0% LOO    | Dedup, MIN_CLIPS guardrail |
 | 2026-03-21 | v1.3    | 5     | 55    | 58.8% LOO    | Harikambhoji cleaned, 0.7/0.3 |
-| 2026-03-31 | v1.3.1  | 7     | 70    | 64.9% LOO    | Abhogi+Saveri activated, 0.8/0.2 |
+| 2026-03-31 | v1.3.1  | 7     | 70    | 67.4% LOO    | Abhogi+Saveri, 0.8/0.2, Bhairavi override |
 
 =========================================================
 10. ORIGIN
@@ -184,8 +196,14 @@ WHERE TO LOOK
 
   architecture.md    Pipeline, scripts, constants (v1.3.1)
   bugs.md            Active bugs (2) and resolved bugs (12)
-  lessons.md         Lessons learned (45)
+  lessons.md         Lessons learned (45+)
   datasets.md        Data locations, test results, external sources
+
+KEY PROVEN DEAD ENDS (do not re-attempt):
+  - Abhogi per-raga weight overrides (0% at all weights tested)
+  - Mohanam per-raga weight overrides (17% unchanged)
+  - Genericness penalty from model PCD (L-016: made things worse)
+  - Escalation / dyad-heavy re-scoring (L-017: crushes margins 5x)
   workflow.md        Development process
   debug-playbook.md  Debugging guide
   agent_spec.md      AI assistant rules

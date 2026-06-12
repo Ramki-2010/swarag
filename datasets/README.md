@@ -28,31 +28,28 @@ datasets/
 
 ---
 
-## Current State (v1.3)
+## Current State (v1.3.1)
 
-### Modeled Ragas (5 — pass MIN_CLIPS_PER_RAGA=5 guardrail)
+### Modeled Ragas (7 — pass MIN_CLIPS_PER_RAGA=5 guardrail)
 
 | Raga | Clips | LOO Accuracy | Notes |
 |---|---|---|---|
-| Thodi | 11 | 83% | Strongest raga. 2 outliers excluded. |
-| Kalyani | 14 | 80% | Most clips. Includes 4 Zenodo varnams. |
-| Shankarabharanam | 9 | 50% | 6 clean wav + 3 Saraga. |
-| Bhairavi | 11 | 50% | PCD overlaps 78% with Thodi. Identity is in gamakas. |
-| Mohanam | 10 | 17% | Weakest raga. Needs diverse clips (different songs). |
+| Thodi | 11 | 100% | 0 wrongs. 2 outliers excluded. |
+| Saveri | 8 | 88% | Strong debut. 3 stems + 5 Zenodo varnams. |
+| Shankarabharanam | 9 | 86% | 6 clean wav + 3 Saraga. |
+| Kalyani | 14 | 67% | Most clips. Absorbs Abhogi wrongs (parent melakarta). |
+| Bhairavi | 11 | 40% | With 0.5/0.5 dyad override. PCD overlaps 78% with Thodi. |
+| Mohanam | 10 | 33% | Needs diverse clips from different songs. |
+| Abhogi | 7 | 25% | STRUCTURAL problem: janya of Kalyani (L-044). |
 
-### Pending Activation (have enough clips, need feature extraction)
-
-| Raga | Clips | Status |
-|---|---|---|
-| Abhogi | 7 | 5 new varnams extracted ✅. Ready to aggregate. |
-| Saveri | 8 | 5 new varnams skipped by BUG-014. Need re-extraction. |
+**Overall LOO: 67.4% decided (with Bhairavi override)**
 
 ### Below Guardrail (need more audio)
 
 | Raga | Clips | Needed | Notes |
 |---|---|---|---|
-| Kamboji | 3 | 2+ more | 3 Harikambhoji clips removed (BUG-013). Need real Kamboji from non-Saraga sources. |
-| Madhyamavati | 2-3 | 2-3 more | |
+| Kamboji | 3 | 2+ more | Harikambhoji removed. Saraga exhausted (0 new sources). Need YouTube/Rasikas. |
+| Madhyamavati | 2 | 3 more | |
 | Hamsadhvani | 1 | 4 more | Subset of Kalyani — may cause false positives. |
 
 ---
@@ -76,7 +73,7 @@ datasets/
 | Kalyani | 4 | ✅ All used |
 | Mohanam | 4 | ✅ All used |
 | Abhogi | 5 | ✅ All extracted (2026-03-21) |
-| Saveri | 5 | ⏳ Pending (BUG-014) |
+| Saveri | 5 | ✅ All extracted |
 | Begada | 3 | Available for future |
 | Sahana | 4 | Available for future |
 | Sri | 3 | Available for future |
@@ -167,7 +164,7 @@ Each `.npz` contains:
 
 Models are stored at `D:\Swaragam\pcd_results\aggregation\v1.2\run_YYYYMMDD_HHMMSS\`.
 
-Current: `run_20260321_135629` (v1.3: 5 ragas, 55 clips)
+Current: `run_20260331_232228` (v1.3.1: 7 ragas, 70 clips)
 
 Each model run contains:
 - `pcd_stats/{raga}_pcd_stats.npz` — mean PCD, std PCD
@@ -178,12 +175,11 @@ Each model run contains:
 
 ## Future Data Needs (Priority Order)
 
-1. **Mohanam**: 4-6 diverse clips from different songs/artists (not more varnams of the same piece)
-2. **Kamboji**: 5-7 real Kamboji clips from YouTube, Rasikas.org, or Carnatic2000
-3. **Saveri**: Fix BUG-014, then already have enough (8 clips)
-4. **Madhyamavati**: 2-3 more clips to hit guardrail
-5. **Hamsadhvani**: 4+ clips (but beware — it's a subset of Kalyani)
-6. **New ragas**: Begada (3 varnams available), Sahana (4 varnams available)
+1. **Kamboji**: 5-7 real clips from YouTube/Rasikas (Saraga exhausted — 0 new sources)
+2. **Mohanam**: 4-6 diverse clips from different songs/artists (not more varnams)
+3. **Madhyamavati**: 3 more clips to hit guardrail
+4. **Hamsadhvani**: 4+ clips (beware — subset of Kalyani, may repeat Abhogi problem)
+5. **New ragas**: Begada (3 varnams available), Sahana (4 varnams available)
 
 ---
 

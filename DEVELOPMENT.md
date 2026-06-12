@@ -201,8 +201,9 @@ These must be identical across `aggregate_all_v12.py`, `recognize_raga_v12.py`, 
 | `ALPHA` | 0.01 | Laplace smoothing (scaled for 72x72 matrix) |
 | `EPS` | 1e-8 | Numerical stability |
 | `MAX_DURATION_SEC` | 360 | Audio duration cap (6 min) |
-| `PCD_WEIGHT` | 0.7 | PCD scoring weight |
-| `DYAD_WEIGHT` | 0.3 | Dyad scoring weight |
+| `PCD_WEIGHT` | 0.8 | PCD scoring weight (global default) |
+| `DYAD_WEIGHT` | 0.2 | Dyad scoring weight (global default) |
+| `PER_RAGA: Bhairavi` | 0.5/0.5 | Per-raga override (transition-heavy) |
 | `MARGIN_STRICT` | 0.003 | HIGH confidence threshold |
 | `MIN_MARGIN_FINAL` | 0.001 | MODERATE confidence threshold |
 | `MIN_CLIPS_PER_RAGA` | 5 | Aggregation guardrail |
