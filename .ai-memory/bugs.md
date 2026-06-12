@@ -161,6 +161,27 @@
 - **Fix**: Moved to excluded/. Kamboji dropped below guardrail (3 clips remain).
 - **Impact**: Overall LOO dropped 72% to 58.8% (honest baseline).
 
+### BUG-015: Abhogi 25% LOO — Structural Janya Absorption
+- **Status**: OPEN — architectural limitation
+- **Found**: 2026-03-31 (sandbox_loo_9ragas.py, _sandbox_override_7raga.py)
+- **Updated**: 2026-04-01 (absent-swara penalty sandbox)
+- **Description**:
+  Abhogi (S R2 G2 M2 D2) gets absorbed by parent Kalyani (S R2 G2 M2 P D2 N3).
+  25% LOO accuracy (1c 2w 4u in sandbox). All wrongs go to Kalyani.
+- **Approaches Tried & Failed**:
+  1. Per-raga weight overrides at 0.6/0.4, 0.5/0.5, 0.4/0.6 — all 0% (L-044)
+  2. Data-driven absent-swara penalty (median threshold) — self-harm on 5/7 clips
+  3. Musicological absent-swara penalty (known swara bin ranges) — gamakas leak
+     Pa/Ni energy into Abhogi clips (5-19%), binary detection fails (L-046)
+- **Root Cause**: Gamaka spillover makes Pa and Ni PRESENT in Abhogi clips at
+  significant energy levels (6-19%). PCD dot-product cannot distinguish
+  "has Pa from gamakas" vs "has Pa as a raga swara".
+- **Remaining Approaches**:
+  - Swara energy RATIO comparison (quantitative, not binary)
+  - Phrase n-gram detection (M2-D2-M2 vs Pa-D2-N3)
+  - Contour templates
+- **Impact**: Abhogi unusable at 25%. Blocks janya raga expansion.
+
 ### BUG-014: extract_new_clips.py Skips Saveri Varnams (Substring Match Bug)
 - **Status**: RESOLVED (2026-03-31)
 - **Found**: 2026-03-21 (feature extraction monitoring)

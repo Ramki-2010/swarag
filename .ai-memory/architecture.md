@@ -166,15 +166,22 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 
 ## Proven Dead Ends (do not re-attempt)
 - Abhogi per-raga weight overrides: 0% at all tested weights (L-044)
+- Abhogi absent-swara penalty: gamakas leak Pa/Ni energy into Abhogi clips (L-046)
+  Both data-driven (median threshold) and musicological (known bin ranges) approaches
+  failed. Self-harm on 5/7 Abhogi clips. Best result +1 Kalyani, 0 Abhogi improvement.
 - Mohanam per-raga weight overrides: no improvement at 0.6/0.4, 0.5/0.5
 - Genericness penalty from model PCD: made things worse (L-016)
 - Escalation / dyad-heavy re-scoring: crushes margins 5x (L-017)
 
-## Next Architectural Step
-Absent-swara penalty: penalize raga scores when expected swaras are
-absent in the test clip. Directly addresses Abhogi/Kalyani separation.
-Abhogi lacks Pa and Ni; if test clip has no Pa/Ni, Kalyani score drops.
-~10-15 lines in _score_models(). Sandbox first.
+## Next Architectural Steps
+1. Abhogi: needs QUANTITATIVE features (energy ratio comparison or phrase-level
+   transition patterns), NOT binary absent/present detection. Candidate approaches:
+   - Swara energy ratio: compare Pa-energy/Sa-energy between test clip and model
+   - Phrase n-grams: detect M2-D2-M2 (Abhogi) vs Pa-D2-N3 (Kalyani) patterns
+   - Contour templates: characteristic melodic shapes
+2. Mohanam: needs diverse clips (different songs/artists), not code changes
+3. Bhairavi: 0% LOO in this sandbox baseline — needs investigation
+4. Add Kamboji clips (YouTube/Rasikas)
 
 ## Parked Features
 | Feature | Trigger | Sandbox Script |

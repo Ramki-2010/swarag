@@ -94,6 +94,40 @@
 
 ## Test Results Log
 
+### Run: 2026-04-01 -- Absent-Swara Penalty Sandbox (7 ragas, 70 clips)
+**Scripts**: sandbox_absent_swara.py (v1), sandbox_absent_swara_v2.py (v2)
+**Purpose**: Test absent-swara penalty to separate Abhogi from Kalyani
+**Validation**: LOO cross-validation, 7 ragas, 70 clips
+
+**v1 Results (data-driven, median threshold)**:
+| Config | C | W | U | Acc | Abhogi | Notes |
+|---|---|---|---|---|---|---|
+| Baseline (no penalty) | 26 | 17 | 27 | 60.5% | 33% | Sandbox baseline |
+| penalty=0.05 | 27 | 17 | 26 | 61.4% | 50% | +1 correct, 0 regressions |
+| penalty=0.10 | 25 | 18 | 27 | 58.1% | 25% | Mohanam/Shankar regress |
+| penalty>=0.15 | <=23 | >=18 | -- | <=56% | 0% | Self-harm dominates |
+
+**v2 Results (musicological swara definitions)**:
+| Config | C | W | U | Acc | Abhogi | Notes |
+|---|---|---|---|---|---|---|
+| Baseline | 26 | 17 | 27 | 60.5% | 33% | Same |
+| penalty=0.05 thresh=0.01 | 27 | 17 | 26 | 61.4% | 33% | +1 Kalyani, not Abhogi |
+| penalty=0.10 | 27 | 18 | 25 | 60.0% | 33% | Mohanam regresses |
+| penalty>=0.15 | -- | >=19 | -- | <=58.7% | 33% | Collateral damage |
+
+**Pre-flight diagnostic key findings**:
+- Abhogi model has Pa energy=0.0611, N3 energy=0.0816 (gamaka spillover)
+- Abhogi clips show 6-19% energy in Pa region, 1.5-14.5% in N3 region
+- Pa and Ni are NOT absent in Abhogi clips (binary detection fails)
+- Self-harm detected: 5/7 Abhogi clips, 4/14 Kalyani clips, 5/10 Mohanam clips
+  miss at least 1 of their own raga's swaras at thresh=0.01
+
+**Verdict: REJECTED for Abhogi separation.**
+- Both approaches fail because gamakas make Pa/Ni present in Abhogi clips
+- penalty=0.05 gives marginal Kalyani improvement (+1) but does NOT fix Abhogi
+- The Abhogi problem is quantitative (energy ratios), not qualitative (present/absent)
+- Added to proven dead ends (L-046)
+
 ### Run: 2026-03-31 -- v1.3.1 LOO (7 ragas, 70 clips, Abhogi+Saveri activated)
 **Models**: run_20260331_232228 (7 ragas, 70 clips)
 **Weights**: PCD=0.8, Dyad=0.2 (locked as best)

@@ -546,3 +546,29 @@
   is more stable with limited data. Increase dyad weight only when per-raga
   clip counts reach 15-20+ and dyad discrimination ratio exceeds 2.0x.
 - **Impact**: +6.1% accuracy over 0.7/0.3. Locked as production default.
+
+### L-046: Absent-Swara Penalty Fails When Gamakas Leak Across Swaras
+- **Date**: 2026-04-01
+- **Context**: Tested absent-swara penalty to separate Abhogi (S R2 G2 M2 D2)
+  from Kalyani (S R2 G2 M2 P D2 N3). Two approaches tried:
+  (1) Data-driven: detect "expected" bins from model PCD using median threshold.
+      Result: 18 expected bins for Abhogi (should be ~5 swaras). Self-harm
+      detected on 5/7 Abhogi clips. Every penalty level >= 0.10 made things worse.
+  (2) Musicological: define swara bin ranges from theory, check presence/absence.
+      Pre-flight revealed Abhogi clips have 6-19% energy at Pa (bins 27-31) and
+      N3 (bins 69-71) from gamaka spillover (M2<->Pa slides, D2<->N3 approaches).
+      The swaras are NOT actually absent — binary absent/present fails.
+  Best result: penalty=0.05 gave +1 correct (Kalyani, not Abhogi) with 0 regressions.
+  Abhogi stayed at 33% across all configurations.
+- **Rule**: Absent-swara penalty requires swaras to be truly absent (near-zero PCD
+  energy). In Carnatic music, gamakas (ornamental slides) spread energy from one
+  swara into neighboring swaras' bin ranges. A raga that "lacks Pa" will still show
+  5-15% Pa-region energy from gamaka leakage. The discrimination signal is
+  QUANTITATIVE (energy ratio), not QUALITATIVE (present vs absent).
+  Approaches that may work: relative energy ratio comparison, phrase-level
+  transition patterns, or swara sequence detection.
+- **Impact**: Prevents re-attempting binary absent-swara approaches. The Abhogi
+  problem requires features that measure HOW MUCH of a swara, not WHETHER it exists.
+  Adds to proven dead-end list alongside weight overrides (L-044).
+- **Sandbox scripts**: sandbox_absent_swara.py (v1), sandbox_absent_swara_v2.py (v2),
+  _diag_bin_positions.py (diagnostic)
