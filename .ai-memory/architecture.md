@@ -174,11 +174,9 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 - Escalation / dyad-heavy re-scoring: crushes margins 5x (L-017)
 
 ## Next Architectural Steps
-1. Abhogi: needs QUANTITATIVE features (energy ratio comparison or phrase-level
-   transition patterns), NOT binary absent/present detection. Candidate approaches:
-   - Swara energy ratio: compare Pa-energy/Sa-energy between test clip and model
-   - Phrase n-grams: detect M2-D2-M2 (Abhogi) vs Pa-D2-N3 (Kalyani) patterns
-   - Contour templates: characteristic melodic shapes
+1. Abhogi: needs QUANTITATIVE features, NOT binary detection (L-046 dead end).
+   NEXT: run sandbox_abhogi_ratio.py -- quantitative Pa/N3 energy ratio comparison.
+   If ratio fails: phrase n-grams (M2-D2-M2 vs Pa-D2-N3), then contour templates.
 2. Mohanam: needs diverse clips (different songs/artists), not code changes
 3. Bhairavi: 0% LOO in this sandbox baseline — needs investigation
 4. Add Kamboji clips (YouTube/Rasikas)

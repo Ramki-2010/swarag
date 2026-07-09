@@ -82,9 +82,9 @@ Open issues:
 =========================================================
 
 Immediate:
-  1. Absent-swara penalty (sandbox): penalize raga scores when expected
-     swaras are absent in the test clip. Directly addresses Abhogi/Kalyani
-     separation. ~10-15 lines in _score_models().
+  1. Abhogi energy-ratio sandbox (sandbox_abhogi_ratio.py -- ready to run).
+     Quantitative Pa/N3 ratio vs model expected. NOT binary absent/present
+     -- that is a proven dead end (L-046, rejected 2026-04-01).
   2. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga exhausted)
   3. Add 4-6 diverse Mohanam clips (different songs/artists)
 
@@ -103,6 +103,9 @@ Long-term:
 
 DO NOT PURSUE (proven dead ends):
   - Per-raga dyad weight overrides for Abhogi (L-042, L-044: 0% at all weights)
+  - Abhogi absent-swara penalty -- BOTH variants failed (L-046, 2026-04-01):
+    * Data-driven (median threshold): self-harm on 5/7 Abhogi clips
+    * Musicological (swara bin ranges): gamakas leak 6-19% Pa, binary fails
   - Mohanam dyad overrides (tested 0.6/0.4, 0.5/0.5: no improvement)
 
 =========================================================
@@ -157,7 +160,7 @@ Details: .ai-memory/architecture.md
 =========================================================
 
 - Abhogi/Kalyani parent-janya overlap makes PCD-only separation impossible
-- Mohanam model weak (20% LOO) -- needs diverse clips
+- Mohanam model weak (33% LOO) -- needs diverse clips
 - Kamboji only 3 real clips after Harikambhoji cleanup
 - Harikambhoji/Kamboji parent-janya confusion can recur with other ragas
 - No absolute OOD score floor (margin-only detection)
@@ -195,13 +198,14 @@ WHERE TO LOOK
 =========================================================
 
   architecture.md    Pipeline, scripts, constants (v1.3.1)
-  bugs.md            Active bugs (2) and resolved bugs (12)
-  lessons.md         Lessons learned (45+)
+  bugs.md            Active bugs (2) and resolved bugs (13)
+  lessons.md         Lessons learned (48+)
   datasets.md        Data locations, test results, external sources
 
 KEY PROVEN DEAD ENDS (do not re-attempt):
-  - Abhogi per-raga weight overrides (0% at all weights tested)
-  - Mohanam per-raga weight overrides (17% unchanged)
+  - Abhogi per-raga weight overrides (0% at all weights tested, L-044)
+  - Abhogi absent-swara penalty (both variants failed 2026-04-01, L-046)
+  - Mohanam per-raga weight overrides (no improvement at 0.6/0.4, 0.5/0.5)
   - Genericness penalty from model PCD (L-016: made things worse)
   - Escalation / dyad-heavy re-scoring (L-017: crushes margins 5x)
   workflow.md        Development process

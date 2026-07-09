@@ -53,7 +53,7 @@ Swarag v1.3.1 (7 Ragas -- Abhogi + Saveri activated, PCD-heavy 0.8/0.2)
 
 - Abhogi: 25% LOO -- STRUCTURAL problem (janya of Kalyani, PCD is strict subset)
   Weight overrides tested at 0.6/0.4, 0.5/0.5, 0.4/0.6 -- all 0%. Only fixed by
-  Bhairavi override side-effect (25%). Needs absent-swara penalty or phrase features.
+  Bhairavi override side-effect (25%). Next approach: quantitative swara energy ratio (sandbox_abhogi_ratio.py).
 - Mohanam: 33% LOO -- needs diverse clips (different songs/artists)
   Dyad overrides tested, no improvement. This is a data problem.
 - Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
@@ -64,8 +64,8 @@ Swarag v1.3.1 (7 Ragas -- Abhogi + Saveri activated, PCD-heavy 0.8/0.2)
 
 ## Priority Plan
 
-1. **Absent-swara penalty** (ARCHITECTURAL): penalize raga scores when expected
-   swaras are absent in test clip. Targets Abhogi/Kalyani separation.
+1. **Abhogi energy-ratio sandbox** (ARCHITECTURAL): run sandbox_abhogi_ratio.py.
+   Quantitative Pa/N3 ratio comparison vs model expected. Absent-swara penalty is a proven dead end (L-046).
 2. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga has 0 new sources)
 3. Add 4-6 diverse Mohanam clips (different songs/artists)
 4. Do NOT add more new ragas until weak ones > 60%
@@ -73,6 +73,9 @@ Swarag v1.3.1 (7 Ragas -- Abhogi + Saveri activated, PCD-heavy 0.8/0.2)
 
 ### Proven Dead Ends (do not re-attempt)
 - Abhogi per-raga weight overrides (0% at all weights -- L-044)
+- Abhogi absent-swara penalty -- BOTH variants failed (L-046, 2026-04-01):
+  * Data-driven: self-harm on 5/7 Abhogi clips
+  * Musicological: gamakas leak 6-19% Pa energy, binary detection fails
 - Mohanam dyad overrides (no improvement -- data problem)
 - Genericness penalty from model PCD (L-016)
 - Escalation / dyad-heavy re-scoring (L-017)

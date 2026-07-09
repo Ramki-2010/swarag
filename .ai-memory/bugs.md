@@ -195,6 +195,31 @@
 
 ## Resolved Bugs
 
+### BUG-016: recognize_raga_v12.py Corrupted by Prepended Duplicate Block
+- **Status**: RESOLVED (2026-06-24)
+- **Found**: 2026-06-24 (session handoff review, git diff)
+- **Description**:
+  A prior session prepended ~120 lines of minified duplicate code to the top of
+  `recognize_raga_v12.py`. This created 5 critical defects simultaneously:
+  1. Smashed imports on line 4: `import librosaimport os` (syntax error risk)
+  2. `PER_RAGA_WEIGHTS = {}` in the prepended block overrode Bhairavi's (0.5,0.5)
+     override — disabling the v1.3.1 per-raga weight correction
+  3. Duplicate function definitions (Python used the corrupted minified versions)
+  4. JS-style `// ...` comments injected mid-function in `_score_models()`
+     (would cause SyntaxError at runtime)
+  5. Silent error swallowing in minified `recognize_raga()` — violated L-001
+- **Root Cause**: Unsafe edit tool usage in a prior session that prepended instead
+  of replacing. No post-edit syntax check was run.
+- **Fix**: Identified clean/corrupted boundary via full file read + git diff.
+  Stripped the 120-line corrupted block and the injected junk lines from
+  `_score_models()` using targeted multi_edit. Verified with:
+  - `py_compile` — SYNTAX OK
+  - Module import constants check — all match architecture.md
+  - `git diff` — empty (byte-identical to commit 9548e92)
+- **Verified**: batch_evaluate_random.py run confirmed correct behaviour:
+  OOD rejection working, trained raga HIGH confidence margins stable.
+- **Lessons**: L-047, L-048
+
 ### BUG-001: Missing Constants in recognize_raga_v12.py
 - **Resolved**: 2026-02-16
 - **Fix**: Added MIN_STABLE_FRAMES=5, ALPHA=0.5, EPS=1e-8 to CONFIG.

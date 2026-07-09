@@ -34,7 +34,7 @@ Aggregation --> Versioned Raga Signatures (pcd_stats/ + dyad_stats/)
   v
 Raga Scoring & Ranking
   |-- IDF x Variance weighted dot-product (PCD + Dyads)
-  |-- Weighted fusion (PCD=0.7, Dyad=0.3)
+  |-- Weighted fusion (PCD=0.8, Dyad=0.2)
   |-- MIN_CLIPS_PER_RAGA=5 guardrail
   +-- Tiered confidence: HIGH / MODERATE / UNKNOWN
   |
@@ -248,7 +248,7 @@ Every feature must first prove **musical validity** before optimization.
 ### Known Structural Limitation
 Janya ragas whose swaras are a strict subset of their parent melakarta
 (e.g., Abhogi ⊂ Kalyani) cannot be separated by PCD alone.
-Absent-swara penalty or phrase-level features are needed.
+Quantitative swara energy ratio or phrase-level features are needed.
 
 ---
 
@@ -256,7 +256,7 @@ Absent-swara penalty or phrase-level features are needed.
 
 - Expand to full 72 Melakarta raga set
 - Add janya ragas
-- Absent-swara penalty for janya/parent raga separation
+- Quantitative swara energy ratio for janya/parent raga separation (sandbox_abhogi_ratio.py)
 - Phrase motif detection
 - Improved Sa drift handling
 - Gamaka modeling via micro-contour analysis

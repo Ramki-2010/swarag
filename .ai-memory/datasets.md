@@ -6,21 +6,21 @@
 - **Ragas (10)**: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Kamboji, Abhogi, Saveri, Madhyamavati, Hamsadhvani
 - **Format**: .wav, .mp3, .flac
 - **Purpose**: Training data for aggregation pipeline
-- **Current clip counts** (as of 2026-03-10, post Phase 2):
+- **Current clip counts** (as of 2026-03-31, v1.3.1 -- canonical):
   | Raga | Total | Sources |
   |---|---|---|
   | Bhairavi | 11 | 6 clean wav + 1 stem + 4 demucs |
   | Kalyani | 14 | 6 clean wav + 4 varnam + 2 stems + 2 demucs |
   | Shankarabharanam | 9 | 6 clean wav + 1 stem + 2 demucs |
-  | Thodi | 10 | 3 stems + 2 demucs (old) + 5 demucs (new external) |
-  | Mohanam | 6 | 4 varnam + 2 demucs |
+  | Thodi | 11 | 3 stems + 2 demucs (old) + 5 demucs (new external) |
+  | Mohanam | 10 | 4 varnam + 2 demucs + 4 additional (Zenodo) |
   | Kamboji | 3 | 3 real Kamboji (3 Harikambhoji removed to excluded/, BUG-013) |
   | Abhogi | 7 | 2 demucs + 5 varnams (Zenodo, extracted 2026-03-21) |
   | Saveri | 8 | 3 demucs/stems + 5 varnams (Zenodo, extracted 2026-03-21) |
   | Madhyamavati | 2-3 | demucs |
   | Hamsadhvani | 1 | demucs |
   **Total: 70 clips modeled (7 ragas), 75 features total, 2 ragas staged**
-  Target: 15 clips per raga. Kamboji (3) and Mohanam (6) still below target.
+  Target: 15 clips per raga. Kamboji (3) and Mohanam (10) still below target.
   **Excluded clips** (moved to excluded/ folders, not deleted):
   - Munnu Ravana (Thodi): entropy 2.4, too concentrated, skewed model
   - Koluvamaregatha (Thodi): low consistency (sim_to_mean=0.050)
@@ -130,8 +130,16 @@
 
 ### Run: 2026-03-31 -- v1.3.1 LOO (7 ragas, 70 clips, Abhogi+Saveri activated)
 **Models**: run_20260331_232228 (7 ragas, 70 clips)
-**Weights**: PCD=0.8, Dyad=0.2 (locked as best)
+**Weights**: PCD=0.8, Dyad=0.2 global; Bhairavi=0.5/0.5 override (CANONICAL run)
 **Scoring**: IDF x Variance, 72 bins, ALPHA=0.01
+
+**BASELINE RECONCILIATION (audit 2026-06-24)**:
+Three LOO numbers existed across files -- now resolved:
+- 64.9% (29c/13w/33u): Run A -- 0.8/0.2 global, NO Bhairavi override. Logged below.
+- 67.4% (29c/14w/27u): Run B -- 0.8/0.2 global, WITH Bhairavi 0.5/0.5 override. CANONICAL.
+- 60.5% (26c/17w/27u): Absent-swara sandbox (2026-04-01) -- different code path,
+  no Bhairavi override in sandbox scorer. Not comparable to production LOO.
+The 67.4% figure in architecture.md, PROJECT_STATUS.md, and the Dossier is Run B.
 
 **LOO Cross-Validation (0.8/0.2)**:
 | Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
@@ -145,7 +153,19 @@
 | Abhogi | 7 | 0 | 4 | 3 | 0% |
 | **TOTAL** | **70** | **24** | **13** | **33** | **64.9%** |
 
-Sink analysis: Kalyani=7, Thodi=4, Shankarabharanam=1, Saveri=1
+**LOO Cross-Validation Run B (WITH Bhairavi 0.5/0.5 override) -- CANONICAL v1.3.1**:
+| Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
+|---|---|---|---|---|---|
+| Thodi | 11 | 5 | 0 | 6 | 100% |
+| Saveri | 8 | 7 | 1 | 0 | 88% |
+| Shankarabharanam | 9 | 6 | 1 | 2 | 86% |
+| Kalyani | 14 | 8 | 4 | 2 | 67% |
+| Bhairavi | 11 | 4 | 1 | 6 | 40% |
+| Mohanam | 10 | 2 | 4 | 4 | 33% |
+| Abhogi | 7 | 2 | 2 | 3 | 25% |
+| **TOTAL** | **70** | **29** | **14** | **27** | **67.4%** |
+
+Sink analysis (Run B): Kalyani=6/14, Saveri=4/14, Thodi=2/14, Shankarabharanam=2/14
 
 **Weight sweep (same 7 ragas, 70 clips)**:
 | Config | C | W | U | Acc |

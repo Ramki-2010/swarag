@@ -572,3 +572,38 @@
   Adds to proven dead-end list alongside weight overrides (L-044).
 - **Sandbox scripts**: sandbox_absent_swara.py (v1), sandbox_absent_swara_v2.py (v2),
   _diag_bin_positions.py (diagnostic)
+
+### L-047: Production Script Corruption — Prepended Duplicate Block
+- **Date**: 2026-06-24
+- **Context**: `recognize_raga_v12.py` was corrupted in a prior session. A minified
+  duplicate of the entire script (~120 lines) was prepended before the original code.
+  Damage included: smashed imports (`import librosaimport os`), duplicate conflicting
+  constants (`PER_RAGA_WEIGHTS = {}` vs `{Bhairavi: (0.5, 0.5)}`), duplicate function
+  definitions (Python uses the FIRST definition, so the corrupted minified versions
+  ran instead of the originals), JS-style `// ...` comments injected into Python,
+  and silent error swallowing (no `traceback.print_exc()`) in the minified `recognize_raga()`.
+- **Rule**: When a production script is corrupted, do NOT attempt to fix it by patching
+  individual lines. Instead:
+  1. Read the full file to identify the clean original vs the injected block
+  2. Use `git diff` to confirm the extent of damage
+  3. Strip the corrupted block with a targeted edit
+  4. Verify with `py_compile` (syntax check) + module import (constants check)
+  5. Confirm `git diff` is empty (byte-identical to last good commit)
+  Never trust a "fixed" script without running all 4 verification steps.
+- **Impact**: The corrupted script was silently using wrong logic — Bhairavi's (0.5, 0.5)
+  override was disabled, and errors were being swallowed without logging.
+  Would have produced subtly wrong results with no visible error signal.
+
+### L-048: Python Uses the FIRST Definition of Duplicate Functions
+- **Date**: 2026-06-24
+- **Context**: When the script was corrupted with a prepended duplicate block, Python
+  loaded the FIRST definition of each function (the corrupted minified ones). The
+  original well-documented functions at the bottom were silently ignored.
+- **Rule**: In Python, if a function or constant is defined twice in the same module,
+  the SECOND definition overwrites the first at import time — UNLESS the first definition
+  is encountered first during sequential execution. For top-level code, last definition
+  wins for constants, but for functions the last `def` wins. Either way, duplicate
+  definitions in a production file are always a bug and must never be tolerated.
+  Always check for duplicate `def` statements after any edit.
+- **Impact**: Silent behaviour change with no error. Extremely hard to detect without
+  reading the full file carefully.
