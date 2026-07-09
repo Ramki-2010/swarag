@@ -34,8 +34,8 @@ Aggregation --> Versioned Raga Signatures (pcd_stats/ + dyad_stats/)
   v
 Raga Scoring & Ranking
   |-- IDF x Variance weighted dot-product (PCD + Dyads)
-  |-- Weighted fusion (PCD=0.8, Dyad=0.2)
-  |-- MIN_CLIPS_PER_RAGA=5 guardrail
+  |-- Weighted fusion
+  |-- MIN_CLIPS_PER_RAGA guardrail
   +-- Tiered confidence: HIGH / MODERATE / UNKNOWN
   |
   v
@@ -75,7 +75,7 @@ which plays the same raga phrases).
 - Voiced/unvoiced frames explicitly tracked
 - Pitch range kept wide to avoid cutting valid alapana phrases
 
-- **Duration cap**: Only the first 6 minutes are processed (`MAX_DURATION_SEC=360`).
+- **Duration cap**: Only the first 6 minutes are processed.
   A raga establishes its identity within 3-5 minutes. Processing beyond that
   has diminishing returns but 10x the compute cost.
 
@@ -119,7 +119,7 @@ Swarag models ragas as *statistical musical behavior* rather than symbolic rules
 
 PCD serves as the **baseline feature** for raga identity.
 
-**IDF x Variance Weighting** (v1.2.3+)
+**IDF x Variance Weighting**
 - Each PCD bin is weighted by IDF (inverse document frequency) times 1/std
 - Downweights common swaras (Sa, Pa) shared by all ragas
 - Upweights distinctive swaras that differentiate ragas
@@ -139,12 +139,11 @@ arohanam is not equal to avarohanam.
 **Definition**
 - Dyads represent transitions between stable pitch regions
 - Computed only across frames that exceed a minimum stability duration
-  (`MIN_STABLE_FRAMES=5`)
 - Split into two directed matrices:
   - `mean_up` -- ascending transitions (arohanam character)
   - `mean_down` -- descending transitions (avarohanam character)
 - Each represented as a 72 x 72 transition matrix
-- Laplace smoothing with ALPHA=0.01 (scaled for matrix size)
+- Laplace smoothing (scaled for matrix size)
 
 **Why “Stable” Dyads**
 - Avoids noise from rapid pitch jitter
@@ -184,28 +183,16 @@ This produces a **raga signature**, not a single exemplar.
 **Scoring**
 - IDF x Variance weighted dot-product for PCD
 - Dot-product similarity for directional dyads (up + down averaged)
-- Weighted combination: `score = 0.8 * pcd_sim + 0.2 * dyad_sim`
-  (Bhairavi override: `score = 0.5 * pcd_sim + 0.5 * dyad_sim`)
+- Weighted combination of PCD and dyad similarity
+  (For current weights, constants, and per-raga overrides, see .ai-memory/architecture.md)
 
 **Tiered Confidence System**
 
 | Tier | Condition | Meaning |
 |---|---|---|
-| HIGH | margin >= 0.003 | Strong separation, high confidence |
-| MODERATE | 0.001 <= margin < 0.003 | Acceptable separation |
-| UNKNOWN | margin < 0.001 | Too close to call -- returns UNKNOWN |
-
-**Output -- Frozen Interface Contract**
-```python
-{ "final": str, "ranking": list, "margin": float, "confidence_tier": str }
-```
-- `final` -- top predicted raga name, or "UNKNOWN / LOW CONFIDENCE"
-- `ranking` -- ordered list of (raga, score) candidates
-- `margin` -- score gap between top-1 and top-2
-- `confidence_tier` -- "HIGH", "MODERATE", or "UNKNOWN"
-
-
-UNKNOWN is a deliberate design choice, not a failure case.
+| HIGH | margin >= threshold | Strong separation, high confidence |
+| MODERATE | threshold_low <= margin < threshold_high | Acceptable separation |
+| UNKNOWN | margin < threshold_low | Too close to call -- returns UNKNOWN |
 
 ---
 
@@ -233,38 +220,9 @@ Every feature must first prove **musical validity** before optimization.
 
 ---
 
-## Current Scope (v1.3.1)
+## Operational Reference
 
-- 7 ragas modeled: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Abhogi, Saveri
-- 70 vocal-isolated training clips
-- 72-bin PCD with IDF x Variance weighting
-- Directional dyads with ALPHA=0.01 Laplace smoothing
-- Global weights: PCD=0.8, Dyad=0.2 (per-raga: Bhairavi=0.5/0.5)
-- MIN_CLIPS_PER_RAGA=5 guardrail
-- Monophonic vocal audio (vocal-isolated)
-- Medium-length excerpts (capped at 6 minutes)
-- LOO accuracy: 67.4% decided (honest baseline)
-
-### Known Structural Limitation
-Janya ragas whose swaras are a strict subset of their parent melakarta
-(e.g., Abhogi ⊂ Kalyani) cannot be separated by PCD alone.
-Quantitative swara energy ratio or phrase-level features are needed.
-
----
-
-## Planned Extensions
-
-- Expand to full 72 Melakarta raga set
-- Add janya ragas
-- Quantitative swara energy ratio for janya/parent raga separation (sandbox_abhogi_ratio.py)
-- Phrase motif detection
-- Improved Sa drift handling
-- Gamaka modeling via micro-contour analysis
-- Sliding-window inference for longer recordings
-- Lightweight classifiers on top of validated features
-- Android deployment prototype
-- Live singing inference support
-- Educational explanations layered on top of results
+For current versioning, model accuracy, clip counts, trained raga lists, constant configuration, and active roadmap, see [.ai-memory/architecture.md](.ai-memory/architecture.md).
 
 ---
 
@@ -273,5 +231,3 @@ Quantitative swara energy ratio or phrase-level features are needed.
 Swarag is not a shortcut-based recognizer.
 It is a **progressive raga modeling engine** that treats Carnatic music as a
 living, expressive system rather than a fixed symbolic grammar.
-
-
