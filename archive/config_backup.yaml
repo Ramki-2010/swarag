@@ -1,0 +1,40 @@
+name: Local Config
+version: 1.0.0
+schema: v1
+models:
+  - name: Claude Sonnet
+    provider: anthropic
+    model: claude-sonnet-4-6
+    apiKey: dummy
+    apiBase: http://localhost:8080/v1
+  - name: Claude Opus
+    provider: anthropic
+    model: claude-opus-4-6-thinking
+    apiKey: dummy
+    apiBase: http://localhost:8080/v1
+  - name: Gemini Flash
+    provider: anthropic
+    model: gemini-2.5-flash
+    apiKey: dummy
+    apiBase: http://localhost:8080/v1
+  - name: Gemini Flash Lite
+    provider: anthropic
+    model: gemini-2.5-flash-lite
+    apiKey: dummy
+    apiBase: http://localhost:8080/v1
+  - name: Gemini Thinking
+    provider: anthropic
+    model: gemini-2.5-flash-thinking
+    apiKey: dummy
+    apiBase: http://localhost:8080/v1
+  - name: Gemini Pro
+    provider: anthropic
+    model: gemini-2.5-pro
+    apiKey: dummy
+    apiBase: http://localhost:8080/v1
+  - name: DeepSeek Local
+    provider: ollama
+    model: deepseek-coder:6.7b
+defaultModel: Gemini Flash
+context:
+  - provider: code
