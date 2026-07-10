@@ -15,7 +15,7 @@ STEP 1: PLAN
   |  Read: bugs.md, architecture.md
   v
 STEP 2: IMPLEMENT (sandbox-first)
-  |  Apply fix in a test_*.py sandbox script first (Rule 6)
+  |  Apply fix in a sandbox_*.py script first (Rule 6)
   |  Run sandbox, capture output, compare before/after
   |  Only apply to production if results are BETTER
   v
@@ -150,8 +150,13 @@ PRODUCTION SCRIPTS (do NOT edit until fix is validated):
   - utils.py
 
 SANDBOX SCRIPTS (safe to experiment in):
-  - test_recognize_fix.py        (current sandbox)
-  - Any new test_*.py script
+  - Any sandbox_*.py or _sandbox_*.py script
+  - Naming: sandbox_<experiment>.py for new experiments
+
+SUPPORT SCRIPTS (treat as production -- do NOT edit without validation):
+  - extract_new_clips.py
+  - extract_saraga_vocals.py
+  - run_demucs_batch.py
 ```
 
 ### The Sandbox Workflow
@@ -181,10 +186,20 @@ STEP D: DECIDE
   v
 STEP E: APPLY to production (only if Step D = BETTER)
   |  Edit the production script
-  |  Run batch_evaluate.py for full validation
+  v
+STEP E½: VERIFY INTEGRITY (mandatory after any production edit)
+  |  python -m py_compile <script>.py       (syntax OK?)
+  |  python -c "import <module>; ..."       (constants correct?)
+  |  git diff <script>.py                   (only expected changes?)
+  |  Check for duplicate def/class/import   (no corruption?)
+  |  See L-047: never trust a "fixed" script without all 4 checks.
+  v
+STEP F: RUN FULL VALIDATION
+  |  Run batch_evaluate.py for full seed validation
+  |  Run batch_evaluate_random.py for OOD validation
   |  Log results in datasets.md
   v
-STEP F: DOCUMENT
+STEP G: DOCUMENT
      Update bugs.md (resolved), lessons.md (what we learned)
 ```
 
@@ -192,10 +207,11 @@ STEP F: DOCUMENT
 
 - Production scripts are the STABLE FOUNDATION
 - One bad edit can silently break everything (see L-001)
-- Test scripts are disposable — production scripts are not
+- Sandbox scripts are disposable -- production scripts are not
 - Comparing before/after in a sandbox catches regressions
-- This is how we caught BUG-001: test_recognize_fix.py worked
-  but recognize_raga_v12.py was silently crashing
+- BUG-001: test_recognize_fix.py worked but production was silently crashing
+- BUG-016: A prior session prepended corrupted code to production;
+  went undetected because no py_compile / git diff was run (see L-047)
 
 ### Current Sandbox Files
 
@@ -218,18 +234,19 @@ STEP F: DOCUMENT
 3. Confirm AGG_FOLDER matches the latest aggregation run
 
 ### Running Evaluation
+
+**IMPORTANT**: This is PowerShell. Use `;` not `&&` to chain commands.
+See L-008. Batch scripts have PER_FILE_TIMEOUT=360s per file (L-039).
+
 ```powershell
 Set-Location D:\Swaragam\scripts
 .\my_virtual_env_swarag\Scripts\Activate.ps1
 
-# Seed dataset (known ragas):
+# Seed dataset (known ragas, ~50-70 files):
 python batch_evaluate.py
 
-# Unknown audio:
+# Unknown/OOD audio (quick validation):
 python batch_evaluate_random.py
-
-# Quick validation (4 test files):
-python test_recognize_fix.py
 ```
 
 ### After Evaluation

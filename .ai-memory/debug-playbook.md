@@ -56,12 +56,21 @@ Most failures occur in data pipelines, not algorithms.
    - Is genericness penalty dominating? (all scores negative = BUG-004)
    - Is score compression present? (total spread < margin threshold)
    - Is escalation crushing margins? (BUG-007)
+   - Is a janya raga being absorbed by its parent? (BUG-015, L-044)
 
 9. GUARDRAILS
    - Are margin thresholds appropriate for the score range?
-   - MARGIN_STRICT=0.05 is too high for current scores (BUG-006)
+     Current: MARGIN_STRICT=0.003 (HIGH), MIN_MARGIN_FINAL=0.001 (MODERATE)
+     (BUG-006 resolved: was 0.05, recalibrated 2026-03-09)
    - Is the except-Exception hiding real errors?
    - Does UNKNOWN mean "genuinely ambiguous" or "crash swallowed"?
+
+10. POST-EDIT VERIFICATION (after modifying any production script)
+   - Run: python -m py_compile <script>.py        (syntax OK?)
+   - Run: python -c "import <module>; ..."         (constants correct?)
+   - Run: git diff <script>.py                     (only expected changes?)
+   - Check for duplicate def/class/import statements (no corruption?)
+   - See L-047: BUG-016 was caused by skipping this step.
 ```
 
 ## Common Failure Patterns
@@ -82,9 +91,13 @@ Most failures occur in data pipelines, not algorithms.
 | ModuleNotFoundError | Virtual environment not activated |
 | Sandbox accuracy much higher than LOO | Self-evaluation bias -- use LOO for true accuracy |
 | Accuracy drops when adding scoring layer | Feature too weak for current dataset size (see BUG-010) |
-| && syntax error | Using PowerShell — use `;` instead |
+| && syntax error | Using PowerShell -- use `;` instead. Never use `&&` in PS commands |
 | New raga tanks accuracy | Thin-data raga sink (need 5+ clips) -- BUG-011 |
-| UnicodeEncodeError (checkmark) | aggregate_all_v12.py print statement — cosmetic, aggregation completed |
+| UnicodeEncodeError (checkmark) | aggregate_all_v12.py print statement -- cosmetic, aggregation completed |
+| Production script has duplicate function defs | Prepended corruption block -- run py_compile + git diff (BUG-016, L-047) |
+| Janya raga always classified as parent | PCD subset overlap -- need phrase/ratio features, not weight overrides (BUG-015, L-044) |
+| Absent-swara penalty hurts self-recognition | Gamaka leakage makes swaras never truly absent -- use energy ratios, not binary (L-046) |
+| Quoting errors in terminal commands | PowerShell uses different quoting than bash. Use single quotes for simple strings, double quotes for variable interpolation. Never use `&&` |
 
 ## Quick Diagnostic Commands
 
@@ -107,7 +120,26 @@ python -c "import numpy as np; d=np.load('file.npz',allow_pickle=True); print(li
 
 # Check current aggregation models
 python -c "import os; print(sorted(os.listdir(r'D:\Swaragam\pcd_results\aggregation\v1.2'))[-1])"
+
+# --- POST-EDIT VERIFICATION (run after ANY production script change) ---
+
+# Syntax check
+python -m py_compile recognize_raga_v12.py
+
+# Constants check (verify key values match architecture.md)
+python -c "import recognize_raga_v12 as r; print('PCD_WEIGHT:', r.PCD_WEIGHT); print('DYAD_WEIGHT:', r.DYAD_WEIGHT); print('ALPHA:', r.ALPHA); print('N_BINS:', r.N_BINS)"
+
+# Git integrity check (should show ONLY your intended changes)
+git diff recognize_raga_v12.py
+
+# Check for duplicate function definitions (corruption canary)
+python -c "import ast; tree=ast.parse(open('recognize_raga_v12.py').read()); defs=[n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]; dupes=set(d for d in defs if defs.count(d)>1); print('DUPLICATES:', dupes) if dupes else print('OK: no duplicate defs')"
 ```
+
+**NOTE on PowerShell quoting**: When running Python one-liners with `-c`,
+use double quotes for the outer string and single quotes inside, or
+vice versa. PowerShell does NOT handle bash-style quoting.
+If in doubt, write a small .py script instead of a one-liner.
 
 ## Audio Source Quality Checklist
 

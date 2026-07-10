@@ -126,8 +126,8 @@ FILE: .ai-memory/datasets.md
 
 FILE: .ai-memory/debug-playbook.md
   PURPOSE: Debugging priority order and common failure patterns
-  CONTAINS: 8-step debug sequence, symptom-cause lookup table,
-            quick diagnostic commands
+  CONTAINS: 10-step debug sequence (steps 1-9 + post-edit verification),
+            symptom-cause lookup table, quick diagnostic commands
   RULE: Update when a new failure pattern is discovered.
         This is the FIRST file to consult when something breaks.
 
@@ -186,19 +186,22 @@ Production scripts (DO NOT edit until fix is validated):
   - utils.py
 
 Sandbox scripts (safe to experiment in):
-  - test_recognize_fix.py  (current sandbox)
-  - Any new test_*.py file
+  - Any sandbox_*.py or _sandbox_*.py script
+  - Naming: sandbox_<experiment>.py for new experiments
 
 Workflow:
-  A. Create/update a test script with the proposed fix
+  A. Create/update a sandbox script with the proposed fix
   B. Run it, capture output
   C. Compare before-fix vs after-fix results
   D. Decide: BETTER -> apply to production
              SAME   -> do not apply
              WORSE  -> reject, document why
              MIXED  -> analyze trade-offs
-  E. If BETTER: apply to production, run batch_evaluate.py
-  F. Document in bugs.md + lessons.md
+  E. If BETTER: apply to production script
+  E1/2. VERIFY INTEGRITY: py_compile + constants check + git diff
+        + duplicate def check (see L-047, BUG-016)
+  F. Run batch_evaluate.py + batch_evaluate_random.py
+  G. Document in bugs.md + lessons.md
 
 See workflow.md Section 5 for full details.
 
@@ -242,7 +245,7 @@ Recognition engine must always return:
 
   { "final": str, "ranking": list, "margin": float }
 
-Plus optional: "confidence_tier": str ("HIGH"|"ESCALATED"|"UNKNOWN")
+Plus optional: "confidence_tier": str ("HIGH"|"MODERATE"|"UNKNOWN")
 
 This interface must never change unless explicitly instructed.
 
@@ -269,8 +272,11 @@ RULE 11 — ENVIRONMENT
 
 - OS: Windows (win32, x64)
 - Shell: PowerShell
-  - Use `;` not `&&` for chaining commands
+  - Use `;` not `&&` for chaining commands (L-008)
   - Use `Set-Location` or `cd` (with `;`)
+  - Quoting: use double quotes for outer, single quotes inside
+    (or vice versa) for python -c one-liners
+  - If quoting gets complex, write a small .py script instead
 - Python: via virtual environment
   - Path: scripts/my_virtual_env_swarag/
   - Activate: .\my_virtual_env_swarag\Scripts\Activate.ps1
@@ -388,8 +394,9 @@ Pipeline:
   Audio -> Pitch Extraction -> Tonic Estimation -> Normalization
   -> PCD + Directional Dyads -> Scoring -> Guardrails -> Prediction
 
-Current: 5 ragas trained (Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi)
-         55 clips, 72-bin PCD, IDF x Variance scoring, v1.3
+Current: 7 ragas trained (Bhairavi, Kalyani, Shankarabharanam, Mohanam,
+         Thodi, Saveri, Abhogi)
+         70 clips, 72-bin PCD, IDF x Variance scoring, v1.3.1
 Goal: Full Melakarta coverage, janya ragas, gamaka modeling,
       phrase detection, live inference, Android deployment
 
