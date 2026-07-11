@@ -1,7 +1,9 @@
 """
-Canonical LOO cross-validation for v1.3.1.
+Canonical LOO cross-validation for v1.3.2.
 Config: 7 ragas, 70 clips, 72-bin IDF x Variance,
-        PCD=0.8/Dyad=0.2 global, Bhairavi=0.5/0.5 override.
+        PCD=0.8/Dyad=0.2 global, NO per-raga overrides.
+Bhairavi 0.5/0.5 override retired in v1.3.2 (LOO audit 2026-06-24 showed
+it caused 9 Bhairavi wrongs and reduced overall accuracy by 3.6pp).
 Excludes ragas below MIN_CLIPS_PER_RAGA=5 (Kamboji=3, Madhyamavati=2).
 Run this to get ground-truth numbers for datasets.md and architecture.md.
 """
@@ -15,7 +17,7 @@ ALPHA            = 0.01
 EPS              = 1e-8
 PCD_WEIGHT       = 0.8
 DYAD_WEIGHT      = 0.2
-PER_RAGA_WEIGHTS = {"Bhairavi": (0.5, 0.5)}
+PER_RAGA_WEIGHTS = {}  # Bhairavi override retired in v1.3.2
 MARGIN_STRICT    = 0.003
 MIN_MARGIN_FINAL = 0.001
 MIN_CLIPS        = 5

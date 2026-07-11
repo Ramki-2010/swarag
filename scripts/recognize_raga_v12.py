@@ -15,12 +15,12 @@ PCD_WEIGHT       = 0.8
 DYAD_WEIGHT      = 0.2
 GENERICNESS_WEIGHT = 0.0   # BUG-004 fix: confirmed inert, removed
 
-# Per-raga weight overrides: ragas whose identity depends more on transitions
-# than pitch distribution get heavier dyad weight. Validated via LOO sandbox.
-PER_RAGA_WEIGHTS = {
-    "Bhairavi": (0.5, 0.5),   # v1.3.1: komal swaras overlap with Thodi, dyads help
-}
-# All other ragas use (PCD_WEIGHT, DYAD_WEIGHT) = (0.8, 0.2)
+# Per-raga weight overrides: empty — Bhairavi 0.5/0.5 override retired in v1.3.2.
+# LOO audit (2026-06-24) showed override caused 9 Bhairavi wrongs (0% decided)
+# and reduced overall accuracy from 64.1% to 60.5%. Global 0.8/0.2 is better.
+# See confusion_matrix_audit.py Scenario 1 vs 2 for evidence.
+PER_RAGA_WEIGHTS = {}
+# All ragas use (PCD_WEIGHT, DYAD_WEIGHT) = (0.8, 0.2)
 N_BINS           = 72   # Phase 4: was 36 (finer microtonal resolution)
 
 # Shared constants — must match aggregate_all_v12.py exactly
@@ -198,7 +198,7 @@ def _score_models(pcd, test_up, test_down, models, pcd_w, dyad_w,
 
     for raga, model in models.items():
 
-        # Per-raga weight override (v1.3.1: Bhairavi gets heavier dyads)
+        # Per-raga weight override (empty in v1.3.2 — see PER_RAGA_WEIGHTS above)
         r_pcd_w, r_dyad_w = PER_RAGA_WEIGHTS.get(raga, (pcd_w, dyad_w))
 
         if pcd_weights is not None:

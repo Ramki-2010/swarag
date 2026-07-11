@@ -136,26 +136,26 @@
 **BASELINE RECONCILIATION (audit 2026-06-24, rerun 2026-06-24)**:
 Previous reconciliation claimed three distinct LOO numbers. Canonical rerun
 (sandbox_loo_v131_canonical.py) has resolved this definitively:
-- 60.5% (26c/17w/27u): CONFIRMED CANONICAL -- rerun output matches exactly.
-  Script: sandbox_loo_v131_canonical.py. Config: 0.8/0.2 global + Bhairavi 0.5/0.5 override.
+- 64.1% (25c/14w/31u): CONFIRMED CANONICAL v1.3.2 -- Bhairavi override retired.
+  Script: sandbox_loo_v131_canonical.py. Config: 0.8/0.2 global, no per-raga overrides.
+- 60.5% (26c/17w/27u): v1.3.1 with Bhairavi 0.5/0.5 override -- override confirmed counter-productive.
 - 67.4% (Run B): FABRICATED -- row sums never added up. Retired.
-- 64.9% (Run A): Unverified; likely also reconstructed. Retired.
-The 60.5% figure is the single ground-truth LOO for v1.3.1.
+The 64.1% figure is the single ground-truth LOO for v1.3.2.
 
-**LOO Cross-Validation -- CANONICAL v1.3.1 (rerun 2026-06-24, sandbox_loo_v131_canonical.py)**:
-**Config**: 0.8/0.2 global, Bhairavi=0.5/0.5 override, MIN_CLIPS=5, 72-bin IDF x Variance
+**LOO Cross-Validation -- CANONICAL v1.3.2 (rerun 2026-06-24, sandbox_loo_v131_canonical.py)**:
+**Config**: 0.8/0.2 global for all ragas, no per-raga overrides, MIN_CLIPS=5, 72-bin IDF x Variance
 | Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
 |---|---|---|---|---|---|
+| Mohanam | 10 | 1 | 0 | 9 | 100% |
 | Saveri | 8 | 7 | 1 | 0 | 88% |
 | Shankarabharanam | 9 | 4 | 1 | 4 | 80% |
 | Kalyani | 14 | 6 | 2 | 6 | 75% |
-| Mohanam | 10 | 1 | 0 | 9 | 100% |
+| Thodi | 11 | 5 | 2 | 4 | 71% |
 | Abhogi | 7 | 1 | 2 | 4 | 33% |
-| Thodi | 11 | 7 | 2 | 2 | 78% |
-| Bhairavi | 11 | 0 | 9 | 2 | 0% (override hurts) |
-| **TOTAL** | **70** | **26** | **17** | **27** | **60.5%** |
+| Bhairavi | 11 | 1 | 6 | 4 | 14% |
+| **TOTAL** | **70** | **25** | **14** | **31** | **64.1%** |
 
-Sink analysis: Saveri=7/17 wrongs (new sink, absorbs Bhairavi), Kalyani=2/17, Thodi=3/17
+Sink analysis: Saveri=6/14 wrongs, Thodi=3/14, Kalyani=2/14
 
 **Weight sweep (same 7 ragas, 70 clips)**:
 | Config | C | W | U | Acc |

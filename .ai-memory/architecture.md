@@ -1,7 +1,7 @@
 # Swarag -- Architecture (Current State)
 
 ## Version
-Swarag v1.3.1 -- Deterministic DSP Pipeline (72-bin PCD + IDF x Variance + MIN_CLIPS guardrail)
+Swarag v1.3.2 -- Bhairavi override retired, global 0.8/0.2 for all ragas
 
 ## Pipeline
 
@@ -74,17 +74,17 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 | `sandbox_phase4_production.py` | Phase 4 production test |
 | `sandbox_loo_v131_canonical.py` | Canonical v1.3.1 LOO rerun (ground-truth numbers, 2026-06-24) |
 
-## Trained Ragas (v1.3.1: 7 ragas, 70 clips)
+## Trained Ragas (v1.3.2: 7 ragas, 70 clips)
 
 | Raga | Clips | LOO Acc (decided) |
 |---|---|---|
 | Mohanam | 10 | 100% (1c/0w/9u -- decides rarely) |
 | Saveri | 8 | 88% |
 | Shankarabharanam | 9 | 80% |
-| Thodi | 11 | 78% |
 | Kalyani | 14 | 75% |
+| Thodi | 11 | 71% |
+| Bhairavi | 11 | 14% (needs more diverse clips) |
 | Abhogi | 7 | 33% |
-| Bhairavi | 11 | 0% (0.5/0.5 override hurts -- 9 wrong to Saveri/Thodi) |
 
 ### Staged Ragas (excluded by MIN_CLIPS_PER_RAGA=5 guardrail)
 - Kamboji: 3 clips (needs 2 more; 3 Harikambhoji removed, BUG-013)
@@ -129,18 +129,17 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 { "final": str, "ranking": list, "margin": float, "confidence_tier": str }
 ```
 
-## Current Accuracy (v1.3.1, LOO, 7 ragas, 70 clips -- rerun 2026-06-24)
+## Current Accuracy (v1.3.2, LOO, 7 ragas, 70 clips -- rerun 2026-06-24)
 
 | Metric | Value |
 |---|---|
-| Accuracy (decided) | 60.5% |
-| Correct | 26 |
-| Wrong | 17 |
-| Unknown | 27 (39%) |
-| Saveri sink | 7/17 wrongs (new -- absorbs Bhairavi) |
-| Thodi sink | 3/17 wrongs |
-| Kalyani sink | 2/17 wrongs |
-| Bhairavi override | COUNTER-PRODUCTIVE -- 0% decided, 9/17 wrongs are Bhairavi |
+| Accuracy (decided) | 64.1% |
+| Correct | 25 |
+| Wrong | 14 |
+| Unknown | 31 (44%) |
+| Saveri sink | 6/14 wrongs |
+| Thodi sink | 3/14 wrongs |
+| Kalyani sink | 2/14 wrongs |
 
 ## Accuracy Evolution
 
@@ -154,15 +153,15 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 | v1.2.5 | 72.0% | Expanded to 61 clips, dedup, MIN_CLIPS guardrail |
 | v1.3 | 58.8% | Harikambhoji removed, weights 0.7/0.3, honest 5-raga baseline |
 | v1.3.1 | 60.5% | Abhogi+Saveri activated, 0.8/0.2, Bhairavi 0.5/0.5 override (counter-productive) |
+| v1.3.2 | 64.1% | Bhairavi override retired, global 0.8/0.2 for all ragas |
 
 ## Remaining Issues
-1. Bhairavi: 0% LOO -- 0.5/0.5 override is counter-productive. 9/11 clips go wrong
-   (mostly to Saveri). Override should be REMOVED or re-tuned. Komal swaras
-   overlap with both Thodi and Saveri; dyad-heavy scoring makes it worse.
+1. Bhairavi: 14% LOO -- weak but no longer poisoning other ragas (override retired).
+   Komal swaras overlap heavily with Saveri and Thodi. Needs more diverse clips.
 2. Abhogi: 33% LOO -- STRUCTURAL: janya of Kalyani, PCD is strict subset (L-044)
    Weight overrides tested at 0.6/0.4, 0.5/0.5, 0.4/0.6 -- all 0% for Abhogi.
    Needs QUANTITATIVE features (energy ratios or phrase n-grams) -- see Next Architectural Steps.
-3. Mohanam: 100% decided but only 1 clip decides (9/10 UNKNOWN) -- margin too low.
+3. Mohanam: 100% decided but only 1/10 clips decides (9 UNKNOWN) -- margin too low.
    Needs diverse clips to build a stronger model signature.
 4. Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
 5. No OOD score floor (margin-only detection)
@@ -178,8 +177,8 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 - Escalation / dyad-heavy re-scoring: crushes margins 5x (L-017)
 
 ## Next Architectural Steps
-1. Bhairavi: REMOVE or retune the 0.5/0.5 override -- it causes 9 wrongs.
-   Test: rerun LOO without override; if global 0.8/0.2 is better, drop override.
+1. Bhairavi: add more diverse clips (currently 6 clean wav + Saraga stems).
+   Clips are acoustically similar -- model has low variance, poor discrimination.
 2. Abhogi: needs QUANTITATIVE features (energy ratio comparison or phrase-level
    transition patterns), NOT binary absent/present detection. Candidate approaches:
    - Swara energy ratio: compare Pa-energy/Sa-energy between test clip and model
