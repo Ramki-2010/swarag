@@ -161,26 +161,38 @@
 - **Fix**: Moved to excluded/. Kamboji dropped below guardrail (3 clips remain).
 - **Impact**: Overall LOO dropped 72% to 58.8% (honest baseline).
 
-### BUG-015: Abhogi 25% LOO — Structural Janya Absorption
+### BUG-015: Abhogi 33% LOO — Structural Janya Absorption
 - **Status**: OPEN — architectural limitation
 - **Found**: 2026-03-31 (sandbox_loo_9ragas.py, _sandbox_override_7raga.py)
-- **Updated**: 2026-04-01 (absent-swara penalty sandbox)
+- **Updated**: 2026-07-11 (energy-ratio sandbox tested and rejected)
 - **Description**:
   Abhogi (S R2 G2 M2 D2) gets absorbed by parent Kalyani (S R2 G2 M2 P D2 N3).
-  25% LOO accuracy (1c 2w 4u in sandbox). All wrongs go to Kalyani.
+  33% LOO decided accuracy on the v1.3.2 canonical baseline (1c/2w/4u).
+  All wrongs go to Kalyani.
 - **Approaches Tried & Failed**:
   1. Per-raga weight overrides at 0.6/0.4, 0.5/0.5, 0.4/0.6 — all 0% (L-044)
   2. Data-driven absent-swara penalty (median threshold) — self-harm on 5/7 clips
   3. Musicological absent-swara penalty (known swara bin ranges) — gamakas leak
      Pa/Ni energy into Abhogi clips (5-19%), binary detection fails (L-046)
+  4. Quantitative Pa/N3 energy-ratio comparison (`sandbox_abhogi_ratio.py`) —
+     Phase 1 diagnostic showed weak separation (Abhogi Pa mean=0.0987 vs
+     Kalyani Pa mean=0.0999, ratio=1.01x — essentially no signal). Phase 2
+     LOO sweep confirmed it: Abhogi score was IDENTICAL (C=1/W=2/U=4, 33%)
+     at every tested ratio_weight from 0.05 to 0.4. The script's own
+     topline "+1.0% improvement" at ratio_weight=0.05 came entirely from
+     Bhairavi/Thodi movement plus a Mohanam regression (100%->50%,
+     1 new wrong) — none of it touched Abhogi. See L-047, L-048.
 - **Root Cause**: Gamaka spillover makes Pa and Ni PRESENT in Abhogi clips at
   significant energy levels (6-19%). PCD dot-product cannot distinguish
-  "has Pa from gamakas" vs "has Pa as a raga swara".
+  "has Pa from gamakas" vs "has Pa as a raga swara". The energy-ratio
+  approach was a more precise way of asking the same question the PCD
+  dot-product already asks, so it inherited the same blind spot — Abhogi
+  and Kalyani's Pa/N3 distributions genuinely overlap at the model level,
+  not just at the detection-threshold level.
 - **Remaining Approaches**:
-  - Swara energy RATIO comparison (quantitative, not binary)
-  - Phrase n-gram detection (M2-D2-M2 vs Pa-D2-N3)
+  - Phrase n-gram detection (M2-D2-M2 vs Pa-D2-N3) — NEXT candidate
   - Contour templates
-- **Impact**: Abhogi unusable at 25%. Blocks janya raga expansion.
+- **Impact**: Abhogi unusable at 33%. Blocks janya raga expansion.
 
 ### BUG-014: extract_new_clips.py Skips Saveri Varnams (Substring Match Bug)
 - **Status**: RESOLVED (2026-03-31)
@@ -194,6 +206,27 @@
 - **Impact**: No impact. All features extracted correctly.
 
 ## Resolved Bugs
+
+### BUG-018: sandbox_abhogi_ratio.py LOO Leaked Held-Out Clip's Dyads
+- **Status**: RESOLVED (2026-07-11)
+- **Found**: 2026-07-11 (baseline mismatch: this script reported 68.3%
+  against `sandbox_loo_v131_canonical.py`'s 64.1% on identical config)
+- **Description**:
+  `run_loo()` correctly rebuilt `mean_pcd` per fold, excluding the held-out
+  clip. It did NOT rebuild `mean_up`/`mean_down` — those were pulled
+  directly from the full aggregated model, which still included the
+  held-out clip's own dyad contribution (20% of the score, DYAD_WEIGHT).
+- **Root Cause**: `load_features()` only ever loaded per-clip PCD, never
+  per-clip dyads, so `run_loo()` had no per-clip dyad data available to
+  exclude from — it fell back to the leaky global model out of necessity,
+  not by explicit design choice.
+- **Fix**: `load_features()` now computes and stores per-clip `(up, down)`
+  dyads at load time via `compute_directional_dyads()`. `run_loo()` now
+  builds `mean_up`/`mean_down` from the same per-fold `remaining` list
+  used for `mean_pcd`.
+- **Verified**: Post-fix baseline exactly matched canonical: C=25/W=14/U=31,
+  64.1% -- bit-for-bit identical to `sandbox_loo_v131_canonical.py`.
+- **Lessons**: L-049, L-050.
 
 ### BUG-016: recognize_raga_v12.py Corrupted by Prepended Duplicate Block
 - **Status**: RESOLVED (2026-06-24)
@@ -219,6 +252,43 @@
 - **Verified**: batch_evaluate_random.py run confirmed correct behaviour:
   OOD rejection working, trained raga HIGH confidence margins stable.
 - **Lessons**: L-047, L-048
+
+### BUG-017: Same Corruption Pattern Recurred Twice More Despite L-047
+- **Status**: RESOLVED (2026-07-11), but see Impact -- the class of bug is
+  not actually closed, only its 3 known instances are.
+- **Found**: 2026-07-10 (docs/ARCHITECTURE.md), 2026-07-11 (two live scripts)
+- **Description**:
+  The exact failure mode from BUG-016 (2026-06-24) — an editor/tool
+  prepending or duplicating content instead of cleanly replacing it —
+  recurred in two more places, despite L-047 already documenting the rule:
+  1. `docs/ARCHITECTURE.md`: found with a literal editor placeholder
+     (`// ... existing code ...`) committed at the top of the file,
+     wrapping a third, never-referenced fabricated LOO table (72.3%).
+  2. `scripts/confusion_matrix_audit.py`: hardcoded the retired Bhairavi
+     override as its own "canonical" default one commit after
+     `recognize_raga_v12.py` retired it — same class as BUG-016 point 2
+     (a stale/duplicate constant silently overriding the real one), though
+     via a different mechanism (never-synced duplicate constant block,
+     not a literal prepend).
+- **Root Cause**: L-047's rule ("verify with py_compile + git diff after
+  any edit to a production script") was never made into an automated,
+  enforced check — it depended on a human or AI session remembering to
+  run it. Across 3 separate sessions (06-24, 07-10, 07-11), it wasn't.
+- **Fix**: All 3 instances manually found and fixed (see this session's
+  audit patch). `confusion_matrix_audit.py` and `sandbox_abhogi_ratio.py`
+  were also structurally streamlined to import shared constants from
+  `recognize_raga_v12.py` instead of duplicating them, which closes the
+  specific "duplicate constant drifts stale" sub-pattern for those two
+  files permanently (see L-002).
+- **Impact**: The general "editor tool corrupts a file via prepend/
+  duplication" pattern is NOT structurally prevented by anything that
+  runs automatically (no pre-commit hook exists) — it is only detected
+  after the fact, 3 times now. Mitigation implemented this session:
+  workflow.md Section 2 (Ending a Session) now has a MANDATORY step 0
+  requiring `py_compile` + placeholder-marker grep + duplicate-def check
+  on every touched `.py` file before any other end-of-session step. This
+  still relies on the step being followed, not an actual git hook — a
+  real pre-commit hook remains the stronger fix and is not yet built.
 
 ### BUG-001: Missing Constants in recognize_raga_v12.py
 - **Resolved**: 2026-02-16

@@ -34,15 +34,15 @@ datasets/
 
 | Raga | Clips | LOO Accuracy | Notes |
 |---|---|---|---|
-| Thodi | 11 | 100% | 0 wrongs. 2 outliers excluded. |
+| Mohanam | 10 | 100% | Decides rarely: 1c/0w/9u. Needs diverse clips. |
 | Saveri | 8 | 88% | Strong debut. 3 stems + 5 Zenodo varnams. |
-| Shankarabharanam | 9 | 86% | 6 clean wav + 3 Saraga. |
-| Kalyani | 14 | 67% | Most clips. Absorbs Abhogi wrongs (parent melakarta). |
-| Bhairavi | 11 | 40% | With 0.5/0.5 dyad override. PCD overlaps 78% with Thodi. |
-| Mohanam | 10 | 33% | Needs diverse clips from different songs. |
-| Abhogi | 7 | 25% | STRUCTURAL problem: janya of Kalyani (L-044). |
+| Shankarabharanam | 9 | 80% | 6 clean wav + 3 Saraga. |
+| Kalyani | 14 | 75% | Most clips. Absorbs Abhogi wrongs (parent melakarta). |
+| Thodi | 11 | 71% | 2 outliers excluded. |
+| Abhogi | 7 | 33% | STRUCTURAL problem: janya of Kalyani (L-044). |
+| Bhairavi | 11 | 14% | Override retired (v1.3.2, confirmed counter-productive). PCD overlaps 78% with Thodi. |
 
-**Overall LOO: 67.4% decided (with Bhairavi override)**
+**Overall LOO: 64.1% decided (v1.3.2, no per-raga overrides), sandbox_loo_v131_canonical.py**
 
 ### Below Guardrail (need more audio)
 

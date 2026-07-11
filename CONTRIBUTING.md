@@ -56,8 +56,10 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for the full development workflow.
 - All changes must be testable via `batch_evaluate.py`
 - Shared constants must match across all scripts:
   - `N_BINS=72`, `ALPHA=0.01`, `MIN_STABLE_FRAMES=5`, `EPS=1e-8`
-  - `PCD_WEIGHT=0.8`, `DYAD_WEIGHT=0.2` (global default)
-  - `PER_RAGA_WEIGHTS: Bhairavi=(0.5, 0.5)`
+  - `PCD_WEIGHT=0.8`, `DYAD_WEIGHT=0.2` (global default, applied uniformly)
+  - `PER_RAGA_WEIGHTS = {}` (Bhairavi override retired v1.3.2 -- confirmed
+    counter-productive; do not reintroduce without a new canonical LOO
+    showing gain, see ADR-006/ADR-013)
   - `MIN_CLIPS_PER_RAGA=5` (aggregation guardrail)
 - Never modify production scripts without sandbox validation first
 - Always cross-reference raga labels against authoritative sources (Saraga, Dunya)

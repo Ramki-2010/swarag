@@ -1,0 +1,1188 @@
+diff --git a/.ai-memory/Swarag_Project_Dossier_v1_2.txt b/.ai-memory/Swarag_Project_Dossier_v1_2.txt
+index 1aa1a4b..a2d8558 100644
+--- a/.ai-memory/Swarag_Project_Dossier_v1_2.txt
++++ b/.ai-memory/Swarag_Project_Dossier_v1_2.txt
+@@ -1,10 +1,11 @@
+-Swarag v1.3.1 -- Project Dossier
++Swarag v1.3.2 -- Project Dossier
+ =========================================================
+ 
+ Author:   Ram Krishna
+ Project:  Swarag (AI-based Carnatic Raga Recognition Engine)
+-Version:  v1.3.1
+-Updated:  2026-04 (Bhairavi override locked, absent-swara analysis)
++Version:  v1.3.2
++Updated:  2026-07-11 (Bhairavi override retired; 67.4% baseline found
++          fabricated and retired; Vision Bible artifacts added)
+ 
+ =========================================================
+ 1. WHAT IS SWARAG
+@@ -17,7 +18,7 @@ matches them against known raga signatures.
+ The goal is to codify Carnatic musical grammar into computation.
+ Raga identity is structured grammar, not statistical coincidence.
+ 
+-Current: 7 ragas modeled (70 clips), 2 more staged.
++Current: 7 ragas modeled (70 clips), 3 more staged.
+ Target: 72 Melakartas, janya ragas, live inference, Android app.
+ 
+ =========================================================
+@@ -32,36 +33,36 @@ Key parameters:
+   - 72-bin PCD (17 cents per bin)
+   - Directional dyads with ALPHA=0.01 Laplace smoothing
+   - IDF x Variance weighted dot-product
+-  - PCD_WEIGHT=0.8, DYAD_WEIGHT=0.2 (global default)
+-  - PER_RAGA_WEIGHTS: Bhairavi=(0.5, 0.5)
++  - PCD_WEIGHT=0.8, DYAD_WEIGHT=0.2 (global, applied uniformly)
++  - PER_RAGA_WEIGHTS: none -- Bhairavi 0.5/0.5 override retired v1.3.2
+   - MIN_CLIPS_PER_RAGA=5 guardrail
+   - MAX_DURATION_SEC=360 (6-minute cap)
+ 
+-Details: .ai-memory/architecture.md
++Details: .ai-memory/architecture.md, .ai-memory/adr.md
+ 
+ =========================================================
+-3. CURRENT STATE (2026-03-31, v1.3.1)
++3. CURRENT STATE (2026-07-11, v1.3.2)
+ =========================================================
+ 
+ Working:
+   - Full pipeline, 7 ragas, 70 clips, 72-bin PCD + dyads
+   - IDF x Variance PCD weighting
+   - MIN_CLIPS_PER_RAGA=5 guardrail prevents thin-data sinks
+-  - Abhogi + Saveri activated from Zenodo varnams
+   - All audio vocal-isolated (Saraga stems + Demucs)
+-  - LOO accuracy: 67.4% decided (with Bhairavi 0.5/0.5 override)
+-  - Bhairavi override: 0.5/0.5 dyad weight -> 40% LOO (up from 17%)
+-  - Thodi: 100% decided (0 wrongs), Saveri: 88%
++  - LOO accuracy: 64.1% decided (25c/14w/31u), no per-raga overrides
++  - Canonical script: sandbox_loo_v131_canonical.py (checked into repo,
++    the only accuracy source treated as ground truth -- see Section 11)
++  - Thodi: 71% decided, Saveri: 88%, Mohanam: 100% decided but 9/10 UNKNOWN
+ 
+-Modeled ragas (v1.3.1):
++Modeled ragas (v1.3.2):
+   | Raga             | Clips | LOO Acc |
+-  | Thodi            | 11    | 100%    |
++  | Mohanam          | 10    | 100% (1c/0w/9u -- decides rarely) |
+   | Saveri           | 8     | 88%     |
+-  | Shankarabharanam | 9     | 86%     |
+-  | Kalyani          | 14    | 67%     |
+-  | Bhairavi         | 11    | 40% (0.5/0.5 override) |
+-  | Mohanam          | 10    | 33%     |
+-  | Abhogi           | 7     | 25%     |
++  | Shankarabharanam | 9     | 80%     |
++  | Kalyani          | 14    | 75%     |
++  | Thodi            | 11    | 71%     |
++  | Abhogi           | 7     | 33%     |
++  | Bhairavi         | 11    | 14% (override retired) |
+ 
+ Staged ragas (below guardrail):
+   - Kamboji: 3 clips (needs 2+ real clips, non-Harikambhoji)
+@@ -69,12 +70,16 @@ Staged ragas (below guardrail):
+   - Hamsadhvani: 1 clip
+ 
+ Open issues:
+-  - Abhogi: 25% LOO (janya of Kalyani -- STRUCTURAL problem, L-044)
++  - Bhairavi: 14% LOO -- weakest raga, needs diverse clips (not a weight
++    problem anymore; the override was tested and confirmed counter-productive)
++  - Abhogi: 33% LOO (janya of Kalyani -- STRUCTURAL problem, L-044)
+     PCD is a strict subset of Kalyani's. Weight overrides cannot fix this.
+-    Needs absent-swara penalty or phrase-level features.
+-  - Mohanam: 33% LOO (needs diverse clips from different songs)
++    Absent-swara penalty is a proven dead end (L-046). Active approach:
++    quantitative energy-ratio comparison (sandbox_abhogi_ratio.py, BUG-015).
++  - Mohanam: 100% decided but 9/10 UNKNOWN -- needs diverse clips
+   - Saraga exhausted for Kamboji (0 new sources, confirmed 2026-03-31)
+-  - BUG-009: Mix audio causes OOD false positives
++  - BUG-009: Mix audio causes OOD false positives; vocal-isolation
++    enforcement confirmed NOT present in recognize_raga_v12.py (2026-07-10)
+   - No OOD score floor (margin-only detection)
+ 
+ =========================================================
+@@ -82,20 +87,25 @@ Open issues:
+ =========================================================
+ 
+ Immediate:
+-  1. Abhogi energy-ratio sandbox (sandbox_abhogi_ratio.py -- ready to run).
+-     Quantitative Pa/N3 ratio vs model expected. NOT binary absent/present
+-     -- that is a proven dead end (L-046, rejected 2026-04-01).
+-  2. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga exhausted)
+-  3. Add 4-6 diverse Mohanam clips (different songs/artists)
++  1. Add diverse Bhairavi clips (different songs/artists) -- weakest raga,
++     confirmed a data problem now that the override is retired.
++  2. Abhogi energy-ratio sandbox (sandbox_abhogi_ratio.py -- ready to run,
++     result not yet logged). Quantitative Pa/N3 ratio vs model expected.
++  3. Add 4-6 diverse Mohanam clips -- 100% decided but 9/10 UNKNOWN.
+ 
+ Short-term:
++  - Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga exhausted)
+   - Do NOT add more new ragas until weak ones > 60%
+-  - Target: 72-78% decided accuracy with 7-8 ragas
++  - Re-baseline the accuracy target: 72-78% was calibrated against the
++    fabricated 67.4% figure; against the real 64.1% floor this target
++    needs review, not blind reuse.
+   - Re-test hubness correction at 15+ ragas (BUG-010)
+ 
+ Medium-term:
+   - Phrase-level features for janya/parent separation
+   - OOD score floor (absolute threshold, not just margin)
++  - Enforce vocal-isolation check in recognize_raga_v12.py (currently
++    policy-only, not code-enforced -- BUG-009, ADR-009)
+ 
+ Long-term:
+   - 72 Melakartas -> janya ragas -> phrase modeling
+@@ -103,10 +113,15 @@ Long-term:
+ 
+ DO NOT PURSUE (proven dead ends):
+   - Per-raga dyad weight overrides for Abhogi (L-042, L-044: 0% at all weights)
++  - Per-raga dyad weight override for Bhairavi (L-042, ADR-013: confirmed
++    0% decided on canonical rerun -- retired 2026-07-11, do not reintroduce
++    without a new canonical LOO showing gain)
+   - Abhogi absent-swara penalty -- BOTH variants failed (L-046, 2026-04-01):
+     * Data-driven (median threshold): self-harm on 5/7 Abhogi clips
+     * Musicological (swara bin ranges): gamakas leak 6-19% Pa, binary fails
+   - Mohanam dyad overrides (tested 0.6/0.4, 0.5/0.5: no improvement)
++  - Hand-typing a LOO results table instead of running a checked-in script
++    (this is how the 67.4% fabrication happened -- see Section 11)
+ 
+ =========================================================
+ 5. DEVELOPMENT PROCESS
+@@ -127,7 +142,8 @@ Details: .ai-memory/workflow.md, DEVELOPMENT.md
+ D:\Swaragam\
+   scripts/          Python code (6 production + sandbox scripts)
+   .ai/              AI agent rules (agent_spec.md)
+-  .ai-memory/       Project memory (8 files including this one)
++  .ai-memory/       Project memory (12 files: original 8 + Feature
++                    Registry, ADRs, Evaluation Protocol, Dataset Chronicle)
+   datasets/         Audio files (seed_carnatic/ + audio test/)
+   pcd_results/      Features, models, evaluation outputs
+   docs/             ARCHITECTURE.md + visual assets
+@@ -145,27 +161,40 @@ Details: .ai-memory/architecture.md
+ - Deterministic DSP (small dataset, explainability, control)
+ - 72-bin PCD (17 cents/bin resolves microtonal swaras)
+ - IDF x Variance weighting (downweights common swaras)
+-- PCD-heavy weights 0.8/0.2 (PCD more stable than dyads at current data)
++- PCD-heavy weights 0.8/0.2, applied uniformly to all ragas (v1.3.2)
+ - Directional dyads (Carnatic ragas are asymmetric)
+ - MIN_CLIPS_PER_RAGA=5 guardrail (thin-data ragas poison models)
+ - Sandbox-first workflow (never edit production untested)
+ - UNKNOWN over wrong certainty (margin guardrails)
+-- Per-raga weight override for Bhairavi (0.5/0.5) -- validated, locked
+-- Honest baselines over inflated numbers (L-041)
+-- Per-raga weight overrides are a trade for most ragas (L-042)
+-  Exception: Bhairavi override works because its dyads ARE distinctive
++- Per-raga weight override for Bhairavi -- TESTED AND RETIRED (v1.3.2).
++  Was believed validated; canonical rerun showed 0% decided. See ADR-006/013.
++- Honest baselines over inflated numbers (L-041) -- reinforced hard by the
++  67.4% fabrication discovery; see Section 11.
++- Per-raga weight overrides are a trade for most ragas (L-042). No
++  currently-active exception remains (Bhairavi was believed to be one;
++  it was not).
++- LOO numbers are only trusted when produced by a checked-in script
++  (sandbox_loo_v131_canonical.py), never a hand-typed table (new, v1.3.2)
+ 
+ =========================================================
+ 8. RISKS
+ =========================================================
+ 
+ - Abhogi/Kalyani parent-janya overlap makes PCD-only separation impossible
+-- Mohanam model weak (33% LOO) -- needs diverse clips
++- Bhairavi model weak (14% LOO) -- needs diverse clips
++- Mohanam model barely commits (9/10 UNKNOWN) -- needs diverse clips
+ - Kamboji only 3 real clips after Harikambhoji cleanup
+ - Harikambhoji/Kamboji parent-janya confusion can recur with other ragas
+ - No absolute OOD score floor (margin-only detection)
++- Vocal-isolation mandate is policy-only, not enforced in code (BUG-009)
+ - Silent failures: except-Exception hides crashes as UNKNOWN
+-- Constants must stay synchronized across scripts
++- Constants must stay synchronized across scripts -- concretely recurred
++  2026-07-11: confusion_matrix_audit.py hardcoded the retired Bhairavi
++  override as "canonical" one commit after recognize_raga_v12.py retired
++  it. Fixed, but demonstrates the risk is not merely theoretical (L-002).
++- Documentation can silently diverge from code and from itself even with
++  an active audit process -- occurred twice in one week (2026-07-10 and
++  2026-07-11 audits each found new staleness the prior pass missed)
+ 
+ Details: .ai-memory/bugs.md, .ai-memory/lessons.md
+ 
+@@ -182,7 +211,12 @@ Details: .ai-memory/bugs.md, .ai-memory/lessons.md
+ | 2026-03-12 | v1.2.4  | 6     | 53    | 78.6% LOO    | 72-bin PCD |
+ | 2026-03-20 | v1.2.5  | 6     | 61    | 72.0% LOO    | Dedup, MIN_CLIPS guardrail |
+ | 2026-03-21 | v1.3    | 5     | 55    | 58.8% LOO    | Harikambhoji cleaned, 0.7/0.3 |
+-| 2026-03-31 | v1.3.1  | 7     | 70    | 67.4% LOO    | Abhogi+Saveri, 0.8/0.2, Bhairavi override |
++| 2026-03-31 | v1.3.1  | 7     | 70    | 60.5% LOO    | Abhogi+Saveri, 0.8/0.2, Bhairavi override (later found counter-productive) |
++| 2026-07-11 | v1.3.2  | 7     | 70    | 64.1% LOO    | Bhairavi override retired, uniform 0.8/0.2 |
++
++Note: v1.3.1's figure was recorded as 67.4% for over three months before
++being found fabricated on 2026-07-10 (per-raga rows never summed to the
++stated total). 60.5% is the confirmed real number for that exact config.
+ 
+ =========================================================
+ 10. ORIGIN
+@@ -193,25 +227,59 @@ from listening -- a skill once natural to elders, now rare.
+ Swarag is computational ethnomusicology: translating parampara
+ intelligence into algorithmic form.
+ 
++=========================================================
++11. DOCUMENTATION INTEGRITY (new section, 2026-07-11)
++=========================================================
++
++A hand-typed LOO table claiming 67.4% accuracy was treated as canonical
++from 2026-03-31 until 2026-07-10, when an audit found its per-raga rows
++summed to 34c/13w/23u -- not the stated 29c/14w/27u. It was never a real
++run. It had directly motivated the Bhairavi 0.5/0.5 override (ADR-006),
++which the real rerun then showed was actively harmful.
++
++Standing rules going forward:
++  1. Any LOO number treated as canonical must trace to a checked-in
++     script (sandbox_loo_v131_canonical.py), not a hand-typed table.
++  2. Before trusting a logged table, sum its own per-raga rows and check
++     against its own TOTAL row. See .ai-memory/evaluation-protocol.md
++     Section 4.
++  3. docs/ARCHITECTURE.md is pure structural documentation (how/why the
++     pipeline works) and holds no run data -- no LOO tables, no accuracy
++     percentages, no per-raga results. All logged data (canonical numbers,
++     per-raga tables, run IDs) lives only in .ai-memory/architecture.md
++     and .ai-memory/datasets.md. The 2026-07-10 and 2026-07-11 corruptions
++     of docs/ARCHITECTURE.md both trace to a results table being pasted
++     into this file -- the file that should structurally never contain one.
++  4. When a scoring-config decision (weight, override) is retired,
++     search the ENTIRE repo -- docs and scripts -- for the old config,
++     not just the file it was made in. The retirement in commit 21da815
++     updated 2 docs and 1 script correctly but missed: docs/ARCHITECTURE.md
++     (corrupted separately), PROJECT_STATUS.md, README.md, datasets/README.md,
++     agent_spec.md, DEVELOPMENT.md, CONTRIBUTING.md, debug-playbook.md,
++     this Dossier, and confusion_matrix_audit.py and sandbox_abhogi_ratio.py
++     (two live scripts that would have silently used the retired config
++     on their next run). All fixed 2026-07-11.
++
+ =========================================================
+ WHERE TO LOOK
+ =========================================================
+ 
+-  architecture.md    Pipeline, scripts, constants (v1.3.1)
+-  bugs.md            Active bugs (2) and resolved bugs (13)
+-  lessons.md         Lessons learned (48+)
+-  datasets.md        Data locations, test results, external sources
++  architecture.md         Pipeline, scripts, constants (v1.3.2)
++  adr.md                  Architecture Decision Records (13 ADRs)
++  feature-registry.md     Every feature's status: active/parked/rejected/retired
++  evaluation-protocol.md  How to run and log a canonical LOO
++  dataset-chronicle.md    Dataset composition + scoring-config history
++  bugs.md                 Active bugs and resolved bugs
++  lessons.md              Lessons learned (48+)
++  datasets.md             Data locations, test results, external sources
+ 
+ KEY PROVEN DEAD ENDS (do not re-attempt):
+   - Abhogi per-raga weight overrides (0% at all weights tested, L-044)
++  - Bhairavi per-raga weight override (confirmed 0% on canonical rerun,
++    retired v1.3.2 -- do not reintroduce without new evidence, ADR-013)
+   - Abhogi absent-swara penalty (both variants failed 2026-04-01, L-046)
+   - Mohanam per-raga weight overrides (no improvement at 0.6/0.4, 0.5/0.5)
+   - Genericness penalty from model PCD (L-016: made things worse)
+   - Escalation / dyad-heavy re-scoring (L-017: crushes margins 5x)
+-  workflow.md        Development process
+-  debug-playbook.md  Debugging guide
+-  agent_spec.md      AI assistant rules
+-
+-=========================================================
+-End of Dossier
+-=========================================================
++  - Hand-typing a "canonical" LOO table instead of running the script
++    (Section 11: this is exactly how the 67.4% fabrication happened)
+diff --git a/.ai-memory/adr.md b/.ai-memory/adr.md
+new file mode 100644
+index 0000000..248bd93
+--- /dev/null
++++ b/.ai-memory/adr.md
+@@ -0,0 +1,170 @@
++# Swarag — Architecture Decision Records
++
++Mandated by the Vision Bible (Section 12). Each ADR documents a decision
++already made and evidenced elsewhere in the memory files. Generated
++2026-07-11 against v1.3.2. Format: Context -> Decision -> Consequence -> Status.
++
++---
++
++### ADR-001: Deterministic DSP over Machine Learning
++- **Context**: Small dataset (<100 clips), need for interpretable errors.
++- **Decision**: Use hand-designed DSP features (PCD, dyads) with deterministic
++  scoring rather than a trained classifier.
++- **Consequence**: No black-box failures; every error is traceable to a
++  specific feature or weight. Slower to add new discriminative power than ML.
++- **Status**: ACTIVE. Revisit per ML Roadmap (Bible Section 10) once
++  deterministic features mature and diverse data exists.
++- **Source**: ARCHITECTURE.md Design Constraints; Bible Section 10.
++
++### ADR-002: 72-bin Pitch Class Distribution
++- **Context**: 36-bin PCD could not separate shuddha Ma from prati Ma
++  (92 cents apart, only 2-3 bins at 36-bin resolution).
++- **Decision**: Use 72 bins (17 cents/bin) as the PCD resolution.
++- **Consequence**: +11.9% LOO accuracy (66.7% -> 78.6% in the 6-raga
++  sandbox). 96+ bins tested and rejected — too sparse, inflated UNKNOWN rate.
++- **Status**: ACTIVE, locked.
++- **Source**: L-034, Run 2026-03-12 (LOO 36 vs 72 bins).
++
++### ADR-003: IDF x Variance PCD Weighting
++- **Context**: Common swaras (Sa, Pa) shared across all ragas were diluting
++  dot-product similarity.
++- **Decision**: Weight each PCD bin by inverse document frequency times
++  1/std, downweighting common swaras and upweighting distinctive ones.
++- **Consequence**: +6% production accuracy over baseline dot-product;
++  single biggest improvement after the ALPHA fix.
++- **Status**: ACTIVE, locked.
++- **Source**: L-030.
++
++### ADR-004: Laplace Smoothing ALPHA = 0.01
++- **Context**: ALPHA=0.5 on 1296-cell dyad matrices added more smoothing
++  mass (648) than signal (~370 transitions/file); dyad similarities were
++  ~0.001 for all ragas (noise).
++- **Decision**: Set ALPHA=0.01, scaled to matrix size.
++- **Consequence**: Discrimination ratio improved 1.24x -> 1.73x.
++- **Status**: ACTIVE, locked.
++- **Source**: L-023, L-026.
++
++### ADR-005: Global Fusion Weight PCD=0.8 / Dyad=0.2
++- **Context**: At 7 ragas / 70 clips, 72x72 dyad matrices are still sparse.
++  Weight sweep tested 0.6/0.4, 0.7/0.3, 0.8/0.2.
++- **Decision**: 0.8/0.2 as the global default, applied uniformly to all
++  ragas as of v1.3.2 (see ADR-013 — no per-raga exceptions remain).
++- **Consequence**: Fewest wrongs of the configs tested at fixed margin
++  threshold.
++- **Status**: ACTIVE. Revisit when per-raga clip counts reach 15-20+ and
++  dyad discrimination ratio exceeds 2.0x.
++- **Source**: L-045.
++
++### ADR-006: Per-Raga Override — Bhairavi = 0.5/0.5 [SUPERSEDED]
++- **Context**: Bhairavi's dyads were believed genuinely distinctive
++  (unlike most ragas, where per-raga overrides just trade accuracy
++  between ragas).
++- **Decision**: Override fusion weight to 0.5/0.5 for Bhairavi only.
++- **Consequence**: Appeared net-positive against a 67.4% LOO table logged
++  at the time. That table was later found fabricated — its per-raga rows
++  never summed to its own TOTAL row. On the canonical rerun
++  (`sandbox_loo_v131_canonical.py`), the override produced 0% decided for
++  Bhairavi (9 wrongs).
++- **Status**: **SUPERSEDED by ADR-013.** Kept as a record that a decision
++  was made on unverified evidence — this is the concrete case for ADR-011
++  (LOO is the only tier trusted for accuracy claims).
++- **Source**: L-042, datasets.md baseline reconciliation, commit b1a1ac9.
++
++### ADR-007: MIN_CLIPS_PER_RAGA = 5 Guardrail
++- **Context**: Adding ragas with 1-3 clips (Abhogi, Saveri, Madhyamavati at
++  the time) dropped LOO accuracy from 72.0% to 41.7% — thin models became
++  false attractors.
++- **Decision**: Exclude any raga with fewer than 5 clips from aggregation.
++  Keep features on disk (not deleted) so they activate automatically once
++  the threshold is met.
++- **Consequence**: Prevents thin-data sink behavior. Currently excludes
++  Kamboji (3), Madhyamavati (2), Hamsadhvani (1).
++- **Status**: ACTIVE, locked.
++- **Source**: L-036, BUG-011.
++
++### ADR-008: Absent-Swara Penalty — Rejected
++- **Context**: Abhogi (janya, subset of Kalyani's swaras) needed a way to
++  score "expected but absent" swaras. Two approaches tried: data-driven
++  (median threshold on model PCD) and musicological (known swara bin ranges).
++- **Decision**: Reject both. Gamaka ornamentation spreads energy into
++  neighboring swara bins, so a "missing" swara still shows 6-19% energy —
++  binary absent/present detection cannot separate signal from gamaka leakage.
++- **Consequence**: Do not re-attempt binary absent-swara detection. Active
++  replacement direction: quantitative energy-ratio comparison
++  (`sandbox_abhogi_ratio.py`, BUG-015).
++- **Status**: REJECTED, added to proven-dead-ends list.
++- **Source**: L-046, BUG-015.
++
++### ADR-009: Mandatory Vocal Isolation
++- **Context**: Blind test showed 64% accuracy / 100% OOD rejection on
++  vocal-isolated audio vs 38% accuracy / 25% OOD rejection on mix audio,
++  same models and thresholds.
++- **Decision**: Vocal isolation (Saraga stems or Demucs) is a mandatory
++  pipeline step, not optional preprocessing.
++- **Consequence**: BUG-009 (mix audio OOD false positives) remains open
++  specifically because this mandate is not yet enforced in code — confirmed
++  2026-07-10: `scripts/recognize_raga_v12.py` contains no vocal/Demucs/
++  isolation check. Policy exists, enforcement does not.
++- **Status**: ACTIVE as policy; enforcement OPEN (tracked under BUG-009).
++- **Source**: L-028, L-029, BUG-009.
++
++### ADR-010: Sandbox-First Development
++- **Context**: A silent production breakage (BUG-001) demonstrated that
++  direct edits to production scripts are unsafe without a comparison step.
++- **Decision**: Every fix is implemented in a `test_*.py` / `sandbox_*.py`
++  script, compared before/after, and only promoted to production if results
++  are strictly better.
++- **Consequence**: Near-zero code regressions since adoption. Notably did
++  NOT prevent the Bhairavi override (ADR-006) from shipping on fabricated
++  documentation — sandbox-first protects code paths, not the accuracy
++  numbers logged about them. See ADR-011.
++- **Status**: ACTIVE, mandatory. See workflow.md Section 5.
++- **Source**: L-011, L-015, workflow.md.
++
++### ADR-011: LOO Cross-Validation as the Trust Standard
++- **Context**: Self-evaluation (model built and tested on the same clips)
++  overestimated accuracy by 10-15% versus true held-out performance. Later,
++  a hand-typed LOO table (67.4%) was found fabricated — internally
++  inconsistent row sums — despite looking like a real run.
++- **Decision**: Leave-one-out cross-validation, run via a checked-in script
++  (not hand-typed), is the only accuracy number treated as canonical.
++- **Consequence**: Canonical baseline is pessimistic but honest. Directly
++  caused the Bhairavi override retirement (ADR-013) once the real rerun
++  contradicted the fabricated one.
++- **Status**: ACTIVE, locked.
++- **Source**: L-031, L-033, ADR-013.
++
++### ADR-012: Multi-Agent Analysis Is On-Demand, Not Routine
++- **Context**: Running the 5-expert analysis on every change wastes tokens
++  on decisions that don't need it.
++- **Decision**: Reserve `/analyze-swarag` for genuinely hard, cross-domain,
++  or mixed-result decisions.
++- **Consequence**: Faster iteration on routine work.
++- **Status**: ACTIVE, locked.
++- **Source**: L-014, workflow.md Section 12.
++
++### ADR-013: Retire Bhairavi Per-Raga Override
++- **Context**: Canonical LOO rerun (`sandbox_loo_v131_canonical.py`)
++  showed the Bhairavi 0.5/0.5 override at 0% decided (9 wrongs), directly
++  contradicting the 40% figure ADR-006 was built on.
++- **Decision**: Retire the override. Bhairavi uses the uniform 0.8/0.2
++  global weight like every other raga (ADR-005).
++- **Consequence**: Overall canonical LOO moved 60.5% (with override,
++  confirmed bad) -> 64.1% (without it), +3.6pp. Bhairavi itself sits at
++  14% decided standalone — weak, but no longer masked by an unsupported
++  weight hack. Its real fix is more diverse training clips.
++  Follow-up (2026-07-11): `scripts/confusion_matrix_audit.py` — the very
++  script whose Scenario 1/2 comparison motivated this retirement — was
++  found still hardcoding the override as its own "canonical" default one
++  commit later. Fixed same day. See Section 11 of the Dossier.
++- **Status**: ACTIVE, locked. Commit `21da815`.
++- **Source**: datasets.md CANONICAL v1.3.2 table, commit `21da815`.
++
++---
++
++## Maintenance Rule
++
++New ADRs are added, never edited after Status is set to ACTIVE/REJECTED —
++if a decision is reversed, write a new ADR that supersedes the old one and
++mark the old one's Status as SUPERSEDED with a pointer forward. ADR-006 /
++ADR-013 is the reference example for how to do this.
+diff --git a/.ai-memory/dataset-chronicle.md b/.ai-memory/dataset-chronicle.md
+new file mode 100644
+index 0000000..1319d60
+--- /dev/null
++++ b/.ai-memory/dataset-chronicle.md
+@@ -0,0 +1,105 @@
++# Swarag — Dataset Chronicle
++
++Mandated by the Vision Bible (Section 12). datasets.md logs *test results*
++chronologically; this document logs *dataset composition and scoring
++config changes* chronologically — a distinct axis. Generated 2026-07-11.
++
++---
++
++## 2026-02-15 — Project Start
++- 3 ragas, small clip counts (exact count: [TBD]).
++- Mix of instrument-contaminated and clean audio.
++
++## 2026-03-09 — Vocal Isolation Pass
++- Saraga vocal stems (8 tracks) + Demucs separation (16 tracks).
++- Result: 6 ragas, 50 clips, all vocal-isolated. MAX_DURATION_SEC=360 added.
++- **Source**: L-020, L-021.
++
++## 2026-03-10 — Thodi Outlier Removal + External Expansion
++- 2 outlier Thodi clips excluded; 5 new Thodi clips added externally.
++- Result: 53 clips, 6 ragas.
++- **Source**: L-024.
++
++## 2026-03-20 — Guardrail Introduction + Dedup
++- 9-raga attempt collapsed LOO 72.0% -> 41.7% (thin-data sink, BUG-011).
++- MIN_CLIPS_PER_RAGA=5 guardrail introduced. 13 duplicate files removed.
++- Result: 6 ragas modeled, 61 clips.
++- **Source**: L-036, L-037, BUG-011, BUG-012.
++
++## 2026-03-21 — Harikambhoji Contamination Cleanup
++- 3/6 Kamboji clips found mislabeled (actually Harikambhoji). Removed.
++- Kamboji dropped to 3 clips, below guardrail.
++- LOO dropped 72% -> 58.8% as a direct, honest consequence (L-041).
++- Result: 5 ragas modeled, 55 clips.
++- **Source**: L-040, L-041, BUG-013.
++
++## 2026-03-31 — Abhogi + Saveri Activation
++- 5 Abhogi + 5 Saveri varnams (already-downloaded Zenodo zip) extracted,
++  pushing both past the guardrail. Fusion weight changed 0.7/0.3 -> 0.8/0.2.
++- Result: 7 ragas modeled, 70 clips — this composition has not changed
++  since; every subsequent entry below is a scoring-config or documentation
++  change on top of the same 70 clips.
++- **Source**: L-045.
++
++## 2026-04-01 — Absent-Swara Sandbox (no composition change)
++- Sandbox evaluation only, testing absent-swara penalty. Rejected (L-046).
++- **Source**: L-046.
++
++## 2026-06-24 — First Baseline Reconciliation Audit (no composition change)
++- Documentation audit resolved three competing LOO numbers (64.9%, 67.4%,
++  60.5%) — reconciliation later found to be itself unverified (see below).
++- **Source**: datasets.md, session_summary_20260624.md.
++
++## 2026-07-10 — Documentation Consistency Pass #1 (no composition change)
++- Fixed stale weight line in docs/ARCHITECTURE.md, a Run A arithmetic
++  typo, and two stale cross-references. Flagged (not fixed) an internal
++  inconsistency in the "canonical" 67.4% Run B table.
++- Created first drafts of this chronicle, feature-registry.md, adr.md,
++  evaluation-protocol.md. **These were never merged into the repo** — the
++  session ended with a patch file that was not applied.
++- **Source**: this project's session history.
++
++## 2026-07-11 — Fabrication Discovered; Bhairavi Override Retired
++- `sandbox_loo_v131_canonical.py` added as the first script-verified,
++  checked-in LOO runner (previously all "canonical" tables were hand-typed).
++- Rerun revealed the 67.4% Run B table was fabricated: its per-raga rows
++  summed to 34c/13w/23u, not the stated 29c/14w/27u. The real config it
++  claimed to describe (Bhairavi 0.5/0.5 override) actually scores 60.5%
++  overall, with Bhairavi itself at 0% decided (9 wrongs).
++- Bhairavi override retired (ADR-013). All ragas now use uniform 0.8/0.2.
++- New canonical: **64.1% decided (25c/14w/31u)**, no composition change —
++  this is a scoring-config change only, same 70 clips as 2026-03-31.
++- docs/ARCHITECTURE.md found with a corrupted header (editor placeholder
++  text `// ... existing code ...` committed literally, wrapping a third,
++  never-referenced 72.3% variant of the same retired table). Fixed.
++- PROJECT_STATUS.md found fully un-migrated from v1.3.1 language (5 stale
++  Bhairavi-override references). Fixed.
++- Vision Bible artifacts (this chronicle + 3 others) actually merged this
++  time.
++- **Source**: commits b1a1ac9, 87902ca, 21da815; this session.
++
++---
++
++## Current State (as of last entry above)
++
++- 7 ragas modeled: Thodi(11), Bhairavi(11), Kalyani(14), Saveri(8),
++  Shankarabharanam(9), Mohanam(10), Abhogi(7) — 70 clips total, unchanged
++  since 2026-03-31.
++- Scoring config (not composition) changed 2026-07-11: no per-raga
++  overrides remain; uniform 0.8/0.2 global weight.
++- 3 ragas staged below guardrail: Kamboji(3), Madhyamavati(2), Hamsadhvani(1).
++
++## Known Gaps in This Chronicle
++
++- Exact clip count/composition at 2026-02-15 project start: [TBD].
++- Per-clip provenance is in datasets.md's seed table by design, not
++  duplicated here — this document tracks *when composition or scoring
++  config changed and why*.
++
++## Maintenance Rule
++
++Any change to which clips are in aggregation, OR any change to a scoring
++config that a prior canonical accuracy number depended on (weights, ALPHA,
++overrides), gets an entry here — even if clip count is unchanged, as the
++2026-07-11 entry demonstrates. A scoring-only change can move accuracy by
+++3.6pp just as much as a data change can.
+diff --git a/.ai-memory/debug-playbook.md b/.ai-memory/debug-playbook.md
+index 2c70065..6319025 100644
+--- a/.ai-memory/debug-playbook.md
++++ b/.ai-memory/debug-playbook.md
+@@ -10,7 +10,7 @@ Most failures occur in data pipelines, not algorithms.
+    - Does the audio file exist?
+    - Does the aggregation folder exist?
+      Current: pcd_results/aggregation/v1.2/run_20260331_232228/
+-     Scoring: IDF x Variance weighted, 72 bins, MIN_CLIPS=5, PCD=0.8/Dyad=0.2 (v1.3.1)
++     Scoring: IDF x Variance weighted, 72 bins, MIN_CLIPS=5, PCD=0.8/Dyad=0.2, no per-raga overrides (v1.3.2)
+    - Are pcd_stats/ and dyad_stats/ subfolders present?
+    - Are .npz files loadable?
+ 
+diff --git a/.ai-memory/evaluation-protocol.md b/.ai-memory/evaluation-protocol.md
+new file mode 100644
+index 0000000..53e31eb
+--- /dev/null
++++ b/.ai-memory/evaluation-protocol.md
+@@ -0,0 +1,116 @@
++# Swarag — Evaluation Protocol
++
++Mandated by the Vision Bible (Section 12) and Bible Section 3 ("Honest
++Leave-One-Out validation before celebrating results"). Generated 2026-07-11
++against v1.3.2.
++
++---
++
++## 1. Accuracy Metrics — Definitions
++
++| Term | Definition |
++|---|---|
++| Correct (C) | Top-1 prediction matches ground truth and confidence tier != UNKNOWN |
++| Wrong (W) | Top-1 prediction != ground truth and confidence tier != UNKNOWN |
++| Unknown (U) | Confidence tier == UNKNOWN (margin < MIN_MARGIN_FINAL) |
++| Acc (decided) | C / (C + W) — accuracy excluding UNKNOWN outputs |
++| Acc (all) | C / (C + W + U) — accuracy treating UNKNOWN as a miss |
++
++**Acc (decided) is the headline number used across this project.** Always
++report U (count and %) alongside it — a high decided-accuracy with 90%
++UNKNOWN (see: Mohanam, v1.3.2, 1c/0w/9u) is not the same claim as one with
++10% UNKNOWN, even though both round to "100% decided."
++
++## 2. Evaluation Tiers — Trust Ranking (highest to lowest)
++
++1. **LOO (Leave-One-Out) cross-validation, run via a checked-in script** —
++   CANONICAL. Each clip is scored against a model built without that clip.
++   This is the only number that may be called "the accuracy" without a
++   qualifier — and it must be the output of an actual script run, not a
++   hand-typed table. (ADR-011, L-033)
++2. **Production batch evaluation** (`batch_evaluate.py`) — informative, not
++   canonical.
++3. **Sandbox self-evaluation** — diagnostic only. Expect +10-15% inflation
++   vs LOO (L-031).
++4. **Blind test on unseen/anonymized audio** — required before declaring
++   any milestone (L-029).
++
++**Rule**: a milestone or version bump may only cite a Tier 1 (LOO) number,
++and that number must trace to a script, not a manually written table.
++
++## 3. Running a Canonical LOO
++
++```powershell
++Set-Location D:\Swaragam\scripts
++.\my_virtual_env_swarag\Scripts\Activate.ps1
++python sandbox_loo_v131_canonical.py
++```
++
++`sandbox_loo_v131_canonical.py` is the permanent ground-truth rerun script
++(added commit `b1a1ac9`). Use it, not a new ad-hoc script, unless the
++production config itself changes in a way it doesn't cover.
++
++Preconditions:
++- Confirm AGG_FOLDER matches the latest aggregation run.
++- Confirm all constants (ALPHA, N_BINS, MIN_STABLE_FRAMES, fusion weights)
++  match production `recognize_raga_v12.py` exactly.
++
++## 4. Logging a Run (mandatory format)
++
++Every LOO run logged in datasets.md Test Results Log must include:
++1. Date, script name, model/aggregation run ID.
++2. Full per-raga table: Raga | Clips | Correct | Wrong | Unknown | Acc (decided).
++3. **A TOTAL row whose C/W/U columns are the sum of the per-raga columns —
++   verify this arithmetic before committing, not after.** The 67.4% "Run B"
++   table (2026-03-31, believed canonical for over three months) was
++   discovered fabricated on 2026-07-10 specifically because its rows summed
++   to 34/13/23, not the stated 29/14/27. It had been driving a real
++   architectural decision (the Bhairavi override, ADR-006) the entire time.
++4. Config used: fusion weights, any per-raga overrides, margin thresholds.
++5. Sink analysis: which raga(s) absorbed the wrongs.
++
++## 5. Canonical Baseline Rule
++
++At any point in time there is exactly **one** canonical LOO number.
++- Current canonical: **64.1% decided (25c/14w/31u), v1.3.2**, uniform
++  0.8/0.2, no per-raga overrides. `sandbox_loo_v131_canonical.py`,
++  2026-07-11.
++- Prior canonical (retired): 67.4%, fabricated, never a real run — do not
++  cite.
++- Prior canonical (superseded): 60.5%, v1.3.1 with Bhairavi 0.5/0.5
++  override — confirmed real but confirmed worse than uniform weighting.
++- When a new canonical run is logged, update architecture.md,
++  PROJECT_STATUS.md, and the Dossier in the same session. A canonical
++  number correct in one file and stale in another is worse than not having
++  one — this exact failure mode recurred twice (2026-06-24 and 2026-07-10
++  audits) on the same project.
++
++## 6. When to Re-run vs. When to Reconcile
++
++- **Numbers merely disagree across files, but a script-verified run log
++  exists somewhere**: reconcile by pointing every file at that run.
++- **No script-verified run log exists, or an existing table fails the
++  row-sum check in Section 4**: re-run. Do not hand-edit counts to match a
++  percentage — reconstructing "plausible" numbers is how the 67.4% table
++  happened in the first place (L-041).
++
++## 7. Diagnostic Sub-Protocols (not full LOO)
++
++- **Ablation**: disable one feature channel and compare margins (L-025).
++- **Discrimination ratio**: self-similarity / mean-other-similarity, used
++  for dyad ALPHA tuning. Target >1.5x useful, >2x strong (L-026).
++- **Weight sweep**: fixed dataset, vary fusion weight, compare C/W/U
++  across configs (L-018, L-045).
++
++These are sandbox diagnostics. Their output informs a decision; it is never
++itself logged as a canonical accuracy number — a lesson learned twice now.
++
++---
++
++## Maintenance Rule
++
++If production scoring code changes in any way that affects margins
++(weights, ALPHA, bin count, guardrails, per-raga overrides added or
++removed), the existing canonical LOO number is invalidated immediately —
++re-run via `sandbox_loo_v131_canonical.py` (or its successor) before making
++any accuracy claim anywhere else in the documentation.
+diff --git a/.ai-memory/feature-registry.md b/.ai-memory/feature-registry.md
+new file mode 100644
+index 0000000..1c7c8c8
+--- /dev/null
++++ b/.ai-memory/feature-registry.md
+@@ -0,0 +1,87 @@
++# Swarag — Feature Registry
++
++Mandated by the Vision Bible (Section 12, Living Knowledge). Every row below
++is sourced from an existing lesson, bug, commit, or architecture entry —
++nothing here is a new claim. Generated 2026-07-11 against v1.3.2.
++
++Status legend: **ACTIVE** (in production), **PARKED** (validated, waiting on
++a trigger condition), **REJECTED** (tested, does not work — kept for record),
++**RETIRED** (was active, removed after evidence showed it hurt).
++
++---
++
++## Pitch & Preprocessing
++
++| Feature | Status | Params | Source |
++|---|---|---|---|
++| Vocal isolation (Saraga stems / Demucs htdemucs) | ACTIVE | Stems preferred over Demucs | L-020, L-028 |
++| pYIN pitch extraction | ACTIVE | librosa, SR=22050 | ARCHITECTURE.md Stage 1 |
++| Duration cap | ACTIVE | MAX_DURATION_SEC=360 | L-021 |
++| Tonic (Sa) estimation | ACTIVE | Histogram + octave-aware peak detection, utils.py | ARCHITECTURE.md Stage 2 |
++| Per-file timeout (batch) | ACTIVE | PER_FILE_TIMEOUT=360s, ThreadPoolExecutor | L-039 |
++
++## Core Representation
++
++| Feature | Status | Params | Source |
++|---|---|---|---|
++| Pitch Class Distribution (PCD) | ACTIVE | 72 bins, 17 cents/bin, tonic-normalized | L-034 |
++| IDF x Variance PCD weighting | ACTIVE | Downweights common swaras, upweights distinctive | L-030 |
++| Directional dyads (mean_up / mean_down) | ACTIVE | 72x72 matrices, MIN_STABLE_FRAMES=5 | ARCHITECTURE.md Stage 3.2 |
++| Laplace smoothing (dyads) | ACTIVE | ALPHA=0.01 (scaled to matrix size) | L-023 |
++
++## Scoring & Fusion
++
++| Feature | Status | Params | Source |
++|---|---|---|---|
++| Global PCD/Dyad fusion weight | ACTIVE | 0.8 / 0.2, applied uniformly to all ragas | L-045, commit 21da815 |
++| Per-raga weight override (Bhairavi 0.5/0.5) | **RETIRED (v1.3.2)** | Confirmed 0% decided for Bhairavi on canonical LOO — was built on a fabricated 67.4% table | ADR-006, ADR-013, commit 21da815 |
++| Per-raga weight override (general, Mohanam/Abhogi) | REJECTED | Trades one raga's accuracy for another's | L-042, L-044 |
++| Genericness penalty | REJECTED | Mathematically inert on ranking; worse when computed from model PCD | L-012, L-016 |
++| Escalation (dyad-heavy re-scoring) | REJECTED | Crushes margins ~5x with thin data | L-017 |
++| Confidence tiers | ACTIVE | HIGH >=0.003, MODERATE >=0.001, else UNKNOWN | BUG-006 (resolved) |
++| Hubness correction (centered) | PARKED | Trigger: ragas >= 15 | BUG-010, L-032, L-035 |
++
++## Data Guardrails
++
++| Feature | Status | Params | Source |
++|---|---|---|---|
++| MIN_CLIPS_PER_RAGA guardrail | ACTIVE | 5 clips minimum before aggregation | L-036, BUG-011 |
++| Duplicate feature dedup | ACTIVE (process, not code) | Match by raga + filename prefix, not timestamp | L-037, BUG-012 |
++| Outlier clip exclusion | ACTIVE (process) | Pairwise sim >0.04, sim-to-mean >0.06, entropy within 0.5 of median | L-024 |
++| Raga label cross-reference vs Saraga/Dunya metadata | ACTIVE (process) | Prevents parent/janya mislabeling | L-040, BUG-013 |
++
++## Janya / Parent-Child Separation (Abhogi problem)
++
++| Feature | Status | Params | Source |
++|---|---|---|---|
++| Absent-swara penalty (data-driven, median threshold) | REJECTED | Self-harm on 5/7 Abhogi clips | L-046 |
++| Absent-swara penalty (musicological bin ranges) | REJECTED | Gamaka spillover puts 6-19% energy in "absent" swaras | L-046 |
++| Swara energy-ratio comparison (quantitative) | ACTIVE (in development) | `sandbox_abhogi_ratio.py`, BUG-015 | BUG-015 |
++| Phrase n-gram detection | PARKED (not yet implemented) | Candidate: M2-D2-M2 vs Pa-D2-N3 | architecture.md Next Steps |
++
++## Evaluation / Governance
++
++| Feature | Status | Params | Source |
++|---|---|---|---|
++| LOO as sole canonical trust tier | ACTIVE | `sandbox_loo_v131_canonical.py` is the permanent ground-truth rerun script | ADR-011, commit b1a1ac9 |
++| Fabricated-table detection (row-sum check) | ACTIVE (process) | Any logged table's per-raga rows must sum to its TOTAL row before being trusted | 2026-07-10/11 audit history (this table caught two separate fabrications) |
++
++## OOD / Robustness
++
++| Feature | Status | Params | Source |
++|---|---|---|---|
++| Margin-only OOD rejection | ACTIVE (partial) | No absolute score floor yet | BUG-009 |
++| Mandatory vocal isolation for inference | ACTIVE (policy, NOT enforced in code) | Confirmed 2026-07-10: `recognize_raga_v12.py` has no vocal/Demucs/isolation check | L-028, L-029, BUG-009, ADR-009 |
++| Absolute score floor / OOD detector | NOT IMPLEMENTED | Open architectural gap | BUG-009, workflow.md Section 4 |
++
++---
++
++## Maintenance Rule
++
++When a feature changes status, update its row here in the same commit as
++the code change. Two features in this table (Bhairavi override, and the
++67.4% baseline it was validated against) were retired in the same session
++this registry was corrected in — that is not a coincidence: the fabricated
++table is what made the override look good in the first place. Any future
++"this feature helps X%" claim must cite a canonical LOO run, not a
++self-eval or a hand-typed table.
+diff --git a/.ai/agent_spec.md b/.ai/agent_spec.md
+index f00ffbe..e032183 100644
+--- a/.ai/agent_spec.md
++++ b/.ai/agent_spec.md
+@@ -396,7 +396,7 @@ Pipeline:
+ 
+ Current: 7 ragas trained (Bhairavi, Kalyani, Shankarabharanam, Mohanam,
+          Thodi, Saveri, Abhogi)
+-         70 clips, 72-bin PCD, IDF x Variance scoring, v1.3.1
++         70 clips, 72-bin PCD, IDF x Variance scoring, v1.3.2 (uniform 0.8/0.2, no per-raga overrides)
+ Goal: Full Melakarta coverage, janya ragas, gamaka modeling,
+       phrase detection, live inference, Android deployment
+ 
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index 2594088..62479cb 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -56,8 +56,10 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for the full development workflow.
+ - All changes must be testable via `batch_evaluate.py`
+ - Shared constants must match across all scripts:
+   - `N_BINS=72`, `ALPHA=0.01`, `MIN_STABLE_FRAMES=5`, `EPS=1e-8`
+-  - `PCD_WEIGHT=0.8`, `DYAD_WEIGHT=0.2` (global default)
+-  - `PER_RAGA_WEIGHTS: Bhairavi=(0.5, 0.5)`
++  - `PCD_WEIGHT=0.8`, `DYAD_WEIGHT=0.2` (global default, applied uniformly)
++  - `PER_RAGA_WEIGHTS = {}` (Bhairavi override retired v1.3.2 -- confirmed
++    counter-productive; do not reintroduce without a new canonical LOO
++    showing gain, see ADR-006/ADR-013)
+   - `MIN_CLIPS_PER_RAGA=5` (aggregation guardrail)
+ - Never modify production scripts without sandbox validation first
+ - Always cross-reference raga labels against authoritative sources (Saraga, Dunya)
+diff --git a/DEVELOPMENT.md b/DEVELOPMENT.md
+index 5a39433..806b5c5 100644
+--- a/DEVELOPMENT.md
++++ b/DEVELOPMENT.md
+@@ -203,7 +203,7 @@ These must be identical across `aggregate_all_v12.py`, `recognize_raga_v12.py`,
+ | `MAX_DURATION_SEC` | 360 | Audio duration cap (6 min) |
+ | `PCD_WEIGHT` | 0.8 | PCD scoring weight (global default) |
+ | `DYAD_WEIGHT` | 0.2 | Dyad scoring weight (global default) |
+-| `PER_RAGA: Bhairavi` | 0.5/0.5 | Per-raga override (transition-heavy) |
++| `PER_RAGA_WEIGHTS` | none (retired v1.3.2) | Bhairavi 0.5/0.5 tested and retired -- see ADR-006/ADR-013 |
+ | `MARGIN_STRICT` | 0.003 | HIGH confidence threshold |
+ | `MIN_MARGIN_FINAL` | 0.001 | MODERATE confidence threshold |
+ | `MIN_CLIPS_PER_RAGA` | 5 | Aggregation guardrail |
+diff --git a/PROJECT_STATUS.md b/PROJECT_STATUS.md
+index 68c4ee1..f618804 100644
+--- a/PROJECT_STATUS.md
++++ b/PROJECT_STATUS.md
+@@ -1,7 +1,7 @@
+ # Swarag -- Project Status
+ 
+ ## Current Version
+-Swarag v1.3.1 (7 Ragas -- Abhogi + Saveri activated, PCD-heavy 0.8/0.2)
++Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for all ragas)
+ 
+ ---
+ 
+@@ -9,8 +9,8 @@ Swarag v1.3.1 (7 Ragas -- Abhogi + Saveri activated, PCD-heavy 0.8/0.2)
+ 
+ - 72-bin PCD + IDF x Variance weighted dot-product scoring
+ - Directional dyads with ALPHA=0.01 Laplace smoothing
+-- PCD_WEIGHT=0.8, DYAD_WEIGHT=0.2 (PCD-heavy -- fewest wrongs)
+-- PER_RAGA_WEIGHTS: Bhairavi=(0.5, 0.5) -- dyad-heavy override for Bhairavi
++- PCD_WEIGHT=0.8, DYAD_WEIGHT=0.2, applied uniformly to all ragas
++  (Bhairavi 0.5/0.5 override tested and retired in v1.3.2 -- see ADR-006/ADR-013)
+ - MIN_CLIPS_PER_RAGA=5 guardrail
+ - Vocal isolation mandatory (Saraga stems + Demucs)
+ - Per-file timeout in batch evaluation (360s)
+@@ -22,54 +22,58 @@ Swarag v1.3.1 (7 Ragas -- Abhogi + Saveri activated, PCD-heavy 0.8/0.2)
+ | ALPHA | 0.01 |
+ | PCD_WEIGHT | 0.8 (global) |
+ | DYAD_WEIGHT | 0.2 (global) |
+-| PER_RAGA: Bhairavi | 0.5/0.5 |
++| PER_RAGA_WEIGHTS | none (retired) |
+ | MIN_CLIPS_PER_RAGA | 5 |
+ | MARGIN_STRICT | 0.003 |
+ | MIN_MARGIN_FINAL | 0.001 |
+ 
+-### Current Accuracy (LOO, 7 ragas, 70 clips, with Bhairavi override)
++### Current Accuracy (LOO, 7 ragas, 70 clips, sandbox_loo_v131_canonical.py)
+ | Raga | Clips | LOO Acc |
+ |---|---|---|
+-| Thodi | 11 | 100% |
++| Mohanam | 10 | 100% (1c/0w/9u -- decides rarely) |
+ | Saveri | 8 | 88% |
+-| Shankarabharanam | 9 | 86% |
+-| Kalyani | 14 | 67% |
+-| Bhairavi | 11 | 40% (0.5/0.5 override) |
+-| Mohanam | 10 | 33% |
+-| Abhogi | 7 | 25% |
+-| **Overall** | **70** | **67.4% decided** |
+-
+-### What Changed from v1.3
+-- Abhogi activated (7 clips: 2 existing + 5 Zenodo varnams)
+-- Saveri activated (8 clips: 3 existing + 5 Zenodo varnams)
+-- Weights: 0.7/0.3 to 0.8/0.2 global (PCD-heavy, fewer wrongs)
+-- Bhairavi per-raga override: 0.5/0.5 (dyad-heavy, validated in sandbox)
+-- Duplicates cleaned (kamalambike Thodi, Rama Namam Madhyamavati, Nannu Brova Abhogi)
+-- Accuracy: 58.8% (5 ragas) to 67.4% (7 ragas, with override)
++| Shankarabharanam | 9 | 80% |
++| Kalyani | 14 | 75% |
++| Thodi | 11 | 71% |
++| Abhogi | 7 | 33% |
++| Bhairavi | 11 | 14% (override retired -- needs more diverse clips instead) |
++| **Overall** | **70** | **64.1% decided** |
++
++### What Changed from v1.3.1
++- Bhairavi 0.5/0.5 per-raga override retired: canonical rerun confirmed
++  it was counter-productive (0% decided for Bhairavi, 9 wrongs)
++- All ragas now use uniform 0.8/0.2 global weight
++- Prior "67.4%" figure retired: found fabricated on audit -- its per-raga
++  rows never summed to its own total. Real config it claimed to describe
++  (Bhairavi override) actually scores 60.5% overall.
++- New canonical: 64.1% decided (25c/14w/31u)
+ 
+ ---
+ 
+ ## Known Limitations
+ 
+-- Abhogi: 25% LOO -- STRUCTURAL problem (janya of Kalyani, PCD is strict subset)
+-  Weight overrides tested at 0.6/0.4, 0.5/0.5, 0.4/0.6 -- all 0%. Only fixed by
+-  Bhairavi override side-effect (25%). Next approach: quantitative swara energy ratio (sandbox_abhogi_ratio.py).
+-- Mohanam: 33% LOO -- needs diverse clips (different songs/artists)
+-  Dyad overrides tested, no improvement. This is a data problem.
++- Abhogi: 33% LOO -- STRUCTURAL problem (janya of Kalyani, PCD is strict subset)
++  Weight overrides tested at 0.6/0.4, 0.5/0.5, 0.4/0.6 -- all 0%.
++  Next approach: quantitative swara energy ratio (sandbox_abhogi_ratio.py).
++- Bhairavi: 14% LOO -- override retired, needs more diverse clips instead
++- Mohanam: 100% decided but 9/10 UNKNOWN -- model barely commits, needs data
+ - Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
+-- Kalyani absorbs Abhogi wrongs (structural, not fixable by weights)
++- Saveri is the new sink (6/14 wrongs) -- was Kalyani pre-retirement
+ - No OOD score floor
+ 
+ ---
+ 
+ ## Priority Plan
+ 
+-1. **Abhogi energy-ratio sandbox** (ARCHITECTURAL): run sandbox_abhogi_ratio.py.
++1. Add diverse Bhairavi clips (different songs/artists) -- weakest raga at
++   14%, now confirmed a data problem, not a weight problem
++2. **Abhogi energy-ratio sandbox** (ARCHITECTURAL): run sandbox_abhogi_ratio.py.
+    Quantitative Pa/N3 ratio comparison vs model expected. Absent-swara penalty is a proven dead end (L-046).
+-2. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga has 0 new sources)
+-3. Add 4-6 diverse Mohanam clips (different songs/artists)
+-4. Do NOT add more new ragas until weak ones > 60%
+-5. Target: 72-78% decided accuracy with 7-8 ragas
++3. Add 4-6 diverse Mohanam clips -- 100% decided but 9/10 UNKNOWN
++4. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga has 0 new sources)
++5. Do NOT add more new ragas until weak ones > 60%
++6. Re-baseline the accuracy target against 64.1% (the 72-78% target was
++   calibrated against the fabricated 67.4% figure)
+ 
+ ### Proven Dead Ends (do not re-attempt)
+ - Abhogi per-raga weight overrides (0% at all weights -- L-044)
+diff --git a/README.md b/README.md
+index 9004742..f276a00 100644
+--- a/README.md
++++ b/README.md
+@@ -2,15 +2,17 @@
+ 
+ Swarag is a deterministic Carnatic raga recognition engine built using interpretable signal processing and structured statistical modeling. It emphasizes explainability, musical grammar, and bias correction over black-box learning.
+ 
+-## Version: v1.3.1
+-
+-v1.3.1 introduces:
+-- **Abhogi + Saveri activated** (5 Zenodo varnams each, total 7 ragas, 70 clips)
+-- **PCD-heavy weights** (0.8/0.2) -- fewest wrongs (13), best decided accuracy
+-- **Saveri debuts at 75% LOO** -- strong first showing
+-- **Thodi: 100% LOO** -- zero wrongs
+-- LOO accuracy: ~64.9% decided (7 ragas, honest baseline)
+-- Abhogi struggles (0% LOO -- janya of Kalyani, absorbed by parent)
++## Version: v1.3.2
++
++v1.3.2 retires the Bhairavi per-raga weight override:
++- Canonical LOO audit found the override scored 0% decided for Bhairavi
++  (9 wrongs) -- confirmed counter-productive, not just unproven
++- All 7 ragas now use uniform PCD=0.8/Dyad=0.2 weighting
++- LOO accuracy: 64.1% decided (25c/14w/31u), sandbox_loo_v131_canonical.py
++- Weakest raga is now Bhairavi (14%, needs diverse clips) rather than
++  Abhogi (33%, structural janya problem -- see L-044, BUG-015)
++- A prior 67.4% figure was found fabricated (per-raga rows never summed
++  to their stated total) and has been retired from all documentation
+ 
+ ### Version History
+ 
+@@ -23,7 +25,8 @@ v1.3.1 introduces:
+ | v1.2.4 | 78.6% | 6 | 72-bin PCD |
+ | v1.2.5 | 72.0% | 6 | Expanded data, dedup, MIN_CLIPS guardrail |
+ | v1.3 | 58.8% | 5 | Harikambhoji removed, weights 0.7/0.3, honest baseline |
+-| v1.3.1 | 67.4% | 7 | Abhogi+Saveri activated, 0.8/0.2, Bhairavi override |
++| v1.3.1 | 60.5% | 7 | Abhogi+Saveri activated, 0.8/0.2, Bhairavi override (later confirmed counter-productive) |
++| v1.3.2 | 64.1% | 7 | Bhairavi override retired, uniform 0.8/0.2 for all ragas |
+ 
+ ## Core Philosophy
+ 
+diff --git a/datasets/README.md b/datasets/README.md
+index 0776c7b..ce83f46 100644
+--- a/datasets/README.md
++++ b/datasets/README.md
+@@ -34,15 +34,15 @@ datasets/
+ 
+ | Raga | Clips | LOO Accuracy | Notes |
+ |---|---|---|---|
+-| Thodi | 11 | 100% | 0 wrongs. 2 outliers excluded. |
++| Mohanam | 10 | 100% | Decides rarely: 1c/0w/9u. Needs diverse clips. |
+ | Saveri | 8 | 88% | Strong debut. 3 stems + 5 Zenodo varnams. |
+-| Shankarabharanam | 9 | 86% | 6 clean wav + 3 Saraga. |
+-| Kalyani | 14 | 67% | Most clips. Absorbs Abhogi wrongs (parent melakarta). |
+-| Bhairavi | 11 | 40% | With 0.5/0.5 dyad override. PCD overlaps 78% with Thodi. |
+-| Mohanam | 10 | 33% | Needs diverse clips from different songs. |
+-| Abhogi | 7 | 25% | STRUCTURAL problem: janya of Kalyani (L-044). |
++| Shankarabharanam | 9 | 80% | 6 clean wav + 3 Saraga. |
++| Kalyani | 14 | 75% | Most clips. Absorbs Abhogi wrongs (parent melakarta). |
++| Thodi | 11 | 71% | 2 outliers excluded. |
++| Abhogi | 7 | 33% | STRUCTURAL problem: janya of Kalyani (L-044). |
++| Bhairavi | 11 | 14% | Override retired (v1.3.2, confirmed counter-productive). PCD overlaps 78% with Thodi. |
+ 
+-**Overall LOO: 67.4% decided (with Bhairavi override)**
++**Overall LOO: 64.1% decided (v1.3.2, no per-raga overrides), sandbox_loo_v131_canonical.py**
+ 
+ ### Below Guardrail (need more audio)
+ 
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+index 73bdc2c..64bad8f 100644
+--- a/docs/ARCHITECTURE.md
++++ b/docs/ARCHITECTURE.md
+@@ -1,18 +1,4 @@
+-﻿// ... existing code ...
+-**LOO Cross-Validation Run B (WITH Bhairavi 0.5/0.5 override) -- CANONICAL v1.3.1**:
+-| Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
+-|---|---|---|---|---|---|
+-| Thodi | 11 | 5 | 0 | 6 | 100% |
+-| Saveri | 8 | 7 | 1 | 0 | 88% |
+-| Shankarabharanam | 9 | 6 | 1 | 2 | 86% |
+-| Kalyani | 14 | 8 | 4 | 2 | 67% |
+-| Bhairavi | 11 | 4 | 1 | 6 | 40% |
+-| Mohanam | 10 | 2 | 4 | 4 | 33% |
+-| Abhogi | 7 | 2 | 2 | 3 | 25% |
+-| **TOTAL** | **70** | **34** | **13** | **23** | **72.3%** |
+-
+-Sink analysis (Run B): Kalyani=6/14, Saveri=4/14, Thodi=2/14, Shankarabharanam=2/14
+-// ... existing code ...# Swarag — Architecture Overview
++# Swarag — Architecture Overview
+ 
+ This document explains the internal architecture and design rationale of Swarag.
+ It is intended for developers, researchers, and technical collaborators who want
+@@ -199,7 +185,8 @@ This produces a **raga signature**, not a single exemplar.
+ - IDF x Variance weighted dot-product for PCD
+ - Dot-product similarity for directional dyads (up + down averaged)
+ - Weighted combination: `score = 0.8 * pcd_sim + 0.2 * dyad_sim`
+-  (Bhairavi override: `score = 0.5 * pcd_sim + 0.5 * dyad_sim`)
++  (v1.3.2: applied uniformly to all ragas — the Bhairavi 0.5/0.5 override
++  was tested and retired; see ADR-006/ADR-013 and datasets.md baseline reconciliation)
+ 
+ **Tiered Confidence System**
+ 
+diff --git a/scripts/confusion_matrix_audit.py b/scripts/confusion_matrix_audit.py
+index 2a2715b..206fb89 100644
+--- a/scripts/confusion_matrix_audit.py
++++ b/scripts/confusion_matrix_audit.py
+@@ -1,31 +1,36 @@
+ """
+-Confusion matrix audit for v1.3.1 LOO.
++Confusion matrix audit for v1.3.2 LOO.
+ Built on top of sandbox_loo_v131_canonical.py infrastructure.
+ Fixes vs old confusion_matrix_audit.py:
+   - No fragile imports from sandbox_absent_swara_v2
+-  - PER_RAGA_WEIGHTS applied correctly (Bhairavi 0.5/0.5)
+   - IDF x Variance weights recomputed per LOO fold (not cached globally)
+   - Raga-exclusion audit runs a clean sub-LOO, not a filtered global model
+-Runs two scenarios:
+-  1. Full 7-raga LOO (canonical baseline)
+-  2. 7-raga LOO WITHOUT Bhairavi override (tests if override helps or hurts)
++v1.3.2 STREAMLINE: constants are now imported directly from
++recognize_raga_v12.py instead of duplicated. This is what actually fixes
++L-002 (constant sync) for this script -- a hardcoded copy of PER_RAGA_WEIGHTS
++drifted from production for one commit (2026-07-11) and silently mislabeled
++the retired Bhairavi override as canonical. Importing removes the
++possibility of drift; if production changes, this script changes with it
++automatically, with no manual sync step to forget.
++Runs three scenarios:
++  1. Full 7-raga LOO, uniform 0.8/0.2, NO override (canonical, v1.3.2)
++  2. [RETIRED] Formerly "7-raga WITH Bhairavi override" -- kept below,
++     disabled, as the historical comparison that caused the retirement
+   3. 5-raga LOO excluding Bhairavi + Abhogi (upper-bound for stable ragas)
+ """
+ import os
+ import numpy as np
+ from collections import Counter
+ 
+-# ── Config (must match recognize_raga_v12.py exactly) ──────────────────────
+-N_BINS            = 72
+-MIN_STABLE_FRAMES = 5
+-ALPHA             = 0.01
+-EPS               = 1e-8
+-PCD_WEIGHT        = 0.8
+-DYAD_WEIGHT       = 0.2
+-PER_RAGA_WEIGHTS  = {"Bhairavi": (0.5, 0.5)}
+-MARGIN_STRICT     = 0.003
+-MIN_MARGIN_FINAL  = 0.001
+-MIN_CLIPS         = 5
++from recognize_raga_v12 import (
++    N_BINS, MIN_STABLE_FRAMES, ALPHA, EPS,
++    PCD_WEIGHT, DYAD_WEIGHT, PER_RAGA_WEIGHTS,
++    MARGIN_STRICT, MIN_MARGIN_FINAL,
++)
++from aggregate_all_v12 import MIN_CLIPS_PER_RAGA as MIN_CLIPS
++
++# Historical only -- DO NOT re-enable without a new canonical LOO showing gain:
++PER_RAGA_WEIGHTS_RETIRED_BHAIRAVI_OVERRIDE = {"Bhairavi": (0.5, 0.5)}
+ 
+ FEAT_DIR = r"D:\Swaragam\pcd_results\features_v12"
+ 
+@@ -222,18 +227,18 @@ for c in clips:
+     processed.append({"fname": c["fname"], "raga": c["raga"],
+                       "pcd": pcd, "up": up, "down": down})
+ 
+-# ── Scenario 1: Full 7-raga, WITH Bhairavi override (canonical) ────────────
++# ── Scenario 1: Full 7-raga, uniform 0.8/0.2, no override (CANONICAL v1.3.2) ─
+ c1, w1, u1, a1 = run_loo_cm(
+     processed,
+-    "SCENARIO 1: 7 ragas, WITH Bhairavi 0.5/0.5 override (CANONICAL)",
++    "SCENARIO 1: 7 ragas, uniform 0.8/0.2, NO override (CANONICAL, v1.3.2)",
+     per_raga_weights=PER_RAGA_WEIGHTS
+ )
+ 
+-# ── Scenario 2: Full 7-raga, WITHOUT Bhairavi override ─────────────────────
++# ── Scenario 2: Full 7-raga, WITH Bhairavi override (RETIRED, historical) ──
+ c2, w2, u2, a2 = run_loo_cm(
+     processed,
+-    "SCENARIO 2: 7 ragas, NO Bhairavi override (global 0.8/0.2 only)",
+-    per_raga_weights={}
++    "SCENARIO 2: 7 ragas, WITH Bhairavi 0.5/0.5 override (RETIRED -- confirmed 0% decided for Bhairavi)",
++    per_raga_weights=PER_RAGA_WEIGHTS_RETIRED_BHAIRAVI_OVERRIDE
+ )
+ 
+ # ── Scenario 3: 5-raga, Bhairavi + Abhogi excluded ─────────────────────────
+diff --git a/scripts/sandbox_abhogi_ratio.py b/scripts/sandbox_abhogi_ratio.py
+index 0ad4bce..1c0dcce 100644
+--- a/scripts/sandbox_abhogi_ratio.py
++++ b/scripts/sandbox_abhogi_ratio.py
+@@ -1,6 +1,12 @@
+ import os
+ import numpy as np
+ 
++from recognize_raga_v12 import (
++    N_BINS, MIN_STABLE_FRAMES, ALPHA, EPS,
++    PCD_WEIGHT, DYAD_WEIGHT, PER_RAGA_WEIGHTS,
++    MARGIN_STRICT, MIN_MARGIN_FINAL,
++)
++
+ # sandbox_abhogi_ratio.py  --  BUG-015: Abhogi vs Kalyani Quantitative Swara Energy Ratio
+ # ========================================================================================
+ # DEAD ENDS (do not re-attempt):
+@@ -22,21 +28,16 @@ import numpy as np
+ #   Phase 1 -- DIAGNOSTIC  : print Pa/N3 ratios per clip, check separation
+ #   Phase 2 -- LOO SWEEP   : baseline vs ratio-augmented at 6 weights
+ #   Phase 3 -- DECISION    : BETTER -> production patch | SAME/WORSE -> dead end
++#
++# v1.3.2 STREAMLINE: scoring constants (N_BINS, ALPHA, weights, margins) are
++# imported from recognize_raga_v12.py rather than duplicated -- this was the
++# script that hardcoded a frozen (stale) Bhairavi override until 2026-07-11.
++# Importing removes the possibility of that drift recurring.
+ # ========================================================================================
+ 
+ FEATURES_DIR = r'D:\Swaragam\pcd_results\features_v12'
+ AGG_FOLDER   = r'D:\Swaragam\pcd_results\aggregation\v1.2\run_20260331_232228'
+ 
+-N_BINS = 72
+-ALPHA  = 0.01
+-EPS    = 1e-8
+-PCD_WEIGHT        = 0.8
+-DYAD_WEIGHT       = 0.2
+-PER_RAGA_WEIGHTS  = {'Bhairavi': (0.5, 0.5)}   # v1.3.1 frozen
+-MARGIN_STRICT     = 0.003
+-MIN_MARGIN_FINAL  = 0.001
+-MIN_STABLE_FRAMES = 5
+-
+ # Swara bin positions  (72 bins, 1200/72 = 16.67 cents/bin)
+ # Pa  = 702 cents  -> bin 42    N3 = 1088 cents -> bin 65
+ BIN_WIDTH = 1200.0 / N_BINS

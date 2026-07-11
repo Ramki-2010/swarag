@@ -1,6 +1,12 @@
 import os
 import numpy as np
 
+from recognize_raga_v12 import (
+    N_BINS, MIN_STABLE_FRAMES, ALPHA, EPS,
+    PCD_WEIGHT, DYAD_WEIGHT, PER_RAGA_WEIGHTS,
+    MARGIN_STRICT, MIN_MARGIN_FINAL,
+)
+
 # sandbox_abhogi_ratio.py  --  BUG-015: Abhogi vs Kalyani Quantitative Swara Energy Ratio
 # ========================================================================================
 # DEAD ENDS (do not re-attempt):
@@ -22,20 +28,15 @@ import numpy as np
 #   Phase 1 -- DIAGNOSTIC  : print Pa/N3 ratios per clip, check separation
 #   Phase 2 -- LOO SWEEP   : baseline vs ratio-augmented at 6 weights
 #   Phase 3 -- DECISION    : BETTER -> production patch | SAME/WORSE -> dead end
+#
+# v1.3.2 STREAMLINE: scoring constants (N_BINS, ALPHA, weights, margins) are
+# imported from recognize_raga_v12.py rather than duplicated -- this was the
+# script that hardcoded a frozen (stale) Bhairavi override until 2026-07-11.
+# Importing removes the possibility of that drift recurring.
 # ========================================================================================
 
 FEATURES_DIR = r'D:\Swaragam\pcd_results\features_v12'
 AGG_FOLDER   = r'D:\Swaragam\pcd_results\aggregation\v1.2\run_20260331_232228'
-
-N_BINS = 72
-ALPHA  = 0.01
-EPS    = 1e-8
-PCD_WEIGHT        = 0.8
-DYAD_WEIGHT       = 0.2
-PER_RAGA_WEIGHTS  = {'Bhairavi': (0.5, 0.5)}   # v1.3.1 frozen
-MARGIN_STRICT     = 0.003
-MIN_MARGIN_FINAL  = 0.001
-MIN_STABLE_FRAMES = 5
 
 # Swara bin positions  (72 bins, 1200/72 = 16.67 cents/bin)
 # Pa  = 702 cents  -> bin 42    N3 = 1088 cents -> bin 65
@@ -52,7 +53,11 @@ N3_BINS   = slice(max(0, N3_CENTRE - WINDOW), min(N_BINS, N3_CENTRE + WINDOW + 1
 # =============================================================================
 
 def load_features(features_dir):
-    """Load all .npz feature files. Returns {raga: [(fname, pcd), ...]}"""
+    """Load all .npz feature files. Returns {raga: [(fname, pcd, up, down), ...]}
+    v1.3.2 FIX: now loads per-clip dyads (up/down) at load time, not just PCD.
+    Previously run_loo() had no per-clip dyad data to exclude the held-out
+    clip from, so it silently reused the full (leaked) global model dyads
+    for every fold -- see run_loo() docstring below."""
     raga_pcds = {}
     for fname in sorted(os.listdir(features_dir)):
         if not fname.endswith('.npz'):
@@ -68,7 +73,8 @@ def load_features(features_dir):
             if np.sum(hist) == 0:
                 continue
             pcd = hist / (np.sum(hist) + EPS)
-            raga_pcds.setdefault(raga, []).append((fname, pcd))
+            up, down = compute_directional_dyads(cents_gated)
+            raga_pcds.setdefault(raga, []).append((fname, pcd, up, down))
         except Exception as e:
             print(f'  [SKIP] {fname}: {e}')
     return raga_pcds
@@ -209,31 +215,42 @@ def score_with_ratio(pcd, up, down, models, pcd_weights, ratio_weight=0.1):
 # =============================================================================
 
 def run_loo(all_features, models, scorer_fn, label):
-    """Leave-One-Out cross-validation across all 7 modelled ragas."""
+    """Leave-One-Out cross-validation across all 7 modelled ragas.
+
+    v1.3.2 BUGFIX: previously only mean_pcd was recomputed per fold from
+    `remaining` clips -- mean_up/mean_down were pulled straight from
+    models[raga]['mean_up']/['mean_down'], the FULL aggregation, which
+    still contained the held-out clip's own dyad contribution. That is
+    data leakage on 20% of the score (DYAD_WEIGHT) and likely explains
+    why this script's prior baseline (68.3%) didn't match
+    sandbox_loo_v131_canonical.py's (64.1%) on identical config -- NOT
+    yet re-run after this fix; expected but unverified. Both pcd and
+    dyads are now excluded together.
+    """
     correct = wrong = unknown = 0
     details = []
     raga_clips = {r: c for r, c in all_features.items() if r in models}
     for true_raga, clips in raga_clips.items():
-        for i, (fname, test_pcd) in enumerate(clips):
-            # Build LOO model set
+        for i, (fname, test_pcd, test_up, test_down) in enumerate(clips):
+            # Build LOO model set -- exclude clip i's pcd AND dyads
             loo_models = {}
             for raga, rclips in raga_clips.items():
-                remaining = ([p for j, (_, p) in enumerate(rclips) if j != i]
+                remaining = ([c for j, c in enumerate(rclips) if j != i]
                              if raga == true_raga
-                             else [p for _, p in rclips])
+                             else rclips)
                 if not remaining:
                     continue
-                mean_pcd  = np.mean(remaining, axis=0)
+                mean_pcd  = np.mean([c[1] for c in remaining], axis=0)
                 mean_pcd /= (np.sum(mean_pcd) + EPS)
+                mean_up   = np.mean([c[2] for c in remaining], axis=0)
+                mean_down = np.mean([c[3] for c in remaining], axis=0)
                 loo_models[raga] = {
                     'pcd':       mean_pcd,
-                    'mean_up':   models[raga]['mean_up'],
-                    'mean_down': models[raga]['mean_down'],
+                    'mean_up':   mean_up,
+                    'mean_down': mean_down,
                 }
             pcd_weights = compute_pcd_weights(loo_models)
-            d  = np.load(os.path.join(FEATURES_DIR, fname), allow_pickle=True)
-            up, down = compute_directional_dyads(d['cents_gated'])
-            scores = scorer_fn(test_pcd, up, down, loo_models, pcd_weights)
+            scores = scorer_fn(test_pcd, test_up, test_down, loo_models, pcd_weights)
             ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
             margin = (ranked[0][1] - ranked[1][1]) if len(ranked) >= 2 else 0.0
             pred   = ranked[0][0] if margin >= MIN_MARGIN_FINAL else 'UNKNOWN'
@@ -288,7 +305,7 @@ def phase1_diagnostic(all_features, models):
         clips = all_features[raga]
         pa_vals, n3_vals = [], []
         print(f'\n  --- {raga} ({len(clips)} clips) ---')
-        for fname, pcd in clips:
+        for fname, pcd, up, down in clips:
             pa, n3 = swara_ratios(pcd)
             pa_vals.append(pa);  n3_vals.append(n3)
             print(f'    {fname[:48]:48s}  Pa={pa:.4f}  N3={n3:.4f}')
@@ -301,8 +318,8 @@ def phase1_diagnostic(all_features, models):
               f'range=[{min(n3_vals):.4f}, {max(n3_vals):.4f}]')
     # Separation check
     if 'Abhogi' in all_features and 'Kalyani' in all_features:
-        ab_pa = [swara_ratios(p)[0] for _, p in all_features['Abhogi']]
-        ka_pa = [swara_ratios(p)[0] for _, p in all_features['Kalyani']]
+        ab_pa = [swara_ratios(p)[0] for _, p, _, _ in all_features['Abhogi']]
+        ka_pa = [swara_ratios(p)[0] for _, p, _, _ in all_features['Kalyani']]
         print()
         print('  SEPARATION CHECK (Pa ratio):')
         print(f'    Abhogi  mean={np.mean(ab_pa):.4f}  '

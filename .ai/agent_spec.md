@@ -396,7 +396,7 @@ Pipeline:
 
 Current: 7 ragas trained (Bhairavi, Kalyani, Shankarabharanam, Mohanam,
          Thodi, Saveri, Abhogi)
-         70 clips, 72-bin PCD, IDF x Variance scoring, v1.3.1
+         70 clips, 72-bin PCD, IDF x Variance scoring, v1.3.2 (uniform 0.8/0.2, no per-raga overrides)
 Goal: Full Melakarta coverage, janya ragas, gamaka modeling,
       phrase detection, live inference, Android deployment
 

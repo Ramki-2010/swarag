@@ -607,3 +607,46 @@
   Always check for duplicate `def` statements after any edit.
 - **Impact**: Silent behaviour change with no error. Extremely hard to detect without
   reading the full file carefully.
+
+### L-049: LOO Must Exclude the Held-Out Clip From EVERY Model Component, Not Just the Primary Feature
+- **Date**: 2026-07-11
+- **Context**: `sandbox_abhogi_ratio.py`'s `run_loo()` correctly recomputed
+  `mean_pcd` excluding the held-out clip each fold, but pulled `mean_up`/
+  `mean_down` straight from the full aggregated model (which still contained
+  the held-out clip's own dyad contribution). This produced a leaked
+  baseline of 68.3% (C=28/W=13/U=29) against the true canonical 64.1%
+  (C=25/W=14/U=31) — a 4.2pp inflation on identical config and constants.
+  Root cause: `load_features()` never loaded per-clip dyads in the first
+  place, only PCD, so there was no data available to properly exclude them.
+- **Rule**: A "leave-one-out" implementation is only as complete as its
+  weakest excluded component. If a score combines multiple features (PCD +
+  dyads here), EVERY feature's model average must be rebuilt from the
+  held-out set, not just the one that's easiest to recompute. Before
+  trusting any custom LOO script, verify per-fold exclusion against the
+  checked-in canonical script (`sandbox_loo_v131_canonical.py`) on identical
+  config — if the baselines don't match exactly, something in the fold
+  logic is leaking, not the config.
+- **Impact**: Every number `sandbox_abhogi_ratio.py` had ever reported was
+  inflated until this was found and fixed. See BUG-015, L-050.
+
+### L-050: A Positive Topline Delta Can Hide That the Target Metric Didn't Move
+- **Date**: 2026-07-11
+- **Context**: `sandbox_abhogi_ratio.py`'s auto-generated verdict logic only
+  compares `best_acc` (overall decided accuracy) against baseline and prints
+  "IMPROVEMENT" if positive. The corrected sweep showed +1.0% at
+  ratio_weight=0.05 — but Abhogi (the raga BUG-015 exists to fix) scored
+  IDENTICALLY at every single tested weight (C=1/W=2/U=4, 33%, flat). The
+  entire +1.0% came from unrelated movement in Bhairavi and Thodi, plus
+  a Mohanam regression (100%->50%) that the topline number doesn't surface
+  at all.
+- **Rule**: When testing a fix aimed at a specific failure mode (here:
+  one raga), the target metric's own per-raga row is the only number that
+  answers "did this work" — the topline delta answers a different question
+  ("did anything shift"), and can be positive while the target is
+  completely flat, or even while it regresses, if other ragas move more.
+  Automated verdict logic ("IMPROVEMENT"/"REGRESSION") that only checks
+  the topline should not be trusted for targeted fixes without manually
+  checking the specific row.
+- **Impact**: Following the script's own "ACTION: Apply ratio_weight=0.05"
+  recommendation would have shipped a change that does nothing for Abhogi,
+  silently degrades Mohanam, and gets credited as a win. See BUG-015.

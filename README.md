@@ -2,15 +2,17 @@
 
 Swarag is a deterministic Carnatic raga recognition engine built using interpretable signal processing and structured statistical modeling. It emphasizes explainability, musical grammar, and bias correction over black-box learning.
 
-## Version: v1.3.1
+## Version: v1.3.2
 
-v1.3.1 introduces:
-- **Abhogi + Saveri activated** (5 Zenodo varnams each, total 7 ragas, 70 clips)
-- **PCD-heavy weights** (0.8/0.2) -- fewest wrongs (13), best decided accuracy
-- **Saveri debuts at 75% LOO** -- strong first showing
-- **Thodi: 100% LOO** -- zero wrongs
-- LOO accuracy: ~64.9% decided (7 ragas, honest baseline)
-- Abhogi struggles (0% LOO -- janya of Kalyani, absorbed by parent)
+v1.3.2 retires the Bhairavi per-raga weight override:
+- Canonical LOO audit found the override scored 0% decided for Bhairavi
+  (9 wrongs) -- confirmed counter-productive, not just unproven
+- All 7 ragas now use uniform PCD=0.8/Dyad=0.2 weighting
+- LOO accuracy: 64.1% decided (25c/14w/31u), sandbox_loo_v131_canonical.py
+- Weakest raga is now Bhairavi (14%, needs diverse clips) rather than
+  Abhogi (33%, structural janya problem -- see L-044, BUG-015)
+- A prior 67.4% figure was found fabricated (per-raga rows never summed
+  to their stated total) and has been retired from all documentation
 
 ### Version History
 
@@ -23,7 +25,8 @@ v1.3.1 introduces:
 | v1.2.4 | 78.6% | 6 | 72-bin PCD |
 | v1.2.5 | 72.0% | 6 | Expanded data, dedup, MIN_CLIPS guardrail |
 | v1.3 | 58.8% | 5 | Harikambhoji removed, weights 0.7/0.3, honest baseline |
-| v1.3.1 | 67.4% | 7 | Abhogi+Saveri activated, 0.8/0.2, Bhairavi override |
+| v1.3.1 | 60.5% | 7 | Abhogi+Saveri activated, 0.8/0.2, Bhairavi override (later confirmed counter-productive) |
+| v1.3.2 | 64.1% | 7 | Bhairavi override retired, uniform 0.8/0.2 for all ragas |
 
 ## Core Philosophy
 

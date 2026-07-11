@@ -160,7 +160,9 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
    Komal swaras overlap heavily with Saveri and Thodi. Needs more diverse clips.
 2. Abhogi: 33% LOO -- STRUCTURAL: janya of Kalyani, PCD is strict subset (L-044)
    Weight overrides tested at 0.6/0.4, 0.5/0.5, 0.4/0.6 -- all 0% for Abhogi.
-   Needs QUANTITATIVE features (energy ratios or phrase n-grams) -- see Next Architectural Steps.
+   Energy-ratio scoring also tested and rejected (L-050, 2026-07-11) --
+   Abhogi result identical at every tested weight. Only phrase n-grams
+   remain untried -- see Next Architectural Steps.
 3. Mohanam: 100% decided but only 1/10 clips decides (9 UNKNOWN) -- margin too low.
    Needs diverse clips to build a stronger model signature.
 4. Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
@@ -172,6 +174,11 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 - Abhogi absent-swara penalty: gamakas leak Pa/Ni energy into Abhogi clips (L-046)
   Both data-driven (median threshold) and musicological (known bin ranges) approaches
   failed. Self-harm on 5/7 Abhogi clips. Best result +1 Kalyani, 0 Abhogi improvement.
+- Abhogi energy-ratio scoring: Pa/N3 separation ratio 1.01x -- essentially
+  none. Abhogi's per-raga LOO result was identical at every tested
+  ratio_weight (0.05-0.40, L-050, BUG-015). Confirms the problem is
+  distributional overlap, not a detection-threshold issue -- ruling out
+  the entire "swara-energy-level" feature category, not just this method.
 - Mohanam per-raga weight overrides: no improvement at 0.6/0.4, 0.5/0.5
 - Genericness penalty from model PCD: made things worse (L-016)
 - Escalation / dyad-heavy re-scoring: crushes margins 5x (L-017)
@@ -179,9 +186,9 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 ## Next Architectural Steps
 1. Bhairavi: add more diverse clips (currently 6 clean wav + Saraga stems).
    Clips are acoustically similar -- model has low variance, poor discrimination.
-2. Abhogi: needs QUANTITATIVE features (energy ratio comparison or phrase-level
-   transition patterns), NOT binary absent/present detection. Candidate approaches:
-   - Swara energy ratio: compare Pa-energy/Sa-energy between test clip and model
+2. Abhogi: swara-energy-level features (weight overrides, absent-swara
+   penalty, energy ratios) have ALL been tried and rejected. Only
+   sequence/phrase-level features remain untried:
    - Phrase n-grams: detect M2-D2-M2 (Abhogi) vs Pa-D2-N3 (Kalyani) patterns
    - Contour templates: characteristic melodic shapes
 3. Mohanam: needs diverse clips (different songs/artists), not code changes

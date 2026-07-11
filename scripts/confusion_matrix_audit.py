@@ -1,31 +1,36 @@
 """
-Confusion matrix audit for v1.3.1 LOO.
+Confusion matrix audit for v1.3.2 LOO.
 Built on top of sandbox_loo_v131_canonical.py infrastructure.
 Fixes vs old confusion_matrix_audit.py:
   - No fragile imports from sandbox_absent_swara_v2
-  - PER_RAGA_WEIGHTS applied correctly (Bhairavi 0.5/0.5)
   - IDF x Variance weights recomputed per LOO fold (not cached globally)
   - Raga-exclusion audit runs a clean sub-LOO, not a filtered global model
-Runs two scenarios:
-  1. Full 7-raga LOO (canonical baseline)
-  2. 7-raga LOO WITHOUT Bhairavi override (tests if override helps or hurts)
+v1.3.2 STREAMLINE: constants are now imported directly from
+recognize_raga_v12.py instead of duplicated. This is what actually fixes
+L-002 (constant sync) for this script -- a hardcoded copy of PER_RAGA_WEIGHTS
+drifted from production for one commit (2026-07-11) and silently mislabeled
+the retired Bhairavi override as canonical. Importing removes the
+possibility of drift; if production changes, this script changes with it
+automatically, with no manual sync step to forget.
+Runs three scenarios:
+  1. Full 7-raga LOO, uniform 0.8/0.2, NO override (canonical, v1.3.2)
+  2. [RETIRED] Formerly "7-raga WITH Bhairavi override" -- kept below,
+     disabled, as the historical comparison that caused the retirement
   3. 5-raga LOO excluding Bhairavi + Abhogi (upper-bound for stable ragas)
 """
 import os
 import numpy as np
 from collections import Counter
 
-# ── Config (must match recognize_raga_v12.py exactly) ──────────────────────
-N_BINS            = 72
-MIN_STABLE_FRAMES = 5
-ALPHA             = 0.01
-EPS               = 1e-8
-PCD_WEIGHT        = 0.8
-DYAD_WEIGHT       = 0.2
-PER_RAGA_WEIGHTS  = {"Bhairavi": (0.5, 0.5)}
-MARGIN_STRICT     = 0.003
-MIN_MARGIN_FINAL  = 0.001
-MIN_CLIPS         = 5
+from recognize_raga_v12 import (
+    N_BINS, MIN_STABLE_FRAMES, ALPHA, EPS,
+    PCD_WEIGHT, DYAD_WEIGHT, PER_RAGA_WEIGHTS,
+    MARGIN_STRICT, MIN_MARGIN_FINAL,
+)
+from aggregate_all_v12 import MIN_CLIPS_PER_RAGA as MIN_CLIPS
+
+# Historical only -- DO NOT re-enable without a new canonical LOO showing gain:
+PER_RAGA_WEIGHTS_RETIRED_BHAIRAVI_OVERRIDE = {"Bhairavi": (0.5, 0.5)}
 
 FEAT_DIR = r"D:\Swaragam\pcd_results\features_v12"
 
@@ -222,18 +227,18 @@ for c in clips:
     processed.append({"fname": c["fname"], "raga": c["raga"],
                       "pcd": pcd, "up": up, "down": down})
 
-# ── Scenario 1: Full 7-raga, WITH Bhairavi override (canonical) ────────────
+# ── Scenario 1: Full 7-raga, uniform 0.8/0.2, no override (CANONICAL v1.3.2) ─
 c1, w1, u1, a1 = run_loo_cm(
     processed,
-    "SCENARIO 1: 7 ragas, WITH Bhairavi 0.5/0.5 override (CANONICAL)",
+    "SCENARIO 1: 7 ragas, uniform 0.8/0.2, NO override (CANONICAL, v1.3.2)",
     per_raga_weights=PER_RAGA_WEIGHTS
 )
 
-# ── Scenario 2: Full 7-raga, WITHOUT Bhairavi override ─────────────────────
+# ── Scenario 2: Full 7-raga, WITH Bhairavi override (RETIRED, historical) ──
 c2, w2, u2, a2 = run_loo_cm(
     processed,
-    "SCENARIO 2: 7 ragas, NO Bhairavi override (global 0.8/0.2 only)",
-    per_raga_weights={}
+    "SCENARIO 2: 7 ragas, WITH Bhairavi 0.5/0.5 override (RETIRED -- confirmed 0% decided for Bhairavi)",
+    per_raga_weights=PER_RAGA_WEIGHTS_RETIRED_BHAIRAVI_OVERRIDE
 )
 
 # ── Scenario 3: 5-raga, Bhairavi + Abhogi excluded ─────────────────────────

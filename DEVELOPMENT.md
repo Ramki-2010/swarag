@@ -203,7 +203,7 @@ These must be identical across `aggregate_all_v12.py`, `recognize_raga_v12.py`, 
 | `MAX_DURATION_SEC` | 360 | Audio duration cap (6 min) |
 | `PCD_WEIGHT` | 0.8 | PCD scoring weight (global default) |
 | `DYAD_WEIGHT` | 0.2 | Dyad scoring weight (global default) |
-| `PER_RAGA: Bhairavi` | 0.5/0.5 | Per-raga override (transition-heavy) |
+| `PER_RAGA_WEIGHTS` | none (retired v1.3.2) | Bhairavi 0.5/0.5 tested and retired -- see ADR-006/ADR-013 |
 | `MARGIN_STRICT` | 0.003 | HIGH confidence threshold |
 | `MIN_MARGIN_FINAL` | 0.001 | MODERATE confidence threshold |
 | `MIN_CLIPS_PER_RAGA` | 5 | Aggregation guardrail |

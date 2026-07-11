@@ -54,6 +54,15 @@ See Section 12 below. Do NOT run it on every change.
 ### Ending a Session
 
 ```
+0. MANDATORY -- run on every .py file touched this session, before
+   anything else (added 2026-07-11, BUG-017: this exact class of bug
+   recurred 3 times -- 2026-06-24, 07-10, 07-11 -- because this check
+   was only ever a manual habit, never enforced):
+     a. python -m py_compile <file>   -- for every changed .py file
+     b. grep -rn "// \.\.\." <file>    -- editor placeholder leaked in
+     c. grep -c "^def <name>" <file>  -- for any function you edited,
+        confirm no duplicate definition was left behind (L-048)
+   Do not proceed to step 1 until all three are clean on every touched file.
 1. Summarize what was done.
 2. Update bugs.md:
    - New bugs found?         -> Add with BUG-NNN format
@@ -69,7 +78,12 @@ See Section 12 below. Do NOT run it on every change.
    - Any scripts changed?    -> Update script table
    - Any constants changed?  -> Update constants table
    - Any new features added? -> Update pipeline diagram
-6. List what should be done next.
+6. If a custom LOO/evaluation script was added or changed: run it against
+   sandbox_loo_v131_canonical.py on identical config and confirm the
+   baseline matches exactly before trusting any of its other output
+   (added 2026-07-11, BUG-018 -- a silent fold-exclusion leak inflated
+   one script's baseline by 4.2pp for an unknown period before this).
+7. List what should be done next.
 ```
 
 ---

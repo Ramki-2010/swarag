@@ -94,6 +94,67 @@
 
 ## Test Results Log
 
+### Run: 2026-07-11 -- Abhogi Energy-Ratio Sandbox (BUG-015), post LOO-leak fix
+**Script**: sandbox_abhogi_ratio.py
+**Purpose**: Test quantitative Pa/N3 energy-ratio scoring to separate
+Abhogi from Kalyani (successor to the rejected absent-swara approach, L-046)
+**Validation**: LOO cross-validation, 7 ragas, 70 clips, v1.3.2 config
+(uniform 0.8/0.2, no per-raga overrides)
+**Note**: This run followed a same-day fix to `run_loo()`'s dyad-exclusion
+leak (BUG-018). The first run of this sandbox (pre-fix) reported a leaked
+baseline of 68.3% and is NOT logged here as it does not reflect true LOO
+performance -- see BUG-018 for that run's details, kept only as evidence
+of the leak, not as an accuracy claim.
+
+**Phase 1 -- Diagnostic (Pa/N3 separation)**:
+| Raga | Pa mean | Pa std | Pa range |
+|---|---|---|---|
+| Abhogi | 0.0987 | 0.0967 | [0.0001, 0.2529] |
+| Kalyani | 0.0999 | 0.0801 | [0.0180, 0.2892] |
+
+Separation ratio: 1.01x (essentially none). 4/7 Abhogi clips fall inside
+Kalyani's Pa range. Script's own verdict: "WEAK SEPARATION... ratio scoring
+is unlikely to help."
+
+**Phase 2 -- LOO sweep (baseline vs ratio-augmented)**:
+| Config | C | W | U | Acc (decided) |
+|---|---|---|---|---|
+| Baseline (production, no ratio) | 25 | 14 | 31 | 64.1% |
+| ratio_weight=0.05 | 28 | 15 | 27 | 65.1% |
+| ratio_weight=0.10 | 26 | 15 | 29 | 63.4% |
+| ratio_weight=0.15 | 27 | 15 | 28 | 64.3% |
+| ratio_weight=0.20 | 26 | 15 | 29 | 63.4% |
+| ratio_weight=0.30 | 27 | 17 | 26 | 61.4% |
+| ratio_weight=0.40 | 27 | 19 | 24 | 58.7% |
+
+Baseline (C=25/W=14/U=31, 64.1%) exactly matches
+`sandbox_loo_v131_canonical.py` -- confirms BUG-018's fix is correct.
+
+**Abhogi-specific result (the actual target of this test)**:
+| Config | Abhogi C | Abhogi W | Abhogi U | Abhogi Acc |
+|---|---|---|---|---|
+| Baseline | 1 | 2 | 4 | 33% |
+| ratio_weight=0.05 (best topline) | 1 | 2 | 4 | 33% |
+
+**Identical at every tested weight, 0.05 through 0.40.** The ratio term
+never once changed an Abhogi prediction.
+
+**Where the topline +1.0% (ratio_weight=0.05) actually came from**:
+| Raga | Baseline | rw=0.05 | Change |
+|---|---|---|---|
+| Bhairavi | C=1 W=6 U=4 (14%) | C=2 W=6 U=3 (25%) | +1 correct |
+| Thodi | C=5 W=2 U=4 (71%) | C=7 W=2 U=2 (78%) | +2 correct |
+| Mohanam | C=1 W=0 U=9 (100%) | C=1 W=1 U=8 (50%) | **regression: +1 wrong** |
+| Abhogi | C=1 W=2 U=4 (33%) | C=1 W=2 U=4 (33%) | no change |
+
+**Verdict: REJECTED for BUG-015.** The script's own auto-generated
+"IMPROVEMENT / apply ratio_weight=0.05" verdict only checks topline delta
+and does not surface that the target raga was unaffected, or that Mohanam
+regressed. See L-050. Phase 1's own diagnostic correctly predicted this
+outcome. Added to the Abhogi proven-dead-ends list alongside weight
+overrides (L-044) and absent-swara penalty (L-046). Next candidate: phrase
+n-gram detection (M2-D2-M2 vs Pa-D2-N3), per architecture.md Next Steps.
+
 ### Run: 2026-04-01 -- Absent-Swara Penalty Sandbox (7 ragas, 70 clips)
 **Scripts**: sandbox_absent_swara.py (v1), sandbox_absent_swara_v2.py (v2)
 **Purpose**: Test absent-swara penalty to separate Abhogi from Kalyani

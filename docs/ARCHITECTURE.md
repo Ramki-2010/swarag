@@ -1,18 +1,4 @@
-﻿// ... existing code ...
-**LOO Cross-Validation Run B (WITH Bhairavi 0.5/0.5 override) -- CANONICAL v1.3.1**:
-| Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
-|---|---|---|---|---|---|
-| Thodi | 11 | 5 | 0 | 6 | 100% |
-| Saveri | 8 | 7 | 1 | 0 | 88% |
-| Shankarabharanam | 9 | 6 | 1 | 2 | 86% |
-| Kalyani | 14 | 8 | 4 | 2 | 67% |
-| Bhairavi | 11 | 4 | 1 | 6 | 40% |
-| Mohanam | 10 | 2 | 4 | 4 | 33% |
-| Abhogi | 7 | 2 | 2 | 3 | 25% |
-| **TOTAL** | **70** | **34** | **13** | **23** | **72.3%** |
-
-Sink analysis (Run B): Kalyani=6/14, Saveri=4/14, Thodi=2/14, Shankarabharanam=2/14
-// ... existing code ...# Swarag — Architecture Overview
+# Swarag — Architecture Overview
 
 This document explains the internal architecture and design rationale of Swarag.
 It is intended for developers, researchers, and technical collaborators who want
@@ -199,7 +185,8 @@ This produces a **raga signature**, not a single exemplar.
 - IDF x Variance weighted dot-product for PCD
 - Dot-product similarity for directional dyads (up + down averaged)
 - Weighted combination: `score = 0.8 * pcd_sim + 0.2 * dyad_sim`
-  (Bhairavi override: `score = 0.5 * pcd_sim + 0.5 * dyad_sim`)
+  (v1.3.2: applied uniformly to all ragas — the Bhairavi 0.5/0.5 override
+  was tested and retired; see ADR-006/ADR-013 and datasets.md baseline reconciliation)
 
 **Tiered Confidence System**
 
