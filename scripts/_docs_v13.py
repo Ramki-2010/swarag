@@ -1,3 +1,6 @@
+"""HISTORICAL SNAPSHOT -- v1.3 docs/verify script (2026-03-21). DO NOT RE-RUN.
+Weights 0.7/0.3 and 5-raga state recorded here are superseded by v1.3.1 (0.8/0.2, 7 ragas).
+Kept as an audit trail of what was verified during the v1.3 transition."""
 """Steps 5-10: Update docs, verify, commit, push."""
 import os
 os.chdir(r"D:\Swaragam")

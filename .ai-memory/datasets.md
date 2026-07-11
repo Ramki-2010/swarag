@@ -133,39 +133,29 @@
 **Weights**: PCD=0.8, Dyad=0.2 global; Bhairavi=0.5/0.5 override (CANONICAL run)
 **Scoring**: IDF x Variance, 72 bins, ALPHA=0.01
 
-**BASELINE RECONCILIATION (audit 2026-06-24)**:
-Three LOO numbers existed across files -- now resolved:
-- 64.9% (29c/13w/33u): Run A -- 0.8/0.2 global, NO Bhairavi override. Logged below.
-- 67.4% (29c/14w/27u): Run B -- 0.8/0.2 global, WITH Bhairavi 0.5/0.5 override. CANONICAL.
-- 60.5% (26c/17w/27u): Absent-swara sandbox (2026-04-01) -- different code path,
-  no Bhairavi override in sandbox scorer. Not comparable to production LOO.
-The 67.4% figure in architecture.md, PROJECT_STATUS.md, and the Dossier is Run B.
+**BASELINE RECONCILIATION (audit 2026-06-24, rerun 2026-06-24)**:
+Previous reconciliation claimed three distinct LOO numbers. Canonical rerun
+(sandbox_loo_v131_canonical.py) has resolved this definitively:
+- 60.5% (26c/17w/27u): CONFIRMED CANONICAL -- rerun output matches exactly.
+  Script: sandbox_loo_v131_canonical.py. Config: 0.8/0.2 global + Bhairavi 0.5/0.5 override.
+- 67.4% (Run B): FABRICATED -- row sums never added up. Retired.
+- 64.9% (Run A): Unverified; likely also reconstructed. Retired.
+The 60.5% figure is the single ground-truth LOO for v1.3.1.
 
-**LOO Cross-Validation (0.8/0.2)**:
+**LOO Cross-Validation -- CANONICAL v1.3.1 (rerun 2026-06-24, sandbox_loo_v131_canonical.py)**:
+**Config**: 0.8/0.2 global, Bhairavi=0.5/0.5 override, MIN_CLIPS=5, 72-bin IDF x Variance
 | Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
 |---|---|---|---|---|---|
-| Thodi | 11 | 5 | 0 | 6 | 100% |
-| Bhairavi | 11 | 1 | 0 | 10 | 100% |
-| Kalyani | 14 | 7 | 1 | 6 | 88% |
-| Saveri | 8 | 6 | 2 | 0 | 75% |
-| Shankarabharanam | 9 | 4 | 2 | 3 | 67% |
-| Mohanam | 10 | 1 | 4 | 5 | 20% |
-| Abhogi | 7 | 0 | 4 | 3 | 0% |
-| **TOTAL** | **70** | **24** | **13** | **33** | **64.9%** |
-
-**LOO Cross-Validation Run B (WITH Bhairavi 0.5/0.5 override) -- CANONICAL v1.3.1**:
-| Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
-|---|---|---|---|---|---|
-| Thodi | 11 | 5 | 0 | 6 | 100% |
 | Saveri | 8 | 7 | 1 | 0 | 88% |
-| Shankarabharanam | 9 | 6 | 1 | 2 | 86% |
-| Kalyani | 14 | 8 | 4 | 2 | 67% |
-| Bhairavi | 11 | 4 | 1 | 6 | 40% |
-| Mohanam | 10 | 2 | 4 | 4 | 33% |
-| Abhogi | 7 | 2 | 2 | 3 | 25% |
-| **TOTAL** | **70** | **29** | **14** | **27** | **67.4%** |
+| Shankarabharanam | 9 | 4 | 1 | 4 | 80% |
+| Kalyani | 14 | 6 | 2 | 6 | 75% |
+| Mohanam | 10 | 1 | 0 | 9 | 100% |
+| Abhogi | 7 | 1 | 2 | 4 | 33% |
+| Thodi | 11 | 7 | 2 | 2 | 78% |
+| Bhairavi | 11 | 0 | 9 | 2 | 0% (override hurts) |
+| **TOTAL** | **70** | **26** | **17** | **27** | **60.5%** |
 
-Sink analysis (Run B): Kalyani=6/14, Saveri=4/14, Thodi=2/14, Shankarabharanam=2/14
+Sink analysis: Saveri=7/17 wrongs (new sink, absorbs Bhairavi), Kalyani=2/17, Thodi=3/17
 
 **Weight sweep (same 7 ragas, 70 clips)**:
 | Config | C | W | U | Acc |

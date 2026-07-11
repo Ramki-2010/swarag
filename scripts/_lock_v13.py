@@ -1,4 +1,9 @@
 """
+HISTORICAL SNAPSHOT -- v1.3 lockdown script (2026-03-21). DO NOT RE-RUN.
+Weights 0.7/0.3 and 5-raga state recorded here are superseded by v1.3.1 (0.8/0.2, 7 ragas).
+Kept as an audit trail of what was changed during the v1.3 transition.
+"""
+"""
 v1.3 lockdown:
 1. Move short Mohanam clip (Shloka Sri Ramachandra) to excluded
 2. Update recognize_raga_v12.py weights to 0.7/0.3

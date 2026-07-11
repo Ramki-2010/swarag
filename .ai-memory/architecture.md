@@ -72,19 +72,19 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 | `sandbox_phase3b_variance.py` | Phase 3b variance weighting |
 | `sandbox_phase4_bins.py` | Phase 4 bin resolution |
 | `sandbox_phase4_production.py` | Phase 4 production test |
-| `sandbox_hubness.py` | Hubness correction (PARKED for 15+ ragas) |
+| `sandbox_loo_v131_canonical.py` | Canonical v1.3.1 LOO rerun (ground-truth numbers, 2026-06-24) |
 
 ## Trained Ragas (v1.3.1: 7 ragas, 70 clips)
 
 | Raga | Clips | LOO Acc (decided) |
 |---|---|---|
-| Thodi | 11 | 100% |
+| Mohanam | 10 | 100% (1c/0w/9u -- decides rarely) |
 | Saveri | 8 | 88% |
-| Shankarabharanam | 9 | 86% |
-| Kalyani | 14 | 67% |
-| Bhairavi | 11 | 40% (0.5/0.5 override) |
-| Mohanam | 10 | 33% |
-| Abhogi | 7 | 25% |
+| Shankarabharanam | 9 | 80% |
+| Thodi | 11 | 78% |
+| Kalyani | 14 | 75% |
+| Abhogi | 7 | 33% |
+| Bhairavi | 11 | 0% (0.5/0.5 override hurts -- 9 wrong to Saveri/Thodi) |
 
 ### Staged Ragas (excluded by MIN_CLIPS_PER_RAGA=5 guardrail)
 - Kamboji: 3 clips (needs 2 more; 3 Harikambhoji removed, BUG-013)
@@ -129,16 +129,18 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 { "final": str, "ranking": list, "margin": float, "confidence_tier": str }
 ```
 
-## Current Accuracy (v1.3.1, LOO, 7 ragas, 70 clips, with Bhairavi override)
+## Current Accuracy (v1.3.1, LOO, 7 ragas, 70 clips -- rerun 2026-06-24)
 
 | Metric | Value |
 |---|---|
-| Accuracy (decided) | 67.4% |
-| Correct | 29 |
-| Wrong | 14 |
+| Accuracy (decided) | 60.5% |
+| Correct | 26 |
+| Wrong | 17 |
 | Unknown | 27 (39%) |
-| Kalyani sink | 6/14 wrongs |
-| Saveri sink | 4/14 wrongs |
+| Saveri sink | 7/17 wrongs (new -- absorbs Bhairavi) |
+| Thodi sink | 3/17 wrongs |
+| Kalyani sink | 2/17 wrongs |
+| Bhairavi override | COUNTER-PRODUCTIVE -- 0% decided, 9/17 wrongs are Bhairavi |
 
 ## Accuracy Evolution
 
@@ -151,18 +153,20 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 | v1.2.4 | 78.6% | 72-bin PCD (53 clips) |
 | v1.2.5 | 72.0% | Expanded to 61 clips, dedup, MIN_CLIPS guardrail |
 | v1.3 | 58.8% | Harikambhoji removed, weights 0.7/0.3, honest 5-raga baseline |
-| v1.3.1 | 67.4% | Abhogi+Saveri activated, 0.8/0.2, Bhairavi 0.5/0.5 override |
+| v1.3.1 | 60.5% | Abhogi+Saveri activated, 0.8/0.2, Bhairavi 0.5/0.5 override (counter-productive) |
 
 ## Remaining Issues
-1. Abhogi: 25% LOO -- STRUCTURAL: janya of Kalyani, PCD is strict subset (L-044)
+1. Bhairavi: 0% LOO -- 0.5/0.5 override is counter-productive. 9/11 clips go wrong
+   (mostly to Saveri). Override should be REMOVED or re-tuned. Komal swaras
+   overlap with both Thodi and Saveri; dyad-heavy scoring makes it worse.
+2. Abhogi: 33% LOO -- STRUCTURAL: janya of Kalyani, PCD is strict subset (L-044)
    Weight overrides tested at 0.6/0.4, 0.5/0.5, 0.4/0.6 -- all 0% for Abhogi.
-   Only improved to 25% as side-effect of Bhairavi override.
-   Needs absent-swara penalty or phrase-level features.
-2. Mohanam: 33% LOO -- needs diverse clips (different songs/artists)
-   Dyad overrides tested (0.6/0.4, 0.5/0.5) -- no improvement. Data problem.
-3. Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
-4. No OOD score floor (margin-only detection)
-5. BUG-009: Mix audio causes OOD false positives
+   Needs QUANTITATIVE features (energy ratios or phrase n-grams) -- see Next Architectural Steps.
+3. Mohanam: 100% decided but only 1 clip decides (9/10 UNKNOWN) -- margin too low.
+   Needs diverse clips to build a stronger model signature.
+4. Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
+5. No OOD score floor (margin-only detection)
+6. BUG-009: Mix audio causes OOD false positives
 
 ## Proven Dead Ends (do not re-attempt)
 - Abhogi per-raga weight overrides: 0% at all tested weights (L-044)
@@ -174,13 +178,14 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 - Escalation / dyad-heavy re-scoring: crushes margins 5x (L-017)
 
 ## Next Architectural Steps
-1. Abhogi: needs QUANTITATIVE features (energy ratio comparison or phrase-level
+1. Bhairavi: REMOVE or retune the 0.5/0.5 override -- it causes 9 wrongs.
+   Test: rerun LOO without override; if global 0.8/0.2 is better, drop override.
+2. Abhogi: needs QUANTITATIVE features (energy ratio comparison or phrase-level
    transition patterns), NOT binary absent/present detection. Candidate approaches:
    - Swara energy ratio: compare Pa-energy/Sa-energy between test clip and model
    - Phrase n-grams: detect M2-D2-M2 (Abhogi) vs Pa-D2-N3 (Kalyani) patterns
    - Contour templates: characteristic melodic shapes
-2. Mohanam: needs diverse clips (different songs/artists), not code changes
-3. Bhairavi: 0% LOO in this sandbox baseline — needs investigation
+3. Mohanam: needs diverse clips (different songs/artists), not code changes
 4. Add Kamboji clips (YouTube/Rasikas)
 
 ## Parked Features

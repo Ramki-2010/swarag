@@ -1,4 +1,18 @@
-﻿# Swarag — Architecture Overview
+﻿// ... existing code ...
+**LOO Cross-Validation Run B (WITH Bhairavi 0.5/0.5 override) -- CANONICAL v1.3.1**:
+| Raga | Clips | Correct | Wrong | Unknown | Acc (decided) |
+|---|---|---|---|---|---|
+| Thodi | 11 | 5 | 0 | 6 | 100% |
+| Saveri | 8 | 7 | 1 | 0 | 88% |
+| Shankarabharanam | 9 | 6 | 1 | 2 | 86% |
+| Kalyani | 14 | 8 | 4 | 2 | 67% |
+| Bhairavi | 11 | 4 | 1 | 6 | 40% |
+| Mohanam | 10 | 2 | 4 | 4 | 33% |
+| Abhogi | 7 | 2 | 2 | 3 | 25% |
+| **TOTAL** | **70** | **34** | **13** | **23** | **72.3%** |
+
+Sink analysis (Run B): Kalyani=6/14, Saveri=4/14, Thodi=2/14, Shankarabharanam=2/14
+// ... existing code ...# Swarag — Architecture Overview
 
 This document explains the internal architecture and design rationale of Swarag.
 It is intended for developers, researchers, and technical collaborators who want
@@ -34,7 +48,7 @@ Aggregation --> Versioned Raga Signatures (pcd_stats/ + dyad_stats/)
   v
 Raga Scoring & Ranking
   |-- IDF x Variance weighted dot-product (PCD + Dyads)
-  |-- Weighted fusion (PCD=0.7, Dyad=0.3)
+  |-- Weighted fusion (PCD=0.8, Dyad=0.2)
   |-- MIN_CLIPS_PER_RAGA=5 guardrail
   +-- Tiered confidence: HIGH / MODERATE / UNKNOWN
   |
@@ -233,38 +247,27 @@ Every feature must first prove **musical validity** before optimization.
 
 ---
 
-## Current Scope (v1.3.1)
+## Current Status & Operational Data
 
-- 7 ragas modeled: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Abhogi, Saveri
-- 70 vocal-isolated training clips
-- 72-bin PCD with IDF x Variance weighting
-- Directional dyads with ALPHA=0.01 Laplace smoothing
-- Global weights: PCD=0.8, Dyad=0.2 (per-raga: Bhairavi=0.5/0.5)
-- MIN_CLIPS_PER_RAGA=5 guardrail
-- Monophonic vocal audio (vocal-isolated)
-- Medium-length excerpts (capped at 6 minutes)
-- LOO accuracy: 67.4% decided (honest baseline)
+For the latest project version, model accuracy, clip counts, trained raga list,
+and specific constant configurations, see the canonical memory file: 
+[.ai-memory/architecture.md](../.ai-memory/architecture.md).
 
-### Known Structural Limitation
+### Structural Limitations
 Janya ragas whose swaras are a strict subset of their parent melakarta
 (e.g., Abhogi ⊂ Kalyani) cannot be separated by PCD alone.
-Absent-swara penalty or phrase-level features are needed.
+Absent-swara penalty is a proven dead end (L-046: gamakas leak Pa/Ni energy
+into Abhogi clips, making binary detection unreliable). The path forward is
+QUANTITATIVE features: swara energy ratios or phrase-level n-grams.
 
 ---
 
-## Planned Extensions
+## Roadmap
 
-- Expand to full 72 Melakarta raga set
-- Add janya ragas
-- Absent-swara penalty for janya/parent raga separation
-- Phrase motif detection
-- Improved Sa drift handling
-- Gamaka modeling via micro-contour analysis
-- Sliding-window inference for longer recordings
-- Lightweight classifiers on top of validated features
-- Android deployment prototype
-- Live singing inference support
-- Educational explanations layered on top of results
+Swarag is a living project. We maintain a detailed roadmap of musical and
+computational extensions in the canonical memory documentation.
+For the active roadmap and planned extensions, see:
+[.ai-memory/architecture.md](../.ai-memory/architecture.md).
 
 ---
 
