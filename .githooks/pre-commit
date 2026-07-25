@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# Swarag pre-commit corruption gate.
+# Blocks the BUG-016 / BUG-017 class on staged Python files:
+#   - syntax corruption (e.g. "import librosaimport os")
+#   - editor placeholders prepended at column 0
+#   - unresolved merge-conflict markers
+#   - duplicated top-level def / class (the prepend-duplicate pattern)
+#
+# Install once (version-controlled, shared across all clones):
+#   git config core.hooksPath .githooks
+# File lives at .githooks/pre-commit, must be executable: chmod +x .githooks/pre-commit
+#
+# Deliberate bypass: git commit --no-verify
+#
+# Scope note: intentionally does NOT flag top-level CONSTANT reassignment
+# (e.g. ARCH = ARCH.replace(...)) -- that is legitimate and indistinguishable
+# from corruption by grep. A corrupting prepend also duplicates def/class
+# blocks and/or breaks syntax, both of which ARE caught below.
+
+set -uo pipefail
+
+fail=0
+py_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.py$' || true)
+[ -z "$py_files" ] && exit 0
+
+echo "pre-commit: auditing staged Python files..."
+
+for f in $py_files; do
+    [ -f "$f" ] || continue
+
+    # 1. Syntax must compile.
+    if ! python3 -m py_compile "$f" 2>/tmp/pyc_err; then
+        echo "  FAIL [syntax]      $f"
+        sed 's/^/                     /' /tmp/pyc_err
+        fail=1
+    fi
+
+    # 2. Editor placeholders / merge markers at column 0 only
+    #    (indented occurrences inside string literals are legitimate).
+    if grep -nE '^(//[[:space:]]*\.\.\.|\.\.\.[[:space:]]*existing|existing code[[:space:]]*\.\.\.|<{7}|>{7})' "$f" >/tmp/ph_hit 2>/dev/null; then
+        echo "  FAIL [placeholder] $f"
+        sed 's/^/                     /' /tmp/ph_hit
+        fail=1
+    fi
+
+    # 3. No duplicated top-level def / class (column 0 only).
+    dup_defs=$(grep -nE '^(def|class)[[:space:]]+[A-Za-z_]' "$f" \
+        | sed -E 's/^[0-9]+:(def|class)[[:space:]]+([A-Za-z_][A-Za-z0-9_]*).*/\2/' \
+        | sort | uniq -d)
+    if [ -n "$dup_defs" ]; then
+        echo "  FAIL [dup-def]     $f -> $(echo "$dup_defs" | tr '\n' ' ')"
+        fail=1
+    fi
+done
+
+if [ "$fail" -ne 0 ]; then
+    echo "pre-commit: BLOCKED. Fix the above or bypass deliberately with --no-verify."
+    exit 1
+fi
+
+echo "pre-commit: clean."
+exit 0

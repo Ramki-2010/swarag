@@ -36,7 +36,7 @@ Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for
 | Kalyani | 14 | 75% |
 | Thodi | 11 | 71% |
 | Abhogi | 7 | 33% |
-| Bhairavi | 11 | 14% (override retired -- needs more diverse clips instead) |
+| Bhairavi | 11 | 14% (override retired -- cause unproven: representation vs data) |
 | **Overall** | **70** | **64.1% decided** |
 
 ### What Changed from v1.3.1
@@ -55,8 +55,11 @@ Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for
 - Abhogi: 33% LOO -- STRUCTURAL problem (janya of Kalyani, PCD is strict subset)
   Weight overrides (L-044) and energy-ratio scoring (L-050) both tested,
   both rejected -- confirmed no signal, not just weak. Next: phrase n-grams.
-- Bhairavi: 14% LOO -- override retired, needs more diverse clips instead
-- Mohanam: 100% decided but 9/10 UNKNOWN -- model barely commits, needs data
+- Bhairavi: 14% LOO -- override retired. Cause UNPROVEN: whether the limit is
+  representation (feature) or data (clip diversity) is untested. "More clips"
+  is a hypothesis, not a confirmed diagnosis.
+- Mohanam: 100% decided but 9/10 UNKNOWN -- model barely commits. Likely a
+  data-diversity limit, but unproven.
 - Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
 - Saveri is the new sink (6/14 wrongs) -- was Kalyani pre-retirement
 - No OOD score floor
@@ -65,8 +68,9 @@ Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for
 
 ## Priority Plan
 
-1. Add diverse Bhairavi clips (different songs/artists) -- weakest raga at
-   14%, now confirmed a data problem, not a weight problem
+1. Diagnose Bhairavi (weakest raga at 14%). The weight hack is disproven
+   (override retired), but data-vs-representation as the root cause is still
+   UNPROVEN. Adding diverse clips is the first test, not a confirmed fix.
 2. **Abhogi phrase n-gram detection** (ARCHITECTURAL): energy-ratio scoring
    tested 2026-07-11 and rejected (BUG-015, L-050) -- Abhogi's per-raga
    result was unchanged at every tested weight. Absent-swara penalty (L-046)
@@ -93,6 +97,32 @@ Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for
 
 ---
 
+## Open Questions (Knowledge State)
+
+Classify remaining work by what is *known*, not by data/architecture/features.
+This is a diagnostic layer, not the roadmap -- it says where the uncertainty
+is; the Priority Plan says what to do about it.
+
+| Question | Status |
+|---|---|
+| Is 72-bin PCD the right resolution? | Proven (ADR-002, +11.9% LOO) |
+| Is IDF x Variance weighting correct? | Proven (ADR-003, +6%) |
+| Is ALPHA=0.01 correct? | Proven (ADR-004) |
+| Are per-raga fusion overrides useful? | Rejected (L-044, ADR-013) |
+| Is the absent-swara penalty useful? | Rejected (ADR-008) |
+| Is energy-ratio scoring useful? | Rejected (ADR-014) |
+| Can phrase models solve Abhogi? | UNKNOWN -- untried, next candidate |
+| Is Abhogi solvable on the current dataset at all? | UNKNOWN |
+| Is Bhairavi limited by representation or by data? | UNKNOWN |
+| Is Mohanam limited by data diversity? | Likely, unproven |
+
+Rule: do not promote an UNKNOWN to a cause ("data problem", "solved") without
+an experiment that isolates it. Rejecting scoring-time features proves only
+that scoring-time is exhausted -- nothing about what the real fix is.
+
+---
+
 ## Philosophy
 
 Honest baselines over inflated numbers. Clean data over more data.
+Do not state as proven what has only been assumed.
