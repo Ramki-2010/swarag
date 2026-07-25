@@ -120,6 +120,39 @@ PRIORITY 5: DATASET
 
 ---
 
+## 3b. Research vs Recognition (Priority + Evidence Discipline)
+
+The primary product is the recognizer (see PROJECT_STATUS Mission). Research
+exists to unblock it, not to run alongside it as a separate goal.
+
+Before any exploratory / research work:
+
+1. State the recognition problem it serves.
+2. State the research question as a single unknown.
+3. Define success AND failure *before* running -- pre-register the pass line.
+4. Run the smallest experiment that can answer it.
+5. Record the outcome in ADR / Lessons / PROJECT_STATUS, pass or fail.
+
+**Tie-break:** when two tasks are equally valuable, prioritize the one that
+most directly improves the recognizer. Research is prioritized only when it is
+the shortest path to removing a recognition bottleneck (e.g. Q-001 gates every
+phrase-based accuracy fix, so it counts as recognition work, not a detour).
+
+### Promotion Rule
+
+An idea enters Swarag's production architecture only along this path:
+
+```
+Observation -> Hypothesis -> Experiment -> Evidence -> ADR/Lesson -> Production
+```
+
+No hypothesis is promoted directly into production. This is the rule that
+would have stopped the fabricated 67.4% baseline, the retired overrides, and
+speculative architecture. Discussion is not evidence; agreement is not
+evidence; only a pre-registered experiment is.
+
+---
+
 ## 4. Decision Tree: "Will Adding More Data Fix This?"
 
 Before adding data, ask these questions:

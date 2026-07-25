@@ -5,6 +5,19 @@ Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for
 
 ---
 
+## Mission
+
+Swarag's primary goal is a usable, explainable Carnatic raga recognizer.
+
+Research into representation, temporal reasoning, phrase modelling, gamakas,
+and computational music exists to improve that recognizer and deepen
+understanding of Carnatic music -- research is a means, not an end. When
+priorities compete, recognition takes precedence, unless a research experiment
+is the shortest path to removing a recognition bottleneck (e.g. Q-001 gates
+every phrase-based accuracy fix).
+
+---
+
 ## What Is Stable
 
 - 72-bin PCD + IDF x Variance weighted dot-product scoring
@@ -71,11 +84,12 @@ Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for
 1. Diagnose Bhairavi (weakest raga at 14%). The weight hack is disproven
    (override retired), but data-vs-representation as the root cause is still
    UNPROVEN. Adding diverse clips is the first test, not a confirmed fix.
-2. **Abhogi phrase n-gram detection** (ARCHITECTURAL): energy-ratio scoring
-   tested 2026-07-11 and rejected (BUG-015, L-050) -- Abhogi's per-raga
-   result was unchanged at every tested weight. Absent-swara penalty (L-046)
-   also rejected. Phrase-level sequence detection (M2-D2-M2 vs Pa-D2-N3) is
-   the only untried category for this raga.
+2. **Abhogi -- Q-001 feasibility spike FIRST** (ARCHITECTURAL): every
+   scoring-time approach is rejected (overrides L-044, absent-swara L-046,
+   energy-ratio L-050). Phrase-level sequence detection (M2-D2-M2 vs Pa-D2-N3)
+   is the only untried category -- but it is BLOCKED by Q-001: prove the
+   representation can be quantized into swara sequences despite gamaka smearing
+   before building any phrase model (Q-002). Do not skip the gate.
 3. Add 4-6 diverse Mohanam clips -- 100% decided but 9/10 UNKNOWN
 4. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga has 0 new sources)
 5. Do NOT add more new ragas until weak ones > 60%
@@ -97,24 +111,24 @@ Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for
 
 ---
 
-## Open Questions (Knowledge State)
+## Research Gates (Knowledge State)
 
-Classify remaining work by what is *known*, not by data/architecture/features.
-This is a diagnostic layer, not the roadmap -- it says where the uncertainty
-is; the Priority Plan says what to do about it.
+Work is tracked by what is *known*, not by feature lists. Settled questions
+live in ADRs; only open unknowns are gated here. A gate is a diagnostic, not
+a promise -- see the Promotion Rule in workflow.md.
 
-| Question | Status |
-|---|---|
-| Is 72-bin PCD the right resolution? | Proven (ADR-002, +11.9% LOO) |
-| Is IDF x Variance weighting correct? | Proven (ADR-003, +6%) |
-| Is ALPHA=0.01 correct? | Proven (ADR-004) |
-| Are per-raga fusion overrides useful? | Rejected (L-044, ADR-013) |
-| Is the absent-swara penalty useful? | Rejected (ADR-008) |
-| Is energy-ratio scoring useful? | Rejected (ADR-014) |
-| Can phrase models solve Abhogi? | UNKNOWN -- untried, next candidate |
-| Is Abhogi solvable on the current dataset at all? | UNKNOWN |
-| Is Bhairavi limited by representation or by data? | UNKNOWN |
-| Is Mohanam limited by data diversity? | Likely, unproven |
+**Settled:** 72-bin PCD (ADR-002), IDF x Variance (ADR-003), ALPHA=0.01
+(ADR-004) -- proven. Per-raga overrides (ADR-013), absent-swara penalty
+(ADR-008), energy-ratio scoring (ADR-014) -- rejected.
+
+### Active Gates
+
+| Gate  | Question | Status | Next action |
+|-------|----------|--------|-------------|
+| Q-001 | Can the current pitch representation be reliably quantized into swara sequences despite gamaka smearing? | Active | Feasibility spike (cheap, decisive) |
+| Q-002 | If Q-001 passes, do phrase n-grams improve Abhogi / sibling-raga discrimination? | Blocked by Q-001 | Phrase-model experiment |
+| Q-003 | Is Bhairavi (14%, worst raga) limited by representation or by dataset diversity? | Unknown, independent of Q-001 | Isolate: add diverse clips vs feature analysis |
+| Q-004 | What is the legally permissible reproducibility artifact for Saraga-derived data -- audio, or derived features only? | Pending | Review Saraga license, then record ADR (gates ADR-016's form) |
 
 Rule: do not promote an UNKNOWN to a cause ("data problem", "solved") without
 an experiment that isolates it. Rejecting scoring-time features proves only
