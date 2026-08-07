@@ -57,7 +57,7 @@ a trigger condition), **REJECTED** (tested, does not work — kept for record),
 | Absent-swara penalty (data-driven, median threshold) | REJECTED | Self-harm on 5/7 Abhogi clips | L-046 |
 | Absent-swara penalty (musicological bin ranges) | REJECTED | Gamaka spillover puts 6-19% energy in "absent" swaras | L-046 |
 | Swara energy-ratio comparison (quantitative) | REJECTED (2026-07-11) | `sandbox_abhogi_ratio.py`, BUG-015. Abhogi score identical at every tested weight (0.05-0.40) -- confirmed no signal, not just weak. | BUG-015, L-050 |
-| Phrase n-gram detection | PARKED (not yet implemented) | Candidate: M2-D2-M2 vs Pa-D2-N3 | architecture.md Next Steps |
+| Phrase n-gram detection | PARKED -> Q-001B (pre-registered) | Candidates DISCOVERED FROM DATA; M2-D2-M2 vs Pa-D2-N3 is musicologically suspect, not assumed. Q-001A found representation adequate (n=7, p=0.39) | Q-001B_Research_Plan.md, L-052 |
 
 ## Evaluation / Governance
 
@@ -66,6 +66,8 @@ a trigger condition), **REJECTED** (tested, does not work — kept for record),
 | LOO as sole canonical trust tier | ACTIVE | `sandbox_loo_v131_canonical.py` is the permanent ground-truth rerun script | ADR-011, commit b1a1ac9 |
 | Fabricated-table detection (row-sum check) | ACTIVE (process) | Any logged table's per-raga rows must sum to its TOTAL row before being trusted | 2026-07-10/11 audit history (this table caught two separate fabrications) |
 | LOO fold completeness check | ACTIVE (process) | Any custom LOO script's baseline must be cross-checked against `sandbox_loo_v131_canonical.py` on identical config before its results are trusted -- a mismatch means a fold-exclusion bug, not a config difference | BUG-018, L-049 |
+| Feature cache reuse (validated f0) | ACTIVE | Experiments reuse cached raw f0 (features_v12); `--validate` proves cache==live (maxdiff 0.00e+00, 30 clips) before trust | L-051, ADR-017 |
+| FEATURE_VERSION single source | ACTIVE | Owned by scripts/feature_constants.py; all producers + consumers import it | L-053, ADR-015, ADR-017 |
 
 ## OOD / Robustness
 

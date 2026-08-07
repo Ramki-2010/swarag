@@ -244,8 +244,12 @@ and specific constant configurations, see the canonical memory file:
 Janya ragas whose swaras are a strict subset of their parent melakarta
 (e.g., Abhogi ⊂ Kalyani) cannot be separated by PCD alone.
 Absent-swara penalty is a proven dead end (L-046: gamakas leak Pa/Ni energy
-into Abhogi clips, making binary detection unreliable). The path forward is
-QUANTITATIVE features: swara energy ratios or phrase-level n-grams.
+into Abhogi clips, making binary detection unreliable). Swara energy-ratio
+scoring was also tested and rejected (ADR-014 / L-050). Q-001A (2026-07)
+confirmed the representation itself is adequate for Abhogi (no evidence of
+degradation vs easy ragas), so the path forward is phrase-level / sequence
+features -- pursued under Q-001B with candidates discovered from data, not
+assumed.
 
 ---
 

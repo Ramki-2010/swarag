@@ -161,8 +161,10 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 2. Abhogi: 33% LOO -- STRUCTURAL: janya of Kalyani, PCD is strict subset (L-044)
    Weight overrides tested at 0.6/0.4, 0.5/0.5, 0.4/0.6 -- all 0% for Abhogi.
    Energy-ratio scoring also tested and rejected (L-050, 2026-07-11) --
-   Abhogi result identical at every tested weight. Only phrase n-grams
-   remain untried -- see Next Architectural Steps.
+   Abhogi result identical at every tested weight. Q-001A (2026-07) found NO
+   evidence the representation degrades on Abhogi (n=7, permutation p=0.39),
+   so phrase-level features (Q-001B) are the live candidate -- see Next
+   Architectural Steps.
 3. Mohanam: 100% decided but only 1/10 clips decides (9 UNKNOWN) -- margin too low.
    Needs diverse clips to build a stronger model signature.
 4. Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
@@ -187,9 +189,13 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 1. Bhairavi: add more diverse clips (currently 6 clean wav + Saraga stems).
    Clips are acoustically similar -- model has low variance, poor discrimination.
 2. Abhogi: swara-energy-level features (weight overrides, absent-swara
-   penalty, energy ratios) have ALL been tried and rejected. Only
-   sequence/phrase-level features remain untried:
-   - Phrase n-grams: detect M2-D2-M2 (Abhogi) vs Pa-D2-N3 (Kalyani) patterns
+   penalty, energy ratios) have ALL been tried and rejected. Q-001A confirmed
+   the representation is adequate (no evidence of degradation, n=7 p=0.39), so
+   sequence/phrase-level features are the live candidate -- pursued under
+   Q-001B (.ai-memory/Q-001B_Research_Plan.md):
+   - Phrase n-grams: candidates DISCOVERED FROM DATA, not assumed. The
+     M2-D2-M2 vs Pa-D2-N3 example is musicologically suspect (Abhogi has no
+     M2/Pa) and must not be hardcoded.
    - Contour templates: characteristic melodic shapes
 3. Mohanam: needs diverse clips (different songs/artists), not code changes
 4. Add Kamboji clips (YouTube/Rasikas)

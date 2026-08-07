@@ -84,12 +84,13 @@ every phrase-based accuracy fix).
 1. Diagnose Bhairavi (weakest raga at 14%). The weight hack is disproven
    (override retired), but data-vs-representation as the root cause is still
    UNPROVEN. Adding diverse clips is the first test, not a confirmed fix.
-2. **Abhogi -- Q-001 feasibility spike FIRST** (ARCHITECTURAL): every
-   scoring-time approach is rejected (overrides L-044, absent-swara L-046,
-   energy-ratio L-050). Phrase-level sequence detection (M2-D2-M2 vs Pa-D2-N3)
-   is the only untried category -- but it is BLOCKED by Q-001: prove the
-   representation can be quantized into swara sequences despite gamaka smearing
-   before building any phrase model (Q-002). Do not skip the gate.
+2. **Abhogi -- Q-001B phrase-discrimination experiment** (ARCHITECTURAL):
+   every scoring-time approach is rejected (overrides L-044, absent-swara L-046,
+   energy-ratio L-050). Q-001A answered: the representation is adequate (no
+   evidence of degradation), so phrase-level features are the live candidate.
+   Q-001B (pre-registered) tests whether data-discovered n-grams add
+   discriminatory power beyond PCD+dyads. Discover candidates from data -- the
+   docs' M2-D2-M2 example is musicologically suspect and must not be assumed.
 3. Add 4-6 diverse Mohanam clips -- 100% decided but 9/10 UNKNOWN
 4. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga has 0 new sources)
 5. Do NOT add more new ragas until weak ones > 60%
@@ -125,14 +126,20 @@ a promise -- see the Promotion Rule in workflow.md.
 
 | Gate  | Question | Status | Next action |
 |-------|----------|--------|-------------|
-| Q-001 | Can the current pitch representation be reliably quantized into swara sequences despite gamaka smearing? | Active | Feasibility spike (cheap, decisive) |
-| Q-002 | If Q-001 passes, do phrase n-grams improve Abhogi / sibling-raga discrimination? | Blocked by Q-001 | Phrase-model experiment |
+| Q-001A | Does production extraction yield stable, meaningful swaras for Abhogi (representation sufficiency)? | ANSWERED 2026-07 -- no evidence of degradation vs easy ragas (n=7, permutation p=0.39, d=0.38; Abhogi median +0.35 vs refs +0.39). Representation adequate; NOT the bottleneck. | done |
+| Q-001B | Can data-discovered swara phrase (n-gram) features add discriminatory power beyond the current PCD+dyad representation? | ACTIVE -- unblocked by Q-001A | Pre-registered sandbox (.ai-memory/Q-001B_Research_Plan.md) |
+| Q-002 | If Q-001B shows phrase power, does a phrase model improve recognition? | Blocked by Q-001B | Phrase-model experiment |
 | Q-003 | Is Bhairavi (14%, worst raga) limited by representation or by dataset diversity? | Unknown, independent of Q-001 | Isolate: add diverse clips vs feature analysis |
 | Q-004 | What is the legally permissible reproducibility artifact for Saraga-derived data -- audio, or derived features only? | Pending | Review Saraga license, then record ADR (gates ADR-016's form) |
 
 Rule: do not promote an UNKNOWN to a cause ("data problem", "solved") without
 an experiment that isolates it. Rejecting scoring-time features proves only
 that scoring-time is exhausted -- nothing about what the real fix is.
+
+**Open note (Q-001A):** the reference band contained 3 sub-chance clips
+(Vara Leela Gana Lola, Undan Paada Pankayam, Sundari Nee Divya). Well-
+represented ragas should not score below chance -- likely tonic mis-estimation
+or heavy-gamaka passages. Diagnose before relying on this band again.
 
 ---
 

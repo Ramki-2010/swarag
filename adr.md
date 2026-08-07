@@ -236,6 +236,26 @@ already made and evidenced elsewhere in the memory files. Generated
   enforcement-open split.
 - **Source**: BUG-017, ADR-011, the fabricated 67.4% and 72.3% tables.
 
+### ADR-017: Feature Cache Reuse Requires Validation; FEATURE_VERSION Has One Owner
+- **Context**: Q-001A needed pyin features for many clips; re-running pyin live
+  is the sole bottleneck (~2 min/clip). The production extractor already caches
+  raw `f0` to `features_v12/*.npz`. Separately, `FEATURE_VERSION` was hardcoded
+  in five files, so a format bump would silently break cache lookup everywhere.
+- **Decision**:
+  1. Experiments MAY reuse cached raw `f0` (never `cents_gated`, a different
+     post-gate array) and skip pyin, but ONLY after `--validate` proves
+     cache == live for the corpus in use (f0 bit-exact AND all metrics
+     identical). Re-validate after any change to extraction / downstream pitch
+     logic or a librosa upgrade.
+  2. `FEATURE_VERSION` is owned by `scripts/feature_constants.py`; every
+     producer and consumer imports it. Never imported from a producer module
+     (import-time side effects) and never re-declared.
+- **Consequence**: Q-001A/B run in seconds on cached clips; cache faithfulness
+  is provable, not assumed; a feature-format bump is a one-line change all
+  readers follow. Validated once (L-051: 30 clips, 0 mismatches, maxdiff 0).
+- **Status**: ACTIVE.
+- **Source**: L-051, L-053, ADR-015 (single-source discipline).
+
 ---
 
 ## Maintenance Rule
