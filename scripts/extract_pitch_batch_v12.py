@@ -12,7 +12,7 @@ FMIN = librosa.note_to_hz("C1")
 FMAX = librosa.note_to_hz("C6")
 PCD_BINS = 36
 
-FEATURE_VERSION = "v1.2"
+from feature_constants import FEATURE_VERSION
 
 WINDOW_SIZE = 10
 DRIFT_THRESHOLD = 25

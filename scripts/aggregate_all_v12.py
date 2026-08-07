@@ -10,7 +10,7 @@ BASE_DIR = r"D:\Swaragam"
 FEATURES_DIR = os.path.join(BASE_DIR, "pcd_results", "features_v12")
 AGG_BASE_DIR = os.path.join(BASE_DIR, "pcd_results", "aggregation")
 
-FEATURE_VERSION = "v1.2"
+from feature_constants import FEATURE_VERSION
 
 N_BINS = 72  # Phase 4: was 36
 MIN_STABLE_FRAMES = 5

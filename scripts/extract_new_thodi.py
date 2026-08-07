@@ -6,7 +6,7 @@ from utils import estimate_tonic
 SR = 22050
 MAX_DURATION_SEC = 360
 N_BINS = 36
-FEATURE_VERSION = "v1.2"
+from feature_constants import FEATURE_VERSION
 FEAT_DIR = r"D:\Swaragam\pcd_results\features_v12"
 
 new_files = [
