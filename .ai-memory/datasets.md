@@ -6,7 +6,11 @@
 - **Ragas (10)**: Bhairavi, Kalyani, Shankarabharanam, Mohanam, Thodi, Kamboji, Abhogi, Saveri, Madhyamavati, Hamsadhvani
 - **Format**: .wav, .mp3, .flac
 - **Purpose**: Training data for aggregation pipeline
-- **Current clip counts** (as of 2026-03-31, v1.3.1 -- canonical):
+- **Current clip counts** (dataset composition as of 2026-03-31; unchanged since --
+  this is the current modeled dataset). The 2026-03-31 date refers to dataset
+  composition only, not to scoring configuration: current canonical scoring is
+  uniform PCD=0.8 / Dyad=0.2 with no per-raga overrides (v1.3.2), and the current
+  canonical LOO is 64.1% decided (25c/14w/31u):
   | Raga | Total | Sources |
   |---|---|---|
   | Bhairavi | 11 | 6 clean wav + 1 stem + 4 demucs |
@@ -19,7 +23,7 @@
   | Saveri | 8 | 3 demucs/stems + 5 varnams (Zenodo, extracted 2026-03-21) |
   | Madhyamavati | 2-3 | demucs |
   | Hamsadhvani | 1 | demucs |
-  **Total: 70 clips modeled (7 ragas), 75 features total, 2 ragas staged**
+  **Total: 70 clips modeled (7 ragas), 3 ragas staged (Kamboji, Madhyamavati, Hamsadhvani)**
   Target: 15 clips per raga. Kamboji (3) and Mohanam (10) still below target.
   **Excluded clips** (moved to excluded/ folders, not deleted):
   - Munnu Ravana (Thodi): entropy 2.4, too concentrated, skewed model
@@ -52,7 +56,7 @@
 ## Aggregated Models
 - **36-bin models**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260310_085601\`
 - **72-bin models (v1.2.4)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260312_205842_72bins\`
-- **72-bin models (v1.3.1 current)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260331_232228\` (7 ragas, 70 clips, PCD=0.8/Dyad=0.2)
+- **72-bin models (current)**: `D:\Swaragam\pcd_results\aggregation\v1.2\run_20260331_232228\` (7 ragas, 70 clips, PCD=0.8/Dyad=0.2 uniform, no per-raga overrides)
 - **ALPHA**: 0.01 (Phase 2 fix, was 0.5)
 - **Contents**:
   - `pcd_stats/{raga}_pcd_stats.npz` — mean_pcd, std_pcd

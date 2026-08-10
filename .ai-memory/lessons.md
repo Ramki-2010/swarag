@@ -268,7 +268,12 @@
   Chordia & Rae (2007) used 12x12 matrices (144 cells). With 144 cells,
   ALPHA=0.5 would add only 72 total — much more reasonable.
 - **Rule**: ALPHA must be proportional to 1/(matrix_size). For 1296 cells,
-  ALPHA=0.01 gives signal ratio 97% and discrimination ratio 5.88x.
+  ALPHA=0.01 gives signal ratio 97%, and `diag_alpha.py`'s analytical model
+  projected a discrimination ratio of 5.88x. That 5.88x is a simulated
+  projection, not a measurement — it assumes fixed overlap constants
+  (shared_cells=30, diff_cells=5) rather than reading real dyad matrices.
+  The measured ratio on actual models is 1.73x (`sandbox_phase2_alpha.py`,
+  see L-026 and the Impact line below); 1.73x is the canonical figure.
   General formula: ALPHA < (mean_transitions / matrix_cells) * 0.1.
 - **Impact**: ALPHA=0.01 improved dyad discrimination from 1.24x to 1.73x,
   and overall accuracy from 61% to 64%.
@@ -599,11 +604,14 @@
 - **Context**: When the script was corrupted with a prepended duplicate block, Python
   loaded the FIRST definition of each function (the corrupted minified ones). The
   original well-documented functions at the bottom were silently ignored.
-- **Rule**: In Python, if a function or constant is defined twice in the same module,
-  the SECOND definition overwrites the first at import time — UNLESS the first definition
-  is encountered first during sequential execution. For top-level code, last definition
-  wins for constants, but for functions the last `def` wins. Either way, duplicate
-  definitions in a production file are always a bug and must never be tolerated.
+- **Rule**: In Python, a module executes top to bottom, so the LAST definition
+  wins: a later `def` (or `class`) rebinds the name, replacing the earlier
+  function object, and a later top-level assignment replaces the earlier value.
+  What made the corruption confusing is that the injected block was PREPENDED,
+  so its definitions ran first and the original definitions further down
+  replaced them — the surviving code was whichever copy appeared last in the
+  file, not whichever was "correct." Either way, duplicate definitions in a
+  production file are always a bug and must never be tolerated.
   Always check for duplicate `def` statements after any edit.
 - **Impact**: Silent behaviour change with no error. Extremely hard to detect without
   reading the full file carefully.
@@ -650,3 +658,80 @@
 - **Impact**: Following the script's own "ACTION: Apply ratio_weight=0.05"
   recommendation would have shipped a change that does nothing for Abhogi,
   silently degrades Mohanam, and gets credited as a win. See BUG-015.
+
+### L-051: Prove Cache Faithfulness Before Substituting It for Live Computation
+- **Date**: 2026-08-07
+- **Context**: Q-001A needed pyin features across the corpus; live pyin was the
+  dominant runtime bottleneck (~2 min/clip), while the production extractor
+  already caches raw `f0` to `features_v12/*.npz`. Substituting the cache is
+  only safe if it is provably identical, not merely assumed identical — a
+  librosa version bump or a silent format change between cache-build time and
+  experiment time would produce different numbers with no visible error.
+  Q-001A therefore shipped a `--validate` mode
+  (`sandbox_q001a_representation_sufficiency.py`) that, for every clip with a
+  cache entry, recomputes pyin live and compares both the raw `f0` array and
+  all five derived metrics (coverage, prec_raw, prec_corr, recall, residual).
+- **Rule**: A cache may substitute for live computation only after an explicit
+  validation run proves equivalence on the corpus in use — `f0` arrays equal
+  AND every derived metric identical, not just array shapes or spot checks.
+  Passing on `f0` alone is insufficient; the metrics are what the experiment
+  actually consumes. Re-validate after any change to extraction or downstream
+  pitch logic, or after a librosa upgrade.
+- **Impact**: Q-001A/Q-001B run in seconds on cached clips instead of minutes
+  per clip, with faithfulness demonstrated rather than assumed. Recorded as 30
+  clips, 0 mismatches, maxdiff 0.00e+00 — this figure is documented in ADR-017
+  and feature-registry.md, but the underlying validation run output is not
+  committed to the repository. **Scope**: the validated set is those 30 clips.
+  The cache directory contains more `.npz` files than were validated; their
+  presence is not evidence of faithfulness, and any experiment relying on
+  clips outside the validated subset should say so rather than inherit this
+  result. Formalized as ADR-017.
+
+### L-052: Mean-vs-Threshold Verdicts Are Fragile at Small n -- Use Separation Tests
+- **Date**: 2026-08-07
+- **Context**: Q-001A's original verdict logic compared the target raga's mean
+  metric against a band derived from reference ragas (min-of-references
+  precision floor, max-of-references residual ceiling). At n=7 for the target,
+  a single outlier clip moves the mean across the threshold and flips the
+  verdict — the test reports a binary pass/fail without reporting how strong
+  or how reliable the underlying difference is. The final implementation
+  replaced this with a two-sided permutation test on the difference of means
+  (50,000 iterations) plus Cohen's d, computed on per-clip values pooled
+  across references versus the target. The reference band is retained in the
+  output but explicitly labelled "DESCRIPTIVE ONLY, not the verdict."
+- **Rule**: A verdict on whether two groups differ must come from a separation
+  test that reports both significance and effect size (permutation test +
+  Cohen's d), never from a mean-versus-threshold comparison. State
+  INCONCLUSIVE as a legitimate pre-registered outcome — at small n, "no
+  significant separation" means the question is unresolved, not that the null
+  is proven.
+- **Impact**: Q-001A's result is reported as n=7, permutation p=0.39,
+  Cohen's d=0.38, Abhogi median +0.35 vs references +0.39 — no evidence of
+  degradation, with the uncertainty visible rather than hidden behind a
+  threshold crossing. Carried forward as a standing requirement in
+  Q-001B_Research_Plan.md's statistical design.
+
+### L-053: FEATURE_VERSION Must Have One Owner, Not a Copy Per Script
+- **Date**: 2026-08-07
+- **Context**: `FEATURE_VERSION = "v1.2"` was independently hardcoded in four
+  active scripts — `aggregate_all_v12.py`, `extract_new_clips.py`,
+  `extract_new_thodi.py`, and `extract_pitch_batch_v12.py` — spanning both
+  producers (which stamp the version into each `.npz`) and consumers (which
+  check it on cache lookup). A format bump would require editing all four in
+  the same commit; missing one leaves a producer and a consumer disagreeing,
+  which fails as a silent cache miss or a stale-cache read rather than a
+  visible error. This is the same class as BUG-016/BUG-017, where a duplicated
+  constant drifted stale for a single commit and mislabelled a retired config
+  as canonical.
+- **Rule**: A constant shared across producer and consumer scripts has exactly
+  one owner module that every other script imports. Here the owner is
+  `scripts/feature_constants.py`. Never re-declare it, and never import it
+  from a producer module — that pulls in import-time side effects.
+- **Impact**: All four active hardcodings replaced with
+  `from feature_constants import FEATURE_VERSION` (commit `f84e3f5`). Two
+  further copies remain in `scripts/archive/` (`aggregate_dyads_v12_split.py`,
+  `aggregate_pcds_v12_split.py`) — deprecated pre-v1.2 scripts, deliberately
+  out of scope. A
+  format bump is now a one-line change that every reader follows
+  automatically. Formalized as ADR-017; extends the single-source discipline
+  of ADR-015.

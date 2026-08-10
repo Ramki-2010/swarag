@@ -240,7 +240,9 @@ already made and evidenced elsewhere in the memory files. Generated
 - **Context**: Q-001A needed pyin features for many clips; re-running pyin live
   is the sole bottleneck (~2 min/clip). The production extractor already caches
   raw `f0` to `features_v12/*.npz`. Separately, `FEATURE_VERSION` was hardcoded
-  in five files, so a format bump would silently break cache lookup everywhere.
+  in four active scripts, so a format bump would silently break cache lookup
+  everywhere. (Two further copies exist in `scripts/archive/` — deprecated
+  pre-v1.2 scripts, intentionally left untouched by the refactor.)
 - **Decision**:
   1. Experiments MAY reuse cached raw `f0` (never `cents_gated`, a different
      post-gate array) and skip pyin, but ONLY after `--validate` proves
@@ -252,9 +254,53 @@ already made and evidenced elsewhere in the memory files. Generated
      (import-time side effects) and never re-declared.
 - **Consequence**: Q-001A/B run in seconds on cached clips; cache faithfulness
   is provable, not assumed; a feature-format bump is a one-line change all
-  readers follow. Validated once (L-051: 30 clips, 0 mismatches, maxdiff 0).
+  readers follow. Validated once over a 30-clip subset (L-051: 0 mismatches,
+  maxdiff 0). The cache directory holds more clips than that subset —
+  cache presence is not cache validation, and the proven-faithful scope is
+  the 30 clips actually run through `--validate`, not the directory as a whole.
 - **Status**: ACTIVE.
 - **Source**: L-051, L-053, ADR-015 (single-source discipline).
+
+### ADR-018: Adoption of Phrase Evaluation Protocol v1.0
+- **Context**: Q-001A's representation-sufficiency result (n=7, permutation
+  p=0.39) and Q-001B planning surfaced three methodological gaps, each caught
+  ad hoc rather than by a standing rule: no defined statistical bar for a
+  promotion decision at low sample sizes; a mean-vs-threshold verdict
+  practice later replaced by paired permutation testing (L-052); and, during
+  the Q-001B feasibility review, a repository-verified composition confound
+  — 5 of Abhogi's 7 clips and 4 of confuser Kalyani's 14 clips traced to the
+  same externally sourced compositions, sung by different performers, not
+  independent samples. None were coding defects; each was an unstated
+  assumption the project had been relying on. Left uncodified, each would
+  need rediscovering for every future raga pair and phrase hypothesis.
+- **Decision**: Adopt **Phrase Evaluation Protocol v1.0** as the canonical
+  methodology governing phrase-based research. Every future phrase
+  experiment, starting with Q-001B, is designed and reported under the
+  protocol; every future production promotion decision for a phrase-based
+  method must satisfy the protocol before entering production. Methodology
+  changes are made by revising the protocol itself, not through ad hoc
+  per-experiment decisions — this ADR records the adoption, it is not
+  updated when the protocol is.
+- **Consequence**: One versioned methodology replaces context scattered
+  across workflow.md, lessons.md, and individual experiment plans — a new
+  raga or hypothesis starts from a template, not a blank page, and Q-001B's
+  promotion decision now has a pre-committed, auditable bar instead of a
+  per-experiment judgment call. Trade-off: pre-registration and composition
+  auditing add upfront cost an informal sandbox check didn't require, and a
+  quick exploratory run has no path to a production decision unless
+  escalated to a properly gated experiment. Enforcement is documentation-level
+  only — nothing currently blocks a phrase experiment from running outside
+  the protocol, the same policy-exists/enforcement-open gap already logged
+  in ADR-009 and ADR-016.
+- **Status**: ACTIVE.
+- **Date**: 2026-08-08.
+- **Source**: Phrase Evaluation Protocol v1.0
+  (`.ai-memory/phrase-evaluation-protocol.md`, full methodology, not
+  duplicated here); Q-001A (n=7, p=0.39); L-049/BUG-018 (LOO leakage); L-050
+  (topline-hides-target-miss); L-052 (mean-vs-threshold correction);
+  PROJECT_STATUS.md Research Gates table; workflow.md Promotion Rule;
+  evaluation-protocol.md; ADR-009, ADR-011, ADR-016 (enforcement-gap and
+  LOO-trust precedent).
 
 ---
 

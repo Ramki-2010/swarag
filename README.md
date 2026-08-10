@@ -62,8 +62,7 @@ Feature Computation
   v
 Raga Scoring
   |-- IDF x Variance weighted dot-product (PCD + Dyads)
-  |-- Weighted fusion (PCD=0.8, Dyad=0.2; Bhairavi override: 0.5/0.5)
-  |-- Per-raga weight overrides for transition-heavy ragas
+  |-- Weighted fusion (PCD=0.8, Dyad=0.2; uniform for all ragas)
   |-- MIN_CLIPS_PER_RAGA guardrail (excludes thin-data ragas)
   +-- Tiered confidence: HIGH / MODERATE / UNKNOWN
   |
@@ -73,15 +72,20 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 
 ## Ragas Currently Modeled
 
-| Raga | Training Clips | LOO Accuracy |
-|---|---|---|
-| Thodi | 11 | 100% |
-| Saveri | 8 | 88% |
-| Shankarabharanam | 9 | 86% |
-| Kalyani | 14 | 67% |
-| Bhairavi | 11 | 40% (0.5/0.5 override) |
-| Mohanam | 10 | 33% |
-| Abhogi | 7 | 25% |
+All ragas use uniform PCD=0.8 / Dyad=0.2 weighting. LOO figures below are
+the canonical v1.3.2 run (sandbox_loo_v131_canonical.py, 70 clips,
+25 correct / 14 wrong / 31 unknown, 64.1% decided).
+
+| Raga | Training Clips | Correct | Wrong | Unknown | LOO Accuracy (decided) |
+|---|---|---|---|---|---|
+| Mohanam | 10 | 1 | 0 | 9 | 100% |
+| Saveri | 8 | 7 | 1 | 0 | 88% |
+| Shankarabharanam | 9 | 4 | 1 | 4 | 80% |
+| Kalyani | 14 | 6 | 2 | 6 | 75% |
+| Thodi | 11 | 5 | 2 | 4 | 71% |
+| Abhogi | 7 | 1 | 2 | 4 | 33% |
+| Bhairavi | 11 | 1 | 6 | 4 | 14% |
+| **TOTAL** | **70** | **25** | **14** | **31** | **64.1%** |
 
 ### Staged / Excluded (need more data)
 
@@ -94,8 +98,8 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 ## Repository Structure
 
 ```
-scripts/                        Active v1.3.1 pipeline
-  recognize_raga_v12.py             Inference engine (72-bin, IDF x Variance, 0.8/0.2 + Bhairavi 0.5/0.5)
+scripts/                        Active v1.3.2 pipeline
+  recognize_raga_v12.py             Inference engine (72-bin, IDF x Variance, uniform 0.8/0.2)
   aggregate_all_v12.py              Build raga models (with MIN_CLIPS guardrail)
   extract_pitch_batch_v12.py        Feature extraction (with 6-min cap)
   batch_evaluate.py                 Evaluation on seed dataset (per-file timeout)

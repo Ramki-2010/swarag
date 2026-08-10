@@ -1,5 +1,14 @@
 # Conversation Summary — Swarag v1.3.1 Session (2026-06-24)
 
+> **HISTORICAL DOCUMENT — DO NOT USE AS CURRENT STATE.**
+> This is a session summary from 2026-06-24. Its v1.3.1 and 67.4% references
+> are historical records of what was believed at the time. The 67.4% figure
+> was later found to be fabricated (its per-raga rows never summed to the
+> stated total) and has been retired. The current canonical state is
+> **v1.3.2, 64.1% decided LOO** (25c/14w/31u, uniform PCD=0.8/Dyad=0.2, no
+> per-raga overrides). The narrative below is preserved unaltered as a
+> historical record.
+
 ---
 
 ## 1. Conversation Overview
