@@ -91,6 +91,12 @@ every phrase-based accuracy fix).
    Q-001B (pre-registered) tests whether data-discovered n-grams add
    discriminatory power beyond PCD+dyads. Discover candidates from data -- the
    docs' M2-D2-M2 example is musicologically suspect and must not be assumed.
+   **Status 2026-08-17:** Q-001B-A completed **INCONCLUSIVE** -- some individual
+   Abhogi sequences show evidence of higher-order structure (Holm-significant
+   1/7, raw 2/7), but Q-001B-A does not establish Abhogi-level generality or
+   discrimination. Q-001B-B **remains blocked** pending additional independent
+   Abhogi compositions: the current 7 clips span only 2 compositional units
+   (Evvari Bodhana 6, Nannu Brova Neeku 1). Q-001B itself stays ACTIVE.
 3. Add 4-6 diverse Mohanam clips -- 100% decided but 9/10 UNKNOWN
 4. Add 5-7 real Kamboji clips (YouTube/Rasikas -- Saraga has 0 new sources)
 5. Do NOT add more new ragas until weak ones > 60%
@@ -127,7 +133,9 @@ a promise -- see the Promotion Rule in workflow.md.
 | Gate  | Question | Status | Next action |
 |-------|----------|--------|-------------|
 | Q-001A | Does production extraction yield stable, meaningful swaras for Abhogi (representation sufficiency)? | ANSWERED 2026-07 -- no evidence of degradation vs easy ragas (n=7, permutation p=0.39, d=0.38; Abhogi median +0.35 vs refs +0.39). Representation adequate; NOT the bottleneck. | done |
-| Q-001B | Can data-discovered swara phrase (n-gram) features add discriminatory power beyond the current PCD+dyad representation? | ACTIVE -- unblocked by Q-001A | Pre-registered sandbox (.ai-memory/Q-001B_Research_Plan.md) |
+| Q-001B | Can data-discovered swara phrase (n-gram) features add discriminatory power beyond the current PCD+dyad representation? | ACTIVE -- unblocked by Q-001A; not answered by Q-001B-A | Q-001B-B needed; blocked on data (see below) |
+| Q-001B-A | Do Abhogi stable-note sequences contain trigram structure beyond their own bigram statistics? | COMPLETED 2026-08-17 -- **INCONCLUSIVE**. 7 clips, 50,000 doublet-preserving surrogates, seed 0, alpha 0.05. Raw significant 2/7, Holm-significant 1/7 (223579). Both synthetic controls PASS (positive p=1.99996e-05, negative p=0.328273); sanity A-D PASS on all 7 clips. Measured **sequence-level** higher-order structure only; did **not** establish Abhogi discrimination. | done -- see datasets.md run log and L-054 |
+| Q-001B-B | Does composition-held-out discrimination separate Abhogi from its top confuser? | BLOCKED -- only **2 independent compositional units** across 7 clips (Evvari Bodhana 6 clips, Nannu Brova Neeku 1 clip). Composition-held-out folds are not constructible at this diversity (protocol section 4). | Acquire additional independent Abhogi compositions |
 | Q-002 | If Q-001B shows phrase power, does a phrase model improve recognition? | Blocked by Q-001B | Phrase-model experiment |
 | Q-003 | Is Bhairavi (14%, worst raga) limited by representation or by dataset diversity? | Unknown, independent of Q-001 | Isolate: add diverse clips vs feature analysis |
 | Q-004 | What is the legally permissible reproducibility artifact for Saraga-derived data -- audio, or derived features only? | Pending | Review Saraga license, then record ADR (gates ADR-016's form) |

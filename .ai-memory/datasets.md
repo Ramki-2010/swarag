@@ -98,6 +98,81 @@
 
 ## Test Results Log
 
+### Run: 2026-08-17 -- Q-001B-A Higher-Order Structure vs Doublet-Preserving Null
+**Script**: sandbox_q001b_a_higher_order.py (commit `f508e60`)
+**Run path**: `Q001B-A results/run_20260817_074952_n50000_seed0/`
+**Purpose**: Test whether Abhogi stable-note sequences contain trigram structure
+beyond what their own bigram statistics already explain. This is the screening
+gate of phrase-evaluation-protocol.md section 6, not a discrimination experiment.
+
+**NOTE ON FORMAT**: evaluation-protocol.md section 4's mandatory C/W/U per-raga
+table **does not apply to this run**. Q-001B-A is not an LOO accuracy run and
+produces no correct/wrong/unknown classifications -- it is a per-clip surrogate
+test of a single sequence statistic. A per-clip table is given instead. No C/W/U
+columns are reported because none exist; fabricating them would misrepresent the
+experiment.
+
+**Population**: 7 validated Abhogi clips, **2 independent compositional units**
+| Composition | Clips | Evidence |
+|---|---|---|
+| Evvari Bodhana | 6 | 5 varnams via `carnatic_varnam_1.0/Notations_Annotations/notations/abhogi.doc` (title "Evvari Bodhana", composer Patnam Subramania Iyer); 1 Saraga clip via work MBID `6ef7a09c-e08d-46a4-b8bf-891d20e87457` |
+| Nannu Brova Neeku | 1 | Saraga work MBID `a1efd91e-ebe9-4afb-8d8c-1e862bf5da06` |
+| **TOTAL** | **7** | 6 + 1 = 7, verified against `input_manifest.json` |
+
+**Parameters**: 50,000 surrogates | seed 0 | alpha 0.05 | Holm step-down across
+K=7 | statistic dH = H(S_t|S_t-1) - H(S_t|S_t-1,S_t-2), plug-in, bits |
+null = doublet-preserving Eulerian-trail shuffle (Altschul & Erickson 1985;
+Kandel et al. 1996), preserving bigram counts, length and endpoints exactly.
+
+**Controls and sanity (all binding checks PASS)**:
+| Check | Result |
+|---|---|
+| Positive control (deterministic cycle, dH = 1 bit) | PASS, p = 1.99996e-05 |
+| Negative control (first-order Markov) | PASS, p = 0.328273 |
+| Sanity A-D | PASS on all 7 clips |
+| Distinct surrogates | 50,000/50,000 on every clip |
+
+**Per-clip results** (ordered by raw p):
+| Clip | Composition | Performer | Len | dH obs | null mean | effect (bits) | raw p | Holm p |
+|---|---|---|---|---|---|---|---|---|
+| 223579 prasanna | Evvari Bodhana | Prasanna | 492 | 0.6279 | 0.5514 | +0.0765 | 0.00340 | 0.02380 |
+| 223578 dharini | Evvari Bodhana | Dharini | 339 | 0.7048 | 0.6302 | +0.0745 | 0.01926 | 0.11556 |
+| Vignesh Ishwar - Evvari Bodhana | Evvari Bodhana | Vignesh Ishwar | 173 | 0.6477 | 0.6114 | +0.0364 | 0.20632 | 1.00000 |
+| 223581 sreevidya | Evvari Bodhana | Sreevidya | 307 | 0.2782 | 0.2578 | +0.0204 | 0.21738 | 1.00000 |
+| Nannu Brova Neeku | Nannu Brova Neeku | S Sundar | 452 | 0.4592 | 0.4461 | +0.0131 | 0.29183 | 1.00000 |
+| 223580 ramakrishnamurthy | Evvari Bodhana | Ramakrishnamurthy | 392 | 0.3615 | 0.3615 | -0.0000 | 0.48941 | 1.00000 |
+| 223582 vignesh | Evvari Bodhana | Vignesh | 242 | 0.7761 | 0.8224 | -0.0463 | 0.89298 | 1.00000 |
+| **TOTAL** | **7 clips** | | | | | | **raw 2/7** | **Holm 1/7** |
+
+Row check: raw p < 0.05 in rows 1-2 = 2 clips; Holm p < 0.05 in row 1 = 1 clip.
+Both match the TOTAL row.
+
+**Verdict: INCONCLUSIVE.** Some individual Abhogi sequences show evidence of
+higher-order structure, but Q-001B-A does not establish Abhogi-level generality
+or discrimination. The sole Holm-significant clip is 223579.
+
+**Limitations recorded**:
+- All raw signal is confined to Evvari Bodhana. Nannu Brova Neeku did not provide
+  significant evidence (raw p = 0.29183), so the 6/1 composition split limits
+  generality.
+- Sequence length varies 173-492 symbols, so per-clip power is not uniform. The
+  two raw-significant clips are length-ranks 1 and 4 of 7; ranks 2 and 3 are both
+  non-significant, so these data show no monotone length-significance
+  relationship. Non-uniform power cannot be ruled out as a contributor, but it is
+  not demonstrated, and n=7 does not support separating length-related power from
+  musical structure.
+- The aggregate p was **descriptive only** and entered no verdict cell: its
+  precision assumes 7 independent units when there are 2.
+- Residual plug-in H2 bias was not independently quantified.
+- Q-001B-B remains BLOCKED: composition-held-out discrimination is unsupported by
+  the current dataset (2 independent compositional units).
+
+**Dataset impact: none.** No clip was added, removed, regrouped or re-extracted.
+The canonical Abhogi population remains 7 clips as listed in the source table
+above.
+
+---
+
 ### Run: 2026-07-11 -- Abhogi Energy-Ratio Sandbox (BUG-015), post LOO-leak fix
 **Script**: sandbox_abhogi_ratio.py
 **Purpose**: Test quantitative Pa/N3 energy-ratio scoring to separate

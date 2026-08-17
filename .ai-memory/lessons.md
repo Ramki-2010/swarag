@@ -735,3 +735,44 @@
   format bump is now a one-line change that every reader follows
   automatically. Formalized as ADR-017; extends the single-source discipline
   of ADR-015.
+
+### L-054: A Matched Per-Clip Null Tests Sequence Structure Without Cross-Clip Independence -- But Cannot Reach Raga-Level Claims
+- **Date**: 2026-08-17
+- **Context**: Q-001B-A asked whether Abhogi stable-note sequences contain
+  trigram structure beyond their own bigram statistics. Abhogi's 7 clips span
+  only 2 independent compositional units (Evvari Bodhana 6, Nannu Brova Neeku
+  1), which blocks any composition-held-out design. The gate was still runnable
+  because each clip was tested against a null generated from *its own* bigram
+  multigraph -- a doublet-preserving Eulerian-trail shuffle preserving that
+  clip's bigram counts, length and endpoints exactly. No cross-clip resampling
+  occurs anywhere, so each per-clip p-value is a valid finite-sample Monte-Carlo
+  p-value under that clip's own conditional null, unaffected by what the other
+  clips are or by how many compositions they share. The same run also computed
+  an aggregate statistic across clips; that aggregate was reported as
+  DESCRIPTIVE ONLY and entered no verdict cell, because its precision assumes 7
+  independent units when the dataset supplies 2. Result: raw-significant 2/7,
+  Holm-significant 1/7, verdict INCONCLUSIVE.
+- **Rule**: When a gate's dataset is too composition-poor for held-out
+  validation, a per-clip matched-surrogate test is still valid and is the
+  cheaper gate to run first -- but scope its conclusion to what it measures.
+  Per-clip significance establishes that *sequence* structure exists in those
+  sequences; it does not establish raga-level generality, and it does not
+  establish discrimination against any other raga. Any statistic that pools
+  across clips requires an independence assumption the composition split may not
+  support, so pool only as description, never as the verdict. INCONCLUSIVE
+  records that the test could not distinguish the outcomes -- it does not
+  establish absence of structure, and a non-significant clip is not evidence
+  that the clip lacks structure.
+- **Impact**: Q-001B-A closed as INCONCLUSIVE without inventing a magnitude
+  floor or a consistency count to force a verdict. Q-001B remains ACTIVE and
+  Q-001B-B remains BLOCKED on composition diversity rather than on method. All
+  raw signal fell inside Evvari Bodhana; Nannu Brova Neeku (raw p = 0.29183)
+  supplied none, so the 6/1 split limits generality. Sequence length varies
+  173-492 symbols, so per-clip power is not uniform. The two raw-significant
+  clips are length-ranks 1 and 4 of 7; ranks 2 and 3 are both non-significant,
+  so these data show no monotone length-significance relationship. Non-uniform
+  power cannot be ruled out as a contributor, but it is not demonstrated, and
+  n=7 does not support separating length-related power from musical structure.
+  Residual plug-in H2 bias was not independently quantified. Run logged in
+  datasets.md (2026-08-17); artifacts at
+  `Q001B-A results/run_20260817_074952_n50000_seed0/`.
