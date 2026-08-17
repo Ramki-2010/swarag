@@ -16,6 +16,8 @@ ML Models/
 
 # Generated experiment outputs
 Q001A sufficiency results/
+Q001B-A results/
+scripts/q001ba_canonical.log
 
 # ========================
 # VIRTUAL ENVIRONMENTS
