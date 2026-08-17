@@ -23,6 +23,7 @@ scripts/q001ba_canonical.log
 # VIRTUAL ENVIRONMENTS
 # ========================
 my_virtual_env_swarag/
+my_virtual_env_swarag.RETIRED_*/
 myenv/
 demucs_env/
 

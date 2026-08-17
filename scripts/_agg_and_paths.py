@@ -1,3 +1,24 @@
+# =============================================================================
+# HISTORICAL / DEPRECATED -- v1.3 transition helper (2026-03). DO NOT USE.
+#
+# This script targets SUPERSEDED v1.3 paths and state:
+#   - it hardcodes the interpreter at scripts\my_virtual_env_swarag\, an
+#     environment RETIRED on 2026-08-17 (renamed
+#     scripts\my_virtual_env_swarag.RETIRED_20260817; see
+#     docs/retired_scripts_venv_packages.txt). The sole canonical environment
+#     is now D:\Swaragam\my_virtual_env_swarag.
+#   - it rewrites AGG_FOLDER in batch_evaluate.py / batch_evaluate_random.py
+#     with the comment "v1.3: 5 ragas, 55 clips", which is superseded by
+#     v1.3.2 (7 ragas, 70 clips).
+#
+# Running it today would fail at the interpreter path, and if that were
+# corrected it would stamp stale v1.3 metadata into two production scripts.
+#
+# Do not use it for current workflows. Kept as an audit trail of the v1.3
+# transition, matching the treatment of _lock_v13.py. Executable logic below
+# is unchanged and deliberately not repaired.
+# =============================================================================
+
 """Steps 3-4: Re-aggregate and update AGG paths."""
 import os, subprocess, json
 

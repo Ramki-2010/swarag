@@ -278,9 +278,15 @@ RULE 11 — ENVIRONMENT
     (or vice versa) for python -c one-liners
   - If quoting gets complex, write a small .py script instead
 - Python: via virtual environment
-  - Path: scripts/my_virtual_env_swarag/
+  - Path: my_virtual_env_swarag/  (repository root -- the SOLE canonical env)
   - Activate: .\my_virtual_env_swarag\Scripts\Activate.ps1
   - Direct:   .\my_virtual_env_swarag\Scripts\python.exe <script>
+  - Never create another virtual environment without authorization.
+  - Historical note: a second environment existed at
+    scripts/my_virtual_env_swarag/ and was RETIRED on 2026-08-17 (renamed
+    scripts/my_virtual_env_swarag.RETIRED_20260817, not deleted). It is no
+    longer required by active Swarag workflows. Its package manifest is
+    preserved at docs/retired_scripts_venv_packages.txt.
 - Project root: D:\Swaragam\
 - Scripts: D:\Swaragam\scripts\
 

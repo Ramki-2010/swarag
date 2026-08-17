@@ -16,7 +16,10 @@ Most failures occur in data pipelines, not algorithms.
 
 2. ENVIRONMENT
    - Is the virtual environment activated?
-     Path: scripts/my_virtual_env_swarag/
+     Path: my_virtual_env_swarag/  (repository root -- the SOLE canonical env)
+     A second env at scripts/my_virtual_env_swarag/ was RETIRED 2026-08-17
+     (renamed .RETIRED_20260817, not deleted; manifest in
+     docs/retired_scripts_venv_packages.txt).
    - Are all dependencies installed? (numpy, librosa, scipy)
    - Demucs has its OWN venv: demucs_env/
 

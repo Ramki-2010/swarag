@@ -74,7 +74,14 @@
 ## External Datasets (Reference)
 - **Saraga Carnatic** — 249 recordings, 96 ragas, 52.7 hours
   - Zenodo: https://zenodo.org/records/4301737
-  - Dataloader: `mirdata.datasets.saraga_carnatic` (installed in venv)
+  - Dataloader: `mirdata.datasets.saraga_carnatic` — used during early project
+    setup to explore Saraga as a data source (see
+    `scripts/archive/test_saraga_load.py`, deprecated). **No longer installed**:
+    mirdata lived only in the `scripts/` environment retired on 2026-08-17
+    (manifest: `docs/retired_scripts_venv_packages.txt`). It is commented out
+    as Optional in `requirements.txt`. Reinstall with `pip install mirdata` if
+    Saraga loading is needed again. The project moved to its own
+    `seed_carnatic` dataset.
   - Local metadata: `D:\Swaragam\datasets\saraga-master\` (184 songs, JSON + md5 only, NO audio)
   - Audio status: NOT YET DOWNLOADED — needs Dunya API or Zenodo bulk download
   - Saraga scan results (target ragas):
