@@ -197,6 +197,24 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
      M2-D2-M2 vs Pa-D2-N3 example is musicologically suspect (Abhogi has no
      M2/Pa) and must not be hardcoded.
    - Contour templates: characteristic melodic shapes
+
+   **Q-001B status (2026-08-17).** Q-001B-A was COMPLETED; its verdict is
+   INCONCLUSIVE. Testing Abhogi stable-note sequences against a
+   doublet-preserving null (50,000 surrogates, seed 0) gave 1/7 clips
+   Holm-significant and 2/7 raw-significant. That measured SEQUENCE-LEVEL
+   higher-order structure only -- it does NOT establish Abhogi-specific
+   discrimination, which is Q-001B-B's question.
+
+   Q-001B-B remains BLOCKED: only 2 independent Abhogi compositions are
+   currently available (Evvari Bodhana 6 clips, Nannu Brova Neeku 1 clip),
+   so composition-held-out folds cannot be constructed.
+
+   The strategic decision about whether to continue phrase research for
+   Abhogi therefore remains OPEN. Q-001B-A neither confirms nor refutes the
+   "live candidate" framing above; it establishes that sequence structure is
+   measurable in some clips and that the dataset, not the method, is the
+   current limit. See PROJECT_STATUS.md (Active Gates), L-054, and
+   datasets.md (Run: 2026-08-17) for the full record.
 3. Mohanam: needs diverse clips (different songs/artists), not code changes
 4. Add Kamboji clips (YouTube/Rasikas)
 

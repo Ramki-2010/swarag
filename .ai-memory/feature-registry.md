@@ -57,7 +57,7 @@ a trigger condition), **REJECTED** (tested, does not work — kept for record),
 | Absent-swara penalty (data-driven, median threshold) | REJECTED | Self-harm on 5/7 Abhogi clips | L-046 |
 | Absent-swara penalty (musicological bin ranges) | REJECTED | Gamaka spillover puts 6-19% energy in "absent" swaras | L-046 |
 | Swara energy-ratio comparison (quantitative) | REJECTED (2026-07-11) | `sandbox_abhogi_ratio.py`, BUG-015. Abhogi score identical at every tested weight (0.05-0.40) -- confirmed no signal, not just weak. | BUG-015, L-050 |
-| Phrase n-gram detection | PARKED -> Q-001B (pre-registered) | Candidates DISCOVERED FROM DATA; M2-D2-M2 vs Pa-D2-N3 is musicologically suspect, not assumed. Q-001A found representation adequate (n=7, p=0.39) | Q-001B_Research_Plan.md, L-052 |
+| Phrase n-gram detection | PARKED -> Q-001B (pre-registered). Q-001B-A COMPLETED 2026-08-17, verdict INCONCLUSIVE; Q-001B-B BLOCKED | Candidates DISCOVERED FROM DATA; M2-D2-M2 vs Pa-D2-N3 is musicologically suspect, not assumed. Q-001A found representation adequate (n=7, p=0.39). Q-001B-A tested sequence-level higher-order structure against a doublet-preserving null (50,000 surrogates, seed 0): Holm-significant 1/7 clips, raw 2/7 -- INCONCLUSIVE. It measured sequence structure only and did NOT establish Abhogi-specific discrimination. Q-001B-B (composition-held-out discrimination) remains BLOCKED: 2 independent compositional units across 7 clips | Q-001B_Research_Plan.md, L-052, L-054, PROJECT_STATUS.md, datasets.md (Run: 2026-08-17) |
 
 ## Evaluation / Governance
 

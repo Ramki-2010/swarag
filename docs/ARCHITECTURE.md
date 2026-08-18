@@ -251,6 +251,12 @@ degradation vs easy ragas), so the path forward is phrase-level / sequence
 features -- pursued under Q-001B with candidates discovered from data, not
 assumed.
 
+Q-001B-A (2026-08-17) completed with verdict INCONCLUSIVE: it measured
+sequence-level higher-order structure only and did not establish
+Abhogi-specific discrimination. Q-001B-B remains blocked on composition
+diversity. See [.ai-memory/architecture.md](../.ai-memory/architecture.md)
+and PROJECT_STATUS.md for current gate status.
+
 ---
 
 ## Roadmap
