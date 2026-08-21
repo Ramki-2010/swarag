@@ -1,0 +1,31 @@
+﻿name: debug-swarag
+description: Debug a Swarag issue using the debugging hierarchy
+
+---
+
+Debug this problem using the Swarag debugging hierarchy.
+
+Before answering, read:
+- .ai-memory/debug-playbook.md
+- .ai-memory/bugs.md
+- .ai-memory/architecture.md
+
+Follow this exact investigation order:
+
+1. ENVIRONMENT - Is the venv activated? Dependencies installed?
+2. FILE PATHS - Does the audio file exist? Aggregation folder?
+3. DATA LOADING - .npz keys correct? Array shapes correct?
+4. PITCH EXTRACTION - Enough voiced frames? f0 reliability?
+5. TONIC ESTIMATION - Sa in 80-400 Hz range? Same logic in both scripts?
+6. FEATURE COMPUTATION - PCD sums to 1? Dyads non-zero? Constants match?
+7. SCORING LOGIC - Scores in reasonable range? Genericness dominating?
+8. GUARDRAILS - Margin thresholds appropriate? Exceptions hiding errors?
+
+For each step, state: PASS / FAIL / NEEDS INVESTIGATION
+
+Then provide a diagnosis and recommended fix, following the fix priority order:
+  Priority 1: BLOCKING (crashes, silent failures)
+  Priority 2: DATA INTEGRITY (feature mismatches)
+  Priority 3: SCORING (weight tuning)
+  Priority 4: ARCHITECTURAL (OOD detection)
+  Priority 5: DATASET (adding ragas)

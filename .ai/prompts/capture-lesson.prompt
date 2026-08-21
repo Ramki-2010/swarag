@@ -1,0 +1,22 @@
+﻿name: capture-lesson
+description: Extract and save a lesson from the current session
+
+---
+
+Extract a lesson from what just happened in this session.
+
+Read .ai-memory/lessons.md to find the next available L-NNN number.
+
+Then create a new lesson entry with:
+- L-NNN identifier (next available number)
+- Date (today)
+- Context: What were we doing when we learned this?
+- Rule: The reusable principle (ACTIONABLE, not vague)
+- Impact: What would go wrong if we forget this?
+
+Good lessons are ACTIONABLE:
+  BAD:  'Shankarabharanam is a problem'
+  GOOD: 'With only 3 trained ragas, untrained audio gets absorbed by the most generic PCD. Need OOD score floor.'
+
+Append the new lesson to .ai-memory/lessons.md.
+Also check if any bugs should be updated in .ai-memory/bugs.md.

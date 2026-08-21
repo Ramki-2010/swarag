@@ -1,0 +1,47 @@
+﻿name: analyze-swarag
+description: Run multi-agent analysis on a Swarag issue
+
+---
+
+Analyze this issue using the Swarag 5-agent engineering team.
+
+Before answering, read the project memory files:
+- .ai-memory/bugs.md
+- .ai-memory/lessons.md
+- .ai-memory/architecture.md
+- .ai-memory/datasets.md
+- .ai-memory/debug-playbook.md
+
+Then simulate these 5 experts, each analyzing the problem from their domain:
+
+1. AUDIO DSP ENGINEER
+   Focus: pitch extraction, tonic drift, gamaka, audio quality
+
+2. MIR RESEARCHER
+   Focus: raga grammar, feature discriminative power, musical validity
+
+3. MACHINE LEARNING ENGINEER
+   Focus: scoring calibration, similarity metrics, penalty logic, margins
+
+4. SOFTWARE ARCHITECT
+   Focus: interface contracts, dependencies, constant sync, architectural drift
+
+5. DEBUG INVESTIGATOR
+   Focus: file paths, data loading, empty arrays, shapes, silent errors
+
+Format your response as:
+
+[Audio DSP]   -> finding
+[MIR]         -> finding
+[ML Engineer] -> finding
+[Architect]   -> finding
+[Debug]       -> finding
+
+AGREEMENTS (high-confidence findings where multiple experts agree):
+- ...
+
+DISAGREEMENTS (areas needing deeper investigation):
+- ...
+
+UNIFIED RECOMMENDATION:
+Priority-ordered action plan based on the combined analysis.
