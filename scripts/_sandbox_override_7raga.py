@@ -1,3 +1,31 @@
+# =============================================================================
+# HISTORICAL SANDBOX TOOLING (2026-04-01). DO NOT USE AS CURRENT EVIDENCE.
+# DO NOT RE-RUN AS CURRENT ANALYSIS.
+#
+# This script explored per-raga dyad weight overrides. That approach was
+# REJECTED: the Bhairavi 0.5/0.5 override was retired by ADR-013 after a
+# canonical rerun showed it scoring 0% decided for Bhairavi (L-042: overrides
+# trade accuracy between ragas rather than improving overall).
+#
+# The "PCD overlap 78%" figure in the docstring below is ASSERTED here, NOT
+# computed by this script. It was inherited from scripts/_diag_weak_ragas.py
+# (2026-03-21). Its historical value is NOT INDEPENDENTLY VERIFIABLE -- the
+# original clip population and outputs were never preserved. Do not cite it as
+# established evidence.
+#
+# The metric definition IS recoverable: histogram intersection,
+# sum(min(mean_PCD_a, mean_PCD_b)) over 72 normalized bins. Measured on current
+# v1.3.2 features (2026-08-18), Bhairavi-Thodi overlap = 0.7840. That is a
+# CURRENT measurement on a different clip population, not a reproduction of the
+# historical figure.
+#
+# Overlap is a descriptive similarity measurement, not an established cause of
+# Bhairavi's errors. Confuser attribution is deferred to Q-003.
+#
+# Kept as an audit trail of the override investigation. Logic below is
+# UNCHANGED and deliberately not repaired.
+# =============================================================================
+
 """
 Test per-raga dyad weight overrides for Abhogi and Bhairavi.
 Both are weak because their identity is in transitions, not just PCD.

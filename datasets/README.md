@@ -40,7 +40,7 @@ datasets/
 | Kalyani | 14 | 75% | Most clips. Absorbs Abhogi wrongs (parent melakarta). |
 | Thodi | 11 | 71% | 2 outliers excluded. |
 | Abhogi | 7 | 33% | STRUCTURAL problem: janya of Kalyani (L-044). |
-| Bhairavi | 11 | 14% | Override retired (v1.3.2, confirmed counter-productive). PCD overlaps 78% with Thodi. |
+| Bhairavi | 11 | 14% | Override retired (v1.3.2, confirmed counter-productive). Current-data mean-PCD overlap with Thodi = 0.7840 (measured 2026-08-18 on v1.3.2 features, histogram intersection `sum(min(mean_PCD_a, mean_PCD_b))` via `scripts/_diag_weak_ragas.py`). A historical "78%" figure from 2026-03 is NOT independently verifiable -- its original clip population and outputs were not preserved. Overlap is a descriptive similarity measurement, not an established cause of Bhairavi's errors; confuser attribution is deferred to Q-003. |
 
 **Overall LOO: 64.1% decided (v1.3.2, no per-raga overrides), sandbox_loo_v131_canonical.py**
 

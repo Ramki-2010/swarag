@@ -152,7 +152,10 @@ already made and evidenced elsewhere in the memory files. Generated
 - **Consequence**: Overall canonical LOO moved 60.5% (with override,
   confirmed bad) -> 64.1% (without it), +3.6pp. Bhairavi itself sits at
   14% decided standalone — weak, but no longer masked by an unsupported
-  weight hack. Its real fix is more diverse training clips.
+  weight hack. (Historical hypothesis, NOT established by this ADR's
+  evidence: "its real fix is more diverse training clips." The LOO rerun
+  cited here measured accuracy, not cause. Whether the limit is data or
+  representation is the open question of Q-003.)
   Follow-up (2026-07-11): `scripts/confusion_matrix_audit.py` — the very
   script whose Scenario 1/2 comparison motivated this retirement — was
   found still hardcoding the override as its own "canonical" default one

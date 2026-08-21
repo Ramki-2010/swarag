@@ -259,8 +259,8 @@ print("  {:<52} {:>7} {:>6} {:>6} {:>8}".format(
     "Scenario", "Correct", "Wrong", "Unk", "Acc"))
 print("  " + "-" * 82)
 for label, c, w, u, a in [
-    ("1. 7-raga + Bhairavi override (canonical)", c1, w1, u1, a1),
-    ("2. 7-raga, no override",                   c2, w2, u2, a2),
+    ("1. 7-raga, uniform 0.8/0.2, NO override (CANONICAL)", c1, w1, u1, a1),
+    ("2. 7-raga, WITH Bhairavi 0.5/0.5 override (RETIRED)",  c2, w2, u2, a2),
     ("3. 5-raga, Bhairavi+Abhogi excluded",       c3, w3, u3, a3),
 ]:
     print("  {:<52} {:>7} {:>6} {:>6}  {:>6.1f}%".format(label, c, w, u, a * 100))
