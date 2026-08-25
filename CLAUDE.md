@@ -69,6 +69,63 @@ per-raga rows never summed to its own stated total, and it drove a real
 architectural decision the whole time. `.ai-memory/evaluation-protocol.md` §4
 requires the row-sum check *before* committing.
 
+## 4a. Source-of-truth hierarchy
+
+When two documents disagree, the higher entry wins:
+
+1. `CLAUDE.md` — governance, working rules, environment
+2. `PROJECT_STATUS.md` — current project state, gates, baseline, priorities
+3. The active research plan — methodology for the active gate
+4. `docs/research/<GATE>/PHASE_LOG.md` — detailed research history
+5. `adr.md` and frozen protocols — settled decisions, frozen methodology
+6. Datasets and experiment artifacts — measured evidence
+7. Historical summaries — records of what was believed at the time
+8. General repository documentation
+
+Two qualifications that are not optional:
+
+- **More recent evidence does not automatically override frozen methodology.**
+  A frozen protocol changes by decision, never by inference.
+- **Never resolve a contradiction by guessing.** Use each document's declared
+  authority and scope. If the conflict is real, stop and report it (§4).
+
+Navigation and reading order: `docs/START_HERE.md`.
+
+## 4b. Documentation architecture
+
+Each category of information has exactly one home. **Do not copy state between
+documents — link instead.**
+
+| Category | Home |
+|---|---|
+| Governance, rules, environment | `CLAUDE.md` |
+| **Volatile project state** | `PROJECT_STATUS.md` |
+| **Detailed research reasoning** | `docs/research/<GATE>/PHASE_LOG.md` |
+| Stable conceptual architecture | `docs/ARCHITECTURE.md` |
+| Volatile architectural state | `.ai-memory/architecture.md` |
+| Settled decisions | `adr.md` |
+| Frozen methodology | `.ai-memory/*-protocol.md` |
+| Historical session records | `.ai-memory/session_summary_*.md` |
+
+Rules:
+
+- `PROJECT_STATUS.md` holds **only current, decision-relevant state**. It is not
+  a session diary, it does not carry detailed experimental reasoning, and it does
+  not rewrite historical conclusions.
+- **Phase logs are append-oriented.** Do not silently rewrite an earlier phase.
+  If an earlier statement was wrong, **append a correction that preserves the
+  original reasoning.** Never erase historical context for cleanliness.
+- Historical summaries stay historical. They are records of past belief and are
+  never updated to look current.
+- **Do not merge stable architecture with volatile state without approval.**
+- Never manufacture a missing number. Never convert inference into fact. Never
+  convert hypothesis into diagnosis.
+
+Precedent: `.ai-memory/session_summary_20260624.md` was a self-contained session
+handoff. It drifted within weeks, carried the fabricated 67.4% figure forward,
+and now has to open with **"HISTORICAL DOCUMENT — DO NOT USE AS CURRENT STATE."**
+A handoff that duplicates state will drift. A handoff that links does not.
+
 ## 5. Frozen research decisions
 
 Treat as frozen unless explicitly reopened: hypotheses, null hypotheses, dataset
@@ -243,6 +300,36 @@ This refines `.ai/agent_spec.md` RULE 1 (Founder Mode): keep explanations clear
 and jargon-light, but clarity of explanation is not a licence to ask for approval
 that has already been given.
 
+## 17a. Phase transition control
+
+The required sequence for research work is:
+
+```
+research → verification → decision → documentation → commit
+```
+
+A phase **does not advance automatically.**
+
+- Do not infer approval from the existence of a completed experiment.
+- Do not create the next phase merely because the previous one finished.
+- Do not rename or skip phases in an established progression.
+- **The next phase requires explicit approval.**
+- A localisation is not a diagnosis. Keep an incomplete phase incomplete.
+
+Additionally: **do not follow a directive blindly.** Check each instruction
+against the established trail before acting. If it contradicts a prior argument,
+unmakes a settled decision, conflicts with the evidence, or is counterproductive,
+**stop and request approval**, stating:
+
+1. What conflicts.
+2. Which prior decision is affected.
+3. Why the conflict matters.
+4. What would change if approved.
+
+This is not the approval-looping §17 forbids. §17 bars re-asking for permission
+already granted; this section bars acting on an instruction that contradicts the
+record.
+
 ## 18. Anti-hallucination
 
 Before documenting any factual claim, identify its evidence: a repository file, an
@@ -302,6 +389,8 @@ scope. When interpreting results, avoid overclaiming.
 | Sandbox convention | `scripts/sandbox_*.py` — checked in, never a notebook or manual calculation |
 | Feature cache | `pcd_results/features_v12/` (gitignored); `excluded/` holds dedup rejects and is not read |
 | Feature version owner | `scripts/feature_constants.py` (`FEATURE_VERSION`) — single source, never re-declare (ADR-015/017) |
+| Navigation / reading order | `docs/START_HERE.md` |
+| Research phase logs | `docs/research/<GATE>/PHASE_LOG.md` (append-only) |
 | Living memory | `.ai-memory/` |
 | Decisions | `adr.md` (repository root) |
 | Gate status | `PROJECT_STATUS.md` |

@@ -83,8 +83,13 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 | Shankarabharanam | 9 | 80% |
 | Kalyani | 14 | 75% |
 | Thodi | 11 | 71% |
-| Bhairavi | 11 | 14% (needs more diverse clips) |
+| Bhairavi | 11 | 14% (cause UNPROVEN -- research gate Q-003) |
 | Abhogi | 7 | 33% |
+
+> **Correction 2026-08-25.** The Bhairavi row previously read
+> "14% (needs more diverse clips)". The 14% is FACT; "needs more diverse
+> clips" was a HYPOTHESIS stated as a fact. See `Next Architectural Steps`
+> below and `docs/research/Q-003/PHASE_LOG.md`.
 
 ### Staged Ragas (excluded by MIN_CLIPS_PER_RAGA=5 guardrail)
 - Kamboji: 3 clips (needs 2 more; 3 Harikambhoji removed, BUG-013)
@@ -137,9 +142,17 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 | Correct | 25 |
 | Wrong | 14 |
 | Unknown | 31 (44%) |
-| Saveri sink | 6/14 wrongs |
-| Thodi sink | 3/14 wrongs |
+| Saveri sink | 8/14 wrongs |
+| Thodi sink | 4/14 wrongs |
 | Kalyani sink | 2/14 wrongs |
+
+> **Correction 2026-08-24 (Q-003 C-6).** The three sink rows previously read
+> Saveri 6/14, Thodi 3/14, Kalyani 2/14 -- a split summing to 11, not 14.
+> Recomputed by independent parse of the canonical confusion matrix
+> (`confusion_matrix_audit.py`, Scenario 1). Only the sink attribution was
+> wrong; it understated Saveri's dominance. The C/W/U totals above are
+> unaffected and were independently reproduced. See
+> `docs/research/Q-003/PHASE_LOG.md` -> Correction C-6.
 
 ## Accuracy Evolution
 
@@ -186,8 +199,32 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 - Escalation / dyad-heavy re-scoring: crushes margins 5x (L-017)
 
 ## Next Architectural Steps
-1. Bhairavi: add more diverse clips (currently 6 clean wav + Saraga stems).
-   Clips are acoustically similar -- model has low variance, poor discrimination.
+1. **Bhairavi -- research gate Q-003. Diagnosis in progress; no remedy is
+   established.** Do not act on this item as though a fix were known.
+   - **FACT.** 11 clips (6 clean wav + Saraga stems).
+   - **FACT.** Bhairavi's clips form the *tightest* cluster of all seven
+     ragas (mean distance to centroid 0.0907, lowest of 7) -- Q-003
+     Phase 1-A, 2026-08-21. The long-standing observation that the clips
+     are acoustically similar and the model has low variance is thereby
+     corroborated by measurement.
+   - **FACT.** Mean-PCD overlap does NOT explain which raga absorbs
+     Bhairavi's errors: Saveri has the lowest overlap (0.6782) yet absorbs
+     4 of 6 (Phase 1-A). The dyad channel ranks Bhairavi #1 in **0 of its
+     11 clips** (Phase 1-B, 2026-08-24).
+   - **INFERENCE.** The failure is localised to the dyad channel.
+     Localisation is not a diagnosis.
+   - **HYPOTHESIS (not established).** That adding more diverse clips is
+     the remedy. Low variance is *consistent* with a data limit, but no
+     experiment has isolated it; H_DATA, H_REP and H_BOTH all remain live.
+
+   > **Correction 2026-08-25.** This item previously read: "Bhairavi: add
+   > more diverse clips (currently 6 clean wav + Saraga stems). Clips are
+   > acoustically similar -- model has low variance, poor discrimination."
+   > The dataset composition and the low-variance observation are retained
+   > as FACT (the latter now measured). The prescription "add more diverse
+   > clips", and the causal link from low variance to poor discrimination,
+   > were unsupported and are downgraded to HYPOTHESIS. Full record:
+   > `docs/research/Q-003/PHASE_LOG.md`.
 2. Abhogi: swara-energy-level features (weight overrides, absent-swara
    penalty, energy ratios) have ALL been tried and rejected. Q-001A confirmed
    the representation is adequate (no evidence of degradation, n=7 p=0.39), so
@@ -215,7 +252,15 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
    measurable in some clips and that the dataset, not the method, is the
    current limit. See PROJECT_STATUS.md (Active Gates), L-054, and
    datasets.md (Run: 2026-08-17) for the full record.
-3. Mohanam: needs diverse clips (different songs/artists), not code changes
+3. Mohanam: 100% decided but 9/10 UNKNOWN -- the model barely commits.
+   **HYPOTHESIS (not established):** a data-diversity limit (different
+   songs/artists) rather than a code change. No experiment has isolated it.
+
+   > **Correction 2026-08-25.** Previously read "Mohanam: needs diverse
+   > clips (different songs/artists), not code changes" -- a confirmed
+   > remedy stated without an experiment. `PROJECT_STATUS.md` records this
+   > as "Likely a data-diversity limit, but unproven"; this line now agrees
+   > with it.
 4. Add Kamboji clips (YouTube/Rasikas)
 
 ## Parked Features

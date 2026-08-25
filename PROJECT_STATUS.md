@@ -3,6 +3,11 @@
 ## Current Version
 Swarag v1.3.2 (7 Ragas -- Bhairavi 0.5/0.5 override retired, uniform 0.8/0.2 for all ragas)
 
+> **This document is the source of truth for current project state.**
+> For where everything else lives and the recommended reading order, see
+> [`docs/START_HERE.md`](docs/START_HERE.md). Detailed research reasoning
+> belongs in `docs/research/<GATE>/PHASE_LOG.md`, not here.
+
 ---
 
 ## Mission
@@ -71,19 +76,34 @@ every phrase-based accuracy fix).
 - Bhairavi: 14% LOO -- override retired. Cause UNPROVEN: whether the limit is
   representation (feature) or data (clip diversity) is untested. "More clips"
   is a hypothesis, not a confirmed diagnosis.
+  Q-003 Phase 1-A eliminated mean-PCD overlap as the mechanism; Phase 1-B
+  localised the failure to the **dyad channel** (ranks Bhairavi #1 in 0 of
+  its 11 clips). Localisation is NOT a diagnosis -- the gate is still open.
+  Detail: docs/research/Q-003/PHASE_LOG.md
 - Mohanam: 100% decided but 9/10 UNKNOWN -- model barely commits. Likely a
   data-diversity limit, but unproven.
 - Kamboji: excluded (3 real clips, Saraga exhausted -- 0 new sources)
-- Saveri is the new sink (6/14 wrongs) -- was Kalyani pre-retirement
+- Saveri is the new sink (8/14 wrongs) -- was Kalyani pre-retirement
+  (corrected 2026-08-24, Q-003 C-6: previously read "6/14"; the documented
+  split 6+3+2 summed to 11, not 14. Recomputed from the canonical confusion
+  matrix: Saveri 8, Thodi 4, Kalyani 2. Totals unaffected. See
+  docs/research/Q-003/PHASE_LOG.md -> Correction C-6.)
 - No OOD score floor
 
 ---
 
 ## Priority Plan
 
-1. Diagnose Bhairavi (weakest raga at 14%). The weight hack is disproven
-   (override retired), but data-vs-representation as the root cause is still
-   UNPROVEN. Adding diverse clips is the first test, not a confirmed fix.
+1. **Diagnose Bhairavi -- Q-003** (weakest raga at 14%). The weight hack is
+   disproven (override retired), and data-vs-representation as the root cause
+   remains UNPROVEN. Phase 0 (documentation provenance), Phase 1-A (PCD
+   overlap eliminated) and Phase 1-B (failure localised to the dyad channel)
+   are complete. **Superseded 2026-08-24:** this item previously read
+   "adding diverse clips is the first test" -- Phases 1-A/1-B ran instead, and
+   the indicated next test is now a dyad-channel diagnostic (does Bhairavi's
+   dyad matrix lack information, or does the representation fail to express
+   it?). That distinguishes H_DATA from H_REP directly. **Requires explicit
+   approval before it begins.** Detail: docs/research/Q-003/PHASE_LOG.md
 2. **Abhogi -- Q-001B phrase-discrimination experiment** (ARCHITECTURAL):
    every scoring-time approach is rejected (overrides L-044, absent-swara L-046,
    energy-ratio L-050). Q-001A answered: the representation is adequate (no
@@ -137,7 +157,7 @@ a promise -- see the Promotion Rule in workflow.md.
 | Q-001B-A | Do Abhogi stable-note sequences contain trigram structure beyond their own bigram statistics? | COMPLETED 2026-08-17 -- **INCONCLUSIVE**. 7 clips, 50,000 doublet-preserving surrogates, seed 0, alpha 0.05. Raw significant 2/7, Holm-significant 1/7 (223579). Both synthetic controls PASS (positive p=1.99996e-05, negative p=0.328273); sanity A-D PASS on all 7 clips. Measured **sequence-level** higher-order structure only; did **not** establish Abhogi discrimination. | done -- see datasets.md run log and L-054 |
 | Q-001B-B | Does composition-held-out discrimination separate Abhogi from its top confuser? | BLOCKED -- only **2 independent compositional units** across 7 clips (Evvari Bodhana 6 clips, Nannu Brova Neeku 1 clip). Composition-held-out folds are not constructible at this diversity (protocol section 4). | Acquire additional independent Abhogi compositions |
 | Q-002 | If Q-001B shows phrase power, does a phrase model improve recognition? | Blocked by Q-001B | Phrase-model experiment |
-| Q-003 | Is Bhairavi (14%, worst raga) limited by representation or by dataset diversity? | Unknown, independent of Q-001 | Isolate: add diverse clips vs feature analysis |
+| Q-003 | Is Bhairavi (14%, worst raga) limited by representation or by dataset diversity? | **ACTIVE -- UNANSWERED.** Phase 0 CLOSED 2026-08-21 (`908dbaa`): H_DATA was asserted in 4 places, including locked ADR-013, with no experiment behind it; corrected. Phase 1-A CLOSED 2026-08-21 (`1ef479f`): mean-PCD overlap **eliminated** as the mechanism -- Saveri has the *lowest* overlap (0.6782) yet absorbs 4 of 6 Bhairavi errors. Phase 1-B COMPLETE 2026-08-24 (uncommitted): failure **localised to the dyad channel** -- it ranks Bhairavi #1 in **0 of 11** of its own clips (Abhogi: 0 of 7); weighted PCD ranks Bhairavi #1, so PCD similarity is NOT the mechanism. **Localisation is not a diagnosis.** H_DATA, H_REP and H_BOTH all remain live. | Dyad-channel diagnostic (sparse vs diffuse vs shared transitions) -- **requires approval**. See docs/research/Q-003/PHASE_LOG.md |
 | Q-004 | What is the legally permissible reproducibility artifact for Saraga-derived data -- audio, or derived features only? | Pending | Review Saraga license, then record ADR (gates ADR-016's form) |
 
 Rule: do not promote an UNKNOWN to a cause ("data problem", "solved") without

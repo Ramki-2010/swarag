@@ -9,8 +9,15 @@ v1.3.2 retires the Bhairavi per-raga weight override:
   (9 wrongs) -- confirmed counter-productive, not just unproven
 - All 7 ragas now use uniform PCD=0.8/Dyad=0.2 weighting
 - LOO accuracy: 64.1% decided (25c/14w/31u), sandbox_loo_v131_canonical.py
-- Weakest raga is now Bhairavi (14%, needs diverse clips) rather than
-  Abhogi (33%, structural janya problem -- see L-044, BUG-015)
+- Weakest raga is now Bhairavi (14%) rather than Abhogi (33%, structural
+  janya problem -- see L-044, BUG-015). Bhairavi's cause is UNPROVEN and
+  under investigation as research gate Q-003.
+  *Correction 2026-08-25:* this line previously read "Bhairavi (14%, needs
+  diverse clips)". The 14% is FACT; "needs diverse clips" was a HYPOTHESIS
+  stated as a fact. Q-003 Phase 1-A eliminated mean-PCD overlap as the
+  mechanism and Phase 1-B localised the failure to the dyad channel;
+  whether the limit is data or representation is still not established.
+  See `PROJECT_STATUS.md` and `docs/research/Q-003/PHASE_LOG.md`.
 - A prior 67.4% figure was found fabricated (per-raga rows never summed
   to their stated total) and has been retired from all documentation
 

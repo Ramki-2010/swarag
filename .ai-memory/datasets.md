@@ -302,7 +302,16 @@ The 64.1% figure is the single ground-truth LOO for v1.3.2.
 | Bhairavi | 11 | 1 | 6 | 4 | 14% |
 | **TOTAL** | **70** | **25** | **14** | **31** | **64.1%** |
 
-Sink analysis: Saveri=6/14 wrongs, Thodi=3/14, Kalyani=2/14
+Sink analysis: Saveri=8/14 wrongs, Thodi=4/14, Kalyani=2/14 (sums to 14)
+  Correction 2026-08-21 (Q-003 C-6): this line previously read
+  "Saveri=6/14, Thodi=3/14, Kalyani=2/14", which sums to 11, not 14.
+  Recomputed from the canonical confusion matrix via
+  scripts/confusion_matrix_audit.py Scenario 1: incoming errors are
+  Saveri 8 (Bhairavi 4 + Kalyani 2 + Thodi 2), Thodi 4 (Bhairavi 2 +
+  Saveri 1 + Shankarabharanam 1), Kalyani 2 (Abhogi 2). The C/W/U totals
+  above (25/14/31, 64.1%) are unaffected and were independently
+  reproduced. Only the sink attribution was wrong; it understated
+  Saveri's dominance.
 
 **Weight sweep (same 7 ragas, 70 clips)**:
 | Config | C | W | U | Acc |
