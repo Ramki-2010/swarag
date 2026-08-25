@@ -299,6 +299,203 @@ would separate explanation 1 from explanation 2 and therefore `H_DATA` from
 
 ---
 
+## Phase 1-C — Dyad-channel diagnostic
+
+**Date.** 2026-08-25. Script `scripts/sandbox_q003_phase1c_dyad_channel.py`
+(committed `9b1dd6d`, sha256
+`4d4b0c9d58090744b5e3dee37f42cc63a881357474c2caf5783c933ff7710ada`).
+Artifacts: `Q003 Bhairavi Diagnosis results/run_20260825_202704_phase1c/`
+(gitignored). Run recorded `git_commit 18b1eaf`. Independently verified
+2026-08-25 in a separate read-only gate.
+
+**Objective.** With overlap eliminated (1-A) and the failure localised to the
+dyad channel (1-B), determine *why* the dyad channel fails weak ragas.
+
+**Starting evidence.** Phase 1-B: dyad ranks Bhairavi #1 in 0 of 11 of its own
+clips; Abhogi 0 of 7; weighted PCD ranks Bhairavi #1. Phase 1-A: mean-PCD
+overlap eliminated as the mechanism.
+
+**Research questions.** Five hypotheses, kept strictly separate and none
+selected by the run: `H_DATA`, `H_REP`, `H_SHARED-measured`,
+`H_SHARED-intrinsic`, `H_SCORE`.
+
+**Methods.** LOO over the canonical 70 clips, models built in memory from
+`pcd_results/features_v12/`. Scoring arithmetic imported from
+`recognize_raga_v12.py` or mirrored from `confusion_matrix_audit.py:129-148`.
+Raw pre-smoothing dyad counts recovered by replicating
+`aggregate_all_v12.py:53-105` and reading the matrices before `+= ALPHA`.
+Executed in the authorised order **M1 -> M3 -> M2 -> M5 -> M4**. No production
+code, dataset or feature cache touched; no subset search; no threshold, weight
+or methodology change. The three stale 2026-01-05 `*_dyad_stats.npz` artifacts
+were ignored.
+
+**Verification.** Canonical baseline **REPRODUCED**, 10/10 checks, before any
+interpretation: 70 clips, 25c/14w/31u; Bhairavi 11 clips 1c/6w/4u; Bhairavi to
+Saveri 4, Bhairavi to Thodi 2. Raw-count replication **PASS on all 70 clips**
+(every reconstructed matrix reproduces the production vector after smoothing
+and normalisation).
+
+### Results
+
+**M1 — per-channel dyad rank and margin.** Bhairavi dyad #1 = **0 of 11**
+(median rank 3.0, median gap 0.001168, gap/top 0.2014). Abhogi 0 of 7 (median
+rank 4.0). Thodi 7 of 11 (median rank 1.0).
+
+**M3 — ascending vs descending.** Bhairavi up #1 = **0/11**, down #1 =
+**0/11**. Thodi up 8, down 7. Model directional asymmetry is near-uniform
+across all seven ragas (0.9707–0.9933; Bhairavi 0.9819, Thodi 0.9886).
+**No direction rescues Bhairavi**; the failure is not directional, and the
+N3-in-avarohana conjecture is NOT supported.
+
+**M2 — Thodi matched control (n = 11 each).**
+
+| Metric | Bhairavi | Thodi |
+|---|---|---|
+| correct / wrong / unknown | 1 / 6 / 4 | 5 / 2 / 4 |
+| PCD #1 | 4 | 7 |
+| dyad #1 | **0** | **7** |
+| up #1 / down #1 | 0 / 0 | 8 / 7 |
+| cosine-dyad #1 | **8** | **5** |
+| median transitions | **253** | 233 |
+| median stable notes | **335** | 290 |
+| median distinct dyads up / down | **66 / 82** | 60 / 59 |
+| model L2 up / down | 0.0792 / 0.0728 | 0.0989 / 0.0978 |
+
+Metadata coverage is also matched: both 5 of 11 clips Saraga-verified, both
+4 distinct verified works.
+
+**M5 — raw vs L2-normalised dyad sharing.** Cosine on identical models moves
+channel leadership: Bhairavi **0 to 8** (+8), Abhogi 0 to 1, Mohanam 2 to 3,
+Shankarabharanam 4 to 4, Kalyani 10 to 9, Saveri 6 to 5, Thodi 7 to 5.
+Across Bhairavi's clips the dyad leader shifts from `Saveri 8, Thodi 2,
+Kalyani 1` to `Bhairavi 8, Saveri 2, Kalyani 1`. Dyad model concentration
+(L2 of the L1-normalised model, ascending): **Saveri 0.1377** highest of seven,
+**Bhairavi 0.0792** — a **1.74x** ratio. Bhairavi's largest dyad overlap is
+with **Thodi** (up 0.6695 / down 0.6393), not Saveri (0.5470 / 0.5171).
+
+**M4 — stability curve, DESCRIPTIVE EVIDENCE ONLY.** Mean cosine distance of a
+k-clip model to the k-clip centroid, 100 draws, seed 0. Bhairavi vs Thodi:
+k=2 0.2312/0.1679, k=4 0.1058/0.0757, k=6 0.0517/0.0395, k=8 0.0255/0.0183,
+k=10 0.0069/0.0052. Bhairavi is less stable than Thodi at every matched k but
+mid-pack overall and **more stable than Kalyani**, which achieves 10/14.
+**No plateau criterion was invented or applied. M4 did not determine any
+diagnosis and is not used to establish `H_DATA`.**
+
+### The wrong / UNKNOWN split — the phase's central result
+
+Bhairavi's 11 clips resolve as **1 correct, 6 wrong, 4 UNKNOWN**. These were
+analysed separately and must never be pooled.
+
+**FACT — the dyad channel explains 0 of the 6 wrong classifications.** In
+**all 6 of 6** wrong clips `pcd_top` equals the raga that actually won
+(Saveri 4, Thodi 2). The error decomposition gives drivers `pcd (both +)` 7,
+`dyad` 3 — no wrong clip is dyad-driven. **The PCD channel independently
+selects every wrong winner.**
+
+**FACT — the dyad channel explains 3 of the 4 UNKNOWNs.** In
+`Bhairavi_clean_2`, `_4` and `_6` the PCD channel ranks Bhairavi first and the
+dyad channel pulls the combined margin below `MIN_MARGIN_FINAL` (margins
+0.000813, 0.000107, 0.000003). The fourth UNKNOWN (Kamakshi, Sanjay
+Subrahmanyan) differs in kind: PCD rank 4, dyad rank 6, `pcd_top` Abhogi —
+both channels fail.
+
+**FACT.** Splitting cosine rank by outcome: correct 1/1, **wrong 6/6**,
+**unknown 1/4**. Normalisation's channel-level benefit falls predominantly on
+the wrong clips. This does **not** establish that any classification would
+change — only channel ranks were measured.
+
+### What was established
+
+1. **FACT.** The dyad failure is **not** a transition-data shortage: against an
+   exactly matched control Bhairavi has more transitions, more stable notes and
+   more distinct dyads in both directions, and still ranks first zero times.
+2. **FACT.** The dyad failure is **not** directional (0/11 both ways).
+3. **FACT.** The dyad **representation carries** discriminating information —
+   8 of 11 under cosine on identical models.
+4. **FACT.** Saveri's dyad-channel dominance over Bhairavi is largely a
+   **model-concentration artifact** (1.74x), removed by L2 normalisation.
+5. **FACT.** Production dyad similarity is an unnormalised dot product
+   (`recognize_raga_v12.py:211-214`) and receives **no IDF x Variance
+   weighting**, unlike PCD. It rewards concentration.
+6. **FACT.** The dyad channel drives 3 of 11 Bhairavi outcomes, all UNKNOWN.
+
+### What remains unestablished
+
+- **NOT ESTABLISHED.** That normalisation would change any classification.
+  Only channel ranks were measured; no end-to-end accuracy was computed.
+- **UNKNOWN.** Margins under cosine — per-clip cosine values were not written
+  to any artifact and are unrecoverable without a rerun.
+- **NOT ESTABLISHED — the largest open gap.** Any mechanism for Bhairavi's
+  **6 wrong answers**. Phase 1-A eliminated PCD *overlap*; Phase 1-C shows PCD
+  nonetheless selects all six winners. Nothing explains them.
+- **NOT ESTABLISHED.** Whether Bhairavi's clips are compositionally redundant.
+- **NOT ESTABLISHED.** `H_SHARED-intrinsic` — untestable with existing features.
+- **NOT ESTABLISHED.** Generalisation to Abhogi: Abhogi gains only +1 under
+  cosine versus Bhairavi's +8, so its 0/7 has a different character.
+
+### Hypothesis status
+
+| Hypothesis | Status |
+|---|---|
+| `H_SCORE` | **SUPPORTED — for UNKNOWNs only.** Not supported for wrong answers |
+| `H_SHARED-measured` | **SUPPORTED** — measured sharing tracks concentration, not shape |
+| `H_REP` | **WEAKENED** — the information is present in the models |
+| `H_DATA` | **WEAKENED at the transition level; NOT ESTABLISHED at the diversity level** |
+| `H_SHARED-intrinsic` | **NOT ESTABLISHED** |
+
+### Limitations
+
+1. **6 of 11 Bhairavi clips (`Bhairavi_clean_1..6`) have no recoverable
+   composition, performer or source identity.** Composition and performer
+   diversity are NOT controlled; every statement about redundancy is limited.
+2. n = 11. Differences of 1–3 clips are not statistically meaningful. No
+   significance test was performed or is claimed. All comparisons descriptive.
+3. The swara table underpinning the Bhairavi/Thodi pairing lives in a rejected
+   experiment's sandbox (`sandbox_absent_swara_v2.py:70-78`) and is a
+   repository working definition, not an established musicological fact.
+4. Tonic quality was not independently validated.
+5. `sandbox_q003_phase1c_dyad_channel.py:69` redeclares `MIN_STABLE_FRAMES = 5`
+   instead of importing it — an ADR-015 violation. The value is correct and no
+   result is affected. Preserved deliberately so executed experiment code is
+   not altered retroactively; recorded as follow-up technical debt.
+
+### Decision
+
+**Phase 1-C COMPLETE and independently verified. No intervention authorised.**
+No production code, scoring weight, dataset or threshold changed. BUG-010 was
+not reopened.
+
+**Phase 1-C does NOT establish the root cause of Bhairavi's failure.** It
+resolves the mechanism behind 3 of 10 failures and leaves the mechanism behind
+the 6 wrong answers entirely unexplained.
+
+**`Q-003` remains INCONCLUSIVE.** `H_DATA`, `H_REP`, `H_SHARED-measured`,
+`H_SHARED-intrinsic` and `H_SCORE` remain distinct; no diagnosis is selected.
+
+### Next permitted step
+
+**Phase 1-D requires a redesigned, scale-controlled test and separate
+authorisation.** A naive substitution of cosine for the dot product is
+**invalid**: raw dyad similarities span 0.0014–0.0094 while weighted PCD
+similarities are ~0.016–0.020, so the dyad channel currently contributes
+roughly 2–12% of score magnitude. Cosine is order 0.1–1.0 — roughly 100x
+larger. Substituting it at `DYAD_WEIGHT = 0.2` would test **re-weighting
+confounded with normalisation**, not normalisation.
+
+A corrected design has been drafted and approved in principle: **C1** current
+production baseline (must reproduce 25/14/31), **C2** cosine at matched
+cross-raga spread, **C3** naive cosine as a diagnostic control that is
+**never a promotion candidate**; outcomes stratified correct / wrong / UNKNOWN.
+
+**Phase 1-D is diagnostic only. ADR-005 blocks production promotion at the
+current dataset size** — its revisit gate requires 15-20+ clips per raga and
+Bhairavi has 11 — so even a positive result becomes research evidence, not an
+engine change.
+
+**Phase 1-D has NOT been executed.**
+
+---
+
 ## Corrections
 
 Corrections are appended here. Earlier phase text above is left intact.
@@ -332,3 +529,44 @@ corrected; the original wording is preserved in the correction note at
 **Bearing on the gate.** The correction **strengthens** Phase 1-A's finding
 rather than altering it: Saveri absorbs a larger share of all errors than
 documented, while having the *lowest* mean-PCD overlap with Bhairavi.
+
+### Correction C-7 — Phase 1-B script provenance status (2026-08-26)
+
+**Identified.** 2026-08-26. **Corrected.** 2026-08-26, by appending this note.
+
+Phase 1-B above records at line 156:
+
+> *"(gitignored). **Uncommitted at time of writing.**"*
+
+**That statement was historically accurate.** When Phase 1-B was written on
+2026-08-24, `scripts/sandbox_q003_phase1b_weighted_channels.py` was genuinely
+untracked, and the entry correctly disclosed it rather than implying the run
+was pinned.
+
+**It is no longer current.** On 2026-08-26 the script was committed in
+**`9b1dd6d`** ("Q-003: commit Phase 1-B and Phase 1-C sandbox scripts
+(provenance pinning)"), together with the Phase 1-C script. Both were committed
+**as-is**, byte-identical to the versions that produced their artifacts:
+
+| Script | sha256 |
+|---|---|
+| `sandbox_q003_phase1b_weighted_channels.py` | `dafe718e6739e416ddee0cc38f8eef199392f6299dd69fdf4c483e10c2488e40` |
+| `sandbox_q003_phase1c_dyad_channel.py` | `4d4b0c9d58090744b5e3dee37f42cc63a881357474c2caf5783c933ff7710ada` |
+
+Provenance was verified before committing: both scripts' modification times
+precede their own artifacts (Phase 1-B by 10 s, Phase 1-C by 3 s), so neither
+was altered after its run.
+
+**The later commit does not alter Phase 1-B's results.** Committing an existing
+file changes only its tracking status. Every measurement, table and count in
+the Phase 1-B entry above stands unchanged, and the artifacts in
+`Q003 Bhairavi Diagnosis results/run_20260824_214001_phase1b/` are untouched.
+
+**No methodology and no interpretation changed.** Nothing in Phase 1-B was
+re-run, re-derived, or re-read. The original text is left exactly as written,
+per the append-only rule.
+
+**Bearing on the gate.** None. This is a provenance-tracking correction only.
+Its sole effect is that Phase 1-B's analysis code is now reconstructible from
+the repository, closing the reproducibility gap that the original note
+honestly disclosed.
