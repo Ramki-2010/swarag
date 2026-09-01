@@ -33,7 +33,8 @@ Aggregation --> Versioned Raga Signatures (pcd_stats/ + dyad_stats/)
   |
   v
 Raga Scoring & Ranking
-  |-- IDF x Variance weighted dot-product (PCD + Dyads)
+  |-- IDF x Variance weighted dot-product (PCD only)
+  |-- Unweighted dot-product (Dyads; up + down averaged)
   |-- Weighted fusion (PCD=0.8, Dyad=0.2)
   |-- MIN_CLIPS_PER_RAGA=5 guardrail
   +-- Tiered confidence: HIGH / MODERATE / UNKNOWN

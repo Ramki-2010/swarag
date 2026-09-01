@@ -31,6 +31,30 @@ priority over speed or convenience.
 Never optimise for producing a desired result. Never manufacture certainty.
 Scientific correctness takes priority over task completion.
 
+## 1a. Project naming
+
+**Canonical display name: `Swaragam`.** Use it in prose, titles and
+documentation.
+
+**Technical identifiers keep the historical `swarag` spelling and must NOT be
+renamed.** They are identifiers, not labels:
+
+| Identifier | Value | Why frozen |
+|---|---|---|
+| GitHub repository slug | `swarag` (`github.com/Ramki-2010/swarag`) | Renaming invalidates every documented clone command |
+| Virtual environment | `my_virtual_env_swarag` | See §9 -- never create another environment |
+| Continue slash commands | `/analyze-swarag`, `/debug-swarag` | Must match the live commands in `~/.continue/prompts/` |
+| Filesystem root | `D:\Swaragam` | Hardcoded in 66 scripts; already spelled `Swaragam` |
+
+**Pending, and deliberate:** roughly 84 prose occurrences of "Swarag" have not
+yet been renamed -- that pass is deferred to the documentation cleanup. Until
+it runs, both spellings appear in the repository. The split is intentional per
+the table above; it is **not** drift, and the prose occurrences are **not** to
+be treated as errors.
+
+Never use `Swargam`. It is not a variant of this project's name. The only
+occurrence anywhere in the repository is this prohibition itself.
+
 ## 2. Mandatory state verification
 
 Before any substantive task, establish the actual current state. Inspect, as

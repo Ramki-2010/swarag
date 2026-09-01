@@ -68,7 +68,8 @@ Feature Computation
   |
   v
 Raga Scoring
-  |-- IDF x Variance weighted dot-product (PCD + Dyads)
+  |-- IDF x Variance weighted dot-product (PCD only)
+  |-- Unweighted dot-product (Dyads; up + down averaged)
   |-- Weighted fusion (PCD=0.8, Dyad=0.2; uniform for all ragas)
   |-- MIN_CLIPS_PER_RAGA guardrail (excludes thin-data ragas)
   +-- Tiered confidence: HIGH / MODERATE / UNKNOWN
@@ -82,6 +83,10 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 All ragas use uniform PCD=0.8 / Dyad=0.2 weighting. LOO figures below are
 the canonical v1.3.2 run (sandbox_loo_v131_canonical.py, 70 clips,
 25 correct / 14 wrong / 31 unknown, 64.1% decided).
+
+> **Canonical source:** [`PROJECT_STATUS.md`](PROJECT_STATUS.md) -> Current
+> Accuracy. The table below is a summary of it. If the two ever disagree,
+> `PROJECT_STATUS.md` is correct.
 
 | Raga | Training Clips | Correct | Wrong | Unknown | LOO Accuracy (decided) |
 |---|---|---|---|---|---|
@@ -128,11 +133,17 @@ pip install -r requirements.txt
 
 ## Run Pipeline
 
-```bash
-python extract_pitch_batch_v12.py    # Step 1: Extract features
-python aggregate_all_v12.py          # Step 2: Build models
-python batch_evaluate.py             # Step 3: Evaluate
+Use the project virtual environment. The bare `python` on PATH is a separate
+install without numpy and will fail.
+
+```bat
+my_virtual_env_swarag\Scripts\python.exe scripts\extract_pitch_batch_v12.py   :: 1. Extract features
+my_virtual_env_swarag\Scripts\python.exe scripts\aggregate_all_v12.py         :: 2. Build models
+my_virtual_env_swarag\Scripts\python.exe scripts\batch_evaluate.py            :: 3. Evaluate
 ```
+
+Run from the repository root. The scripts resolve their data paths absolutely,
+so the working directory does not matter, but the interpreter does.
 
 ## Development
 

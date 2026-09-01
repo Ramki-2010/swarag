@@ -104,21 +104,31 @@ All training audio must be **vocal-only**. Instrument contamination (violin, mri
 
 ## 4. Pipeline Execution Order
 
-```bash
-# Step 1: Extract features from audio
-python extract_pitch_batch_v12.py
+Run from the repository root, using the project virtual environment. The bare
+`python` on PATH is a separate install without numpy and will fail. Data paths
+inside the scripts are absolute, so the working directory does not matter.
 
-# Step 2: Aggregate raga models
-python aggregate_all_v12.py
+```bat
+:: Step 1: Extract features from audio
+my_virtual_env_swarag\Scripts\python.exe scripts\extract_pitch_batch_v12.py
 
-# Step 3a: Evaluate on training data
-python batch_evaluate.py
+:: Step 2: Aggregate raga models
+my_virtual_env_swarag\Scripts\python.exe scripts\aggregate_all_v12.py
 
-# Step 3b: Evaluate on unknown audio
-python batch_evaluate_random.py
+:: Step 3a: Evaluate on training data
+my_virtual_env_swarag\Scripts\python.exe scripts\batch_evaluate.py
+
+:: Step 3b: Evaluate on unknown audio
+my_virtual_env_swarag\Scripts\python.exe scripts\batch_evaluate_random.py
 ```
 
-> Update `AGG_FOLDER` in batch scripts to point to the latest aggregation run folder.
+> **Step 2 does not feed Step 3 automatically.** `batch_evaluate.py` and
+> `batch_evaluate_random.py` read a hardcoded `AGG_FOLDER` constant
+> (`batch_evaluate.py:14`), currently pinned to
+> `pcd_results\aggregation\v1.2\run_20260331_232228`. Unless you edit that
+> constant, Step 3 evaluates against that pinned run, **not** the aggregation
+> Step 2 just produced. Update `AGG_FOLDER` in both batch scripts to point at
+> the new run folder before evaluating.
 
 ---
 
@@ -183,9 +193,10 @@ Never skip a higher priority to work on a lower one.
    - Use Demucs for mix-only recordings
    - Carnatic Varnam dataset has clean solo vocals
 2. **Create folder** — `datasets/seed_carnatic/{RagaName}/`
-3. **Run extraction** — `python extract_pitch_batch_v12.py`
-4. **Re-aggregate** — `python aggregate_all_v12.py`
-5. **Evaluate** — `python batch_evaluate.py` + `python batch_evaluate_random.py`
+3. **Run extraction** — `my_virtual_env_swarag\Scripts\python.exe scripts\extract_pitch_batch_v12.py`
+4. **Re-aggregate** — `my_virtual_env_swarag\Scripts\python.exe scripts\aggregate_all_v12.py`
+5. **Evaluate** — update `AGG_FOLDER` (see Section 4), then run
+   `scripts\batch_evaluate.py` and `scripts\batch_evaluate_random.py`
 6. **Document** — Update `datasets.md` and `architecture.md`
 
 ---

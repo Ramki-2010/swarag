@@ -76,6 +76,11 @@ Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str
 
 ## Trained Ragas (v1.3.2: 7 ragas, 70 clips)
 
+> **MIRROR -- not canonical.** These figures are copied from
+> `PROJECT_STATUS.md` -> Current Accuracy, which is the canonical source.
+> Kept here for offline debugging. If the two disagree, `PROJECT_STATUS.md`
+> is correct.
+
 | Raga | Clips | LOO Acc (decided) |
 |---|---|---|
 | Mohanam | 10 | 100% (1c/0w/9u -- decides rarely) |

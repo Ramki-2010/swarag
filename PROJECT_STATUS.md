@@ -46,6 +46,12 @@ every phrase-based accuracy fix).
 | MIN_MARGIN_FINAL | 0.001 |
 
 ### Current Accuracy (LOO, 7 ragas, 70 clips, sandbox_loo_v131_canonical.py)
+
+> **This table is the canonical source for every accuracy figure in the
+> repository.** Other documents may summarise it but must point here.
+> Regenerate it with the named script -- never edit these numbers by hand.
+> Known mirrors: `README.md`, `.ai-memory/architecture.md`.
+
 | Raga | Clips | LOO Acc |
 |---|---|---|
 | Mohanam | 10 | 100% (1c/0w/9u -- decides rarely) |
