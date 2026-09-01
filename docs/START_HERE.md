@@ -70,6 +70,9 @@ must not depend on conversational memory from a previous session.
 | Governance, rules, environment | `CLAUDE.md` | Rarely |
 | **Volatile project state** | `PROJECT_STATUS.md` | Every gate/phase transition |
 | **Detailed research reasoning** | `docs/research/<GATE>/PHASE_LOG.md` | Append-only, per phase |
+| **Active gate methodology** | `docs/research/<GATE>/RESEARCH_PLAN.md` | Per phase design |
+| Phase authorisation gates | `docs/research/<GATE>/PHASE_*_PRECHECK.md` | Historical, never edited |
+| Repository consistency audits | `docs/repository-consistency-audit.md` (+ `.json`) | Dated snapshots |
 | Stable conceptual architecture | `docs/ARCHITECTURE.md` | Rarely |
 | Volatile architectural state | `.ai-memory/architecture.md` | Often |
 | Settled decisions | `adr.md` | Append-only |

@@ -570,3 +570,62 @@ per the append-only rule.
 Its sole effect is that Phase 1-B's analysis code is now reconstructible from
 the repository, closing the reproducibility gap that the original note
 honestly disclosed.
+
+### Correction C-8 — Phase 1-D design superseded by design audit (2026-09-01)
+
+**Identified.** 2026-09-01, during a read-only Phase 1-D design audit.
+**Corrected.** 2026-09-01, by appending this note.
+
+Phase 1-C's "Next permitted step" above records:
+
+> *"A corrected design has been drafted and approved in principle: **C1**
+> current production baseline (must reproduce 25/14/31), **C2** cosine at
+> matched cross-raga spread, **C3** naive cosine as a diagnostic control..."*
+
+**That was accurate when written.** A subsequent design audit found **C2 as
+described is defective**, and the design has been revised.
+
+**Why.** Cosine divides by *two* norms, not one:
+
+| Factor | Effect on dyad rank | Effect on the combined score |
+|---|---|---|
+| model norm `‖m_r‖` — varies per raga | **rank-changing** — this is the mechanism | yes |
+| clip norm `‖x‖` — constant across ragas within a fold | **rank-neutral** | **yes — rescales the channel per clip** |
+
+Phase 1-C's 8/11 result is attributable **entirely** to the model-norm term; the
+clip-norm term contributed nothing to it. But Phase 1-D measures *decisions*,
+and `MARGIN_STRICT` (0.003) and `MIN_MARGIN_FINAL` (0.001) are **absolute**
+thresholds. The clip-norm term would rescale each clip's dyad contribution
+against those fixed cutoffs — a per-clip effect that played no part in the
+finding being tested. Full cosine therefore conflates the mechanism with an
+irrelevant rescaling, which is the exact class of confound the redesign was
+commissioned to remove.
+
+**Required corrections, both folded into the plan:**
+
+- **F1** — C2 must be **model-norm-only**:
+  `γ · 0.5·(dot(x_up, m_up/‖m_up‖) + dot(x_dn, m_dn/‖m_dn‖))`.
+- **F2** — Phase 1-D must **import** `MIN_STABLE_FRAMES` from
+  `recognize_raga_v12.py:27` rather than redeclare it (ADR-015, ACTIVE/locked).
+
+**Two further audit findings, recorded because they change how the design is
+read rather than what it does:**
+
+- **C2 and C3 produce identical dyad-channel rankings** (γ is a positive global
+  scalar and ranks are scale-invariant). C3 is therefore not an independent
+  normalisation result. The real factorisation is **C1→C2 = normalisation at
+  matched influence** and **C2→C3 = pure effective weight at fixed
+  normalisation** — an orthogonal decomposition, and the design's main strength.
+- **C0 = PCD-only** was added as an effect ceiling. `L-045` swept 0.6/0.4,
+  0.7/0.3 and 0.8/0.2 but never tested PCD-only, so it is new information: if
+  C0 ≈ C1, the dyad channel is nearly inert at weight 0.2 and no dyad-side
+  change can exceed that difference.
+
+**Bearing on the gate.** None on any Phase 0/1-A/1-B/1-C result. This is a
+correction to a **forward-looking design**, not to evidence. No measurement,
+table or count above is affected, and the Phase 1-C text is left exactly as
+written per the append-only rule.
+
+**Where the current design lives.** `docs/research/Q-003/RESEARCH_PLAN.md`.
+That file supersedes the C1/C2/C3 sketch quoted above. **Phase 1-D remains
+NOT AUTHORISED and NOT EXECUTED.**
