@@ -1,0 +1,661 @@
+{
+  "audit": {
+    "title": "Repository Consistency Audit",
+    "date": "2026-09-01",
+    "commit": "0bf39cb087a847e8b9496c87e45b96c36b16693c",
+    "scope": "repository-wide, read-only",
+    "companion_report": "docs/repository-consistency-audit.md",
+    "modifications_made": false,
+    "decisions_made": false,
+    "severity_scale": [
+      "CRITICAL",
+      "HIGH",
+      "MEDIUM",
+      "LOW",
+      "INFORMATIONAL"
+    ]
+  },
+  "summary": {
+    "total_findings": 30,
+    "by_severity": {
+      "CRITICAL": 1,
+      "HIGH": 8,
+      "MEDIUM": 10,
+      "LOW": 6,
+      "INFORMATIONAL": 5
+    },
+    "fabricated_numbers_found": 0,
+    "broken_links_found": 0,
+    "verified_sound": [
+      "canonical accuracy table (README.md:86-95)",
+      "confidence thresholds across all documents and code",
+      "virtual-environment references",
+      "Q-003 phase record"
+    ],
+    "distinct_issues": 29,
+    "note_on_counts": "30 finding entries; J-1 cross-lists C-3 as the same underlying issue, so 29 distinct issues. HIGH: 8 entries / 7 distinct.",
+    "resolution_status": {
+      "note": "Added after the audit. Findings are unaltered. This audit is a dated snapshot taken at 0bf39cb.",
+      "resolved_in_416cc44": [
+        "C-1",
+        "C-2",
+        "D-1",
+        "D-2",
+        "I-1"
+      ],
+      "partially_resolved_in_416cc44": [
+        "B-1"
+      ],
+      "maintained_continuously": false,
+      "check": "git log -- for anything closed after 416cc44"
+    }
+  },
+  "findings": [
+    {
+      "id": "B-1",
+      "category": "naming",
+      "severity": "CRITICAL",
+      "title": "Project is named Swarag repository-wide, not Swaragam",
+      "location": "repository-wide",
+      "observed": "Swarag used as project name in 87 places; Swaragam appears 174 times exclusively as a filesystem path and never as a project name; Swargam 0 times",
+      "expected": "UNDETERMINED - no canonical decision exists in the repository",
+      "evidence": "CLAUDE.md:1; CONTRIBUTING.md:1,3,5; DEVELOPMENT.md:1,3; README.md:1; git remote https://github.com/Ramki-2010/swarag.git; venv my_virtual_env_swarag; requirements.txt:1",
+      "confidence": "high",
+      "recommended_resolution": "DECISION REQUIRED - not decided in this audit. Four alternatives presented in report section B.",
+      "options": [
+        "Option 1: display name Swaragam, repo slug and venv stay swarag (documentation-only cost)",
+        "Option 2: full rename including repo slug and venv (highest cost)",
+        "Option 3: standardise on Swarag (zero changes, contradicts stated intent)",
+        "Option 4: also rename filesystem paths (highest churn, lowest benefit)"
+      ],
+      "identifier_classes": {
+        "display_name": "Swarag",
+        "github_slug": "swarag",
+        "filesystem_paths": "D:\\Swaragam\\, H:\\Swaragam\\",
+        "python_package_identifiers": "none - flat scripts, no package",
+        "virtual_environment": "my_virtual_env_swarag",
+        "documentation_references": "Swarag (87 occurrences)"
+      },
+      "files_affected": [
+        "README.md",
+        "CLAUDE.md",
+        "PROJECT_STATUS.md",
+        "adr.md",
+        "CONTRIBUTING.md",
+        "DEVELOPMENT.md",
+        "requirements.txt",
+        ".ai/agent_spec.md",
+        ".ai-memory/*"
+      ],
+      "disposition": "must_fix_before_readme",
+      "resolution": "PARTIALLY RESOLVED in 416cc44 -- naming architecture established (CLAUDE.md 1a). The prose rename of ~84 occurrences remains deferred."
+    },
+    {
+      "id": "B-2",
+      "category": "naming",
+      "severity": "INFORMATIONAL",
+      "title": "The guarded-against spelling Swargam does not occur",
+      "location": "repository-wide",
+      "observed": "0 occurrences of Swargam in tracked files",
+      "expected": "n/a",
+      "evidence": "git grep over tracked files",
+      "confidence": "high",
+      "recommended_resolution": "No action.",
+      "files_affected": [],
+      "disposition": "no_action"
+    },
+    {
+      "id": "C-1",
+      "category": "technical",
+      "severity": "HIGH",
+      "title": "README misstates where IDF x Variance weighting applies",
+      "location": "README.md:71",
+      "observed": "IDF x Variance weighted dot-product (PCD + Dyads)",
+      "expected": "IDF x Variance applies to PCD only; the dyad channel uses a raw unweighted dot product",
+      "evidence": "recognize_raga_v12.py:210 pcd_sim = np.dot(pcd_w_arr, model_w) weighted; :211-212 up_sim/down_sim = np.dot(...) unweighted; compute_pcd_weights() :159-182 applied to PCD alone; independently established by Q-003 Phase 1-C",
+      "confidence": "high",
+      "recommended_resolution": "Correct to: IDF x Variance weighted dot-product (PCD); unweighted dot-product (Dyads)",
+      "files_affected": [
+        "README.md"
+      ],
+      "disposition": "must_fix_before_readme",
+      "requires_user_authorisation": true,
+      "resolution": "RESOLVED in 416cc44 -- README.md:71 corrected."
+    },
+    {
+      "id": "C-2",
+      "category": "technical",
+      "severity": "HIGH",
+      "title": "docs/ARCHITECTURE.md contradicts itself on the IDF claim",
+      "location": "docs/ARCHITECTURE.md:36 vs :185-186",
+      "observed": ":36 says 'IDF x Variance weighted dot-product (PCD + Dyads)'; :185-186 say 'IDF x Variance weighted dot-product for PCD' and 'Dot-product similarity for directional dyads'",
+      "expected": "lines 185-186 are correct",
+      "evidence": "recognize_raga_v12.py:210-214; the two statements sit 149 lines apart in one document",
+      "confidence": "high",
+      "recommended_resolution": "Correct :36 to match :185-186. This is the origin of C-1 - README.md:71 reproduces :36 verbatim.",
+      "files_affected": [
+        "docs/ARCHITECTURE.md",
+        "README.md"
+      ],
+      "disposition": "must_fix_before_readme",
+      "requires_user_authorisation": true,
+      "resolution": "RESOLVED in 416cc44 -- docs/ARCHITECTURE.md:36 corrected; now agrees with its own :185-186."
+    },
+    {
+      "id": "C-3",
+      "category": "technical",
+      "severity": "HIGH",
+      "title": "DEVELOPMENT.md section 8 conflicts with ADR-015 (ACTIVE, locked)",
+      "location": "DEVELOPMENT.md:195",
+      "observed": "'These must be identical across aggregate_all_v12.py, recognize_raga_v12.py, and all test scripts' - a duplicate-and-manually-sync policy",
+      "expected": "ADR-015: scripts import shared constants instead of redefining them",
+      "evidence": "adr.md:189-208, Status ACTIVE locked; ADR-015 was created because a duplicated constant drifted stale and mislabelled a retired config as canonical (BUG-017)",
+      "confidence": "high",
+      "recommended_resolution": "Rewrite section 8 as a reference table sourced from recognize_raga_v12.py, instructing contributors to import rather than copy",
+      "files_affected": [
+        "DEVELOPMENT.md"
+      ],
+      "disposition": "safe_to_defer",
+      "cross_listed_as": "J-1"
+    },
+    {
+      "id": "C-4",
+      "category": "technical",
+      "severity": "MEDIUM",
+      "title": "Production declares MIN_STABLE_FRAMES in two places",
+      "location": "recognize_raga_v12.py:27 and aggregate_all_v12.py:16",
+      "observed": "MIN_STABLE_FRAMES = 5 declared in both files",
+      "expected": "single owner, per ADR-015 principle and the ADR-017 FEATURE_VERSION precedent",
+      "evidence": "both files read directly; values currently agree so nothing is broken today",
+      "confidence": "high",
+      "recommended_resolution": "Have aggregate_all_v12.py import from recognize_raga_v12.py. Production change - requires separate authorisation and sandbox validation per ADR-010.",
+      "files_affected": [
+        "aggregate_all_v12.py",
+        "DEVELOPMENT.md"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "C-5",
+      "category": "technical",
+      "severity": "MEDIUM",
+      "title": "Known ADR-015 violation preserved in a committed sandbox",
+      "location": "scripts/sandbox_q003_phase1c_dyad_channel.py:69",
+      "observed": "MIN_STABLE_FRAMES = 5 redeclared although exported by recognize_raga_v12.py:27",
+      "expected": "import it",
+      "evidence": "documented in commit 9b1dd6d and in docs/research/Q-003/PHASE_LOG.md Phase 1-C limitations",
+      "confidence": "high",
+      "recommended_resolution": "DO NOT FIX. Preserved deliberately so executed experiment code is not altered retroactively; value is correct and no Phase 1-C result is affected.",
+      "files_affected": [],
+      "disposition": "no_action"
+    },
+    {
+      "id": "D-1",
+      "category": "paths_and_commands",
+      "severity": "HIGH",
+      "title": "README run commands fail as written",
+      "location": "README.md:131-135",
+      "observed": "python extract_pitch_batch_v12.py (and two more) run from repository root",
+      "expected": "scripts live in scripts/; canonical interpreter is my_virtual_env_swarag\\Scripts\\python.exe",
+      "evidence": "ls scripts/ confirms location; CLAUDE.md section 9: 'The bare python on PATH is a separate install without numpy and will fail'; .ai-memory/lessons.md:70-77",
+      "confidence": "high",
+      "recommended_resolution": "Show cd scripts plus the venv interpreter, or use full paths",
+      "files_affected": [
+        "README.md"
+      ],
+      "disposition": "must_fix_before_readme",
+      "resolution": "RESOLVED in 416cc44 -- README run commands now use the venv interpreter and scripts/ paths."
+    },
+    {
+      "id": "D-2",
+      "category": "paths_and_commands",
+      "severity": "HIGH",
+      "title": "Same command defect in DEVELOPMENT.md",
+      "location": "DEVELOPMENT.md:109,112,115,118,186,187,188",
+      "observed": "bare python invocations from repository root",
+      "expected": "same as D-1",
+      "evidence": "same as D-1",
+      "confidence": "high",
+      "recommended_resolution": "same as D-1",
+      "files_affected": [
+        "DEVELOPMENT.md"
+      ],
+      "disposition": "safe_to_defer",
+      "resolution": "RESOLVED in 416cc44 -- DEVELOPMENT.md commands corrected; AGG_FOLDER behaviour documented."
+    },
+    {
+      "id": "D-3",
+      "category": "paths_and_commands",
+      "severity": "MEDIUM",
+      "title": "README repository structure is incomplete",
+      "location": "README.md:107-121",
+      "observed": "lists only scripts/, .ai/, .ai-memory/, docs/",
+      "expected": "tracked top-level also includes datasets/, notebooks/, archive/, .githooks/ and root files CLAUDE.md, PROJECT_STATUS.md, adr.md, CONTRIBUTING.md, DEVELOPMENT.md, LICENSE, requirements.txt",
+      "evidence": "git ls-files",
+      "confidence": "high",
+      "recommended_resolution": "Complete the listing; update the docs/ description to include START_HERE.md, ARCHITECTURE.md, research/Q-003/",
+      "files_affected": [
+        "README.md"
+      ],
+      "disposition": "should_fix_before_readme"
+    },
+    {
+      "id": "D-4",
+      "category": "paths_and_commands",
+      "severity": "LOW",
+      "title": "Two tracked directories are effectively empty and undocumented",
+      "location": "notebooks/, archive/",
+      "observed": "notebooks/ contains no files; archive/ contains only config_backup.yaml",
+      "expected": "documented purpose, or retirement",
+      "evidence": "git ls-files and directory listing",
+      "confidence": "high",
+      "recommended_resolution": "Document purpose or retire. Not urgent.",
+      "files_affected": [
+        "README.md"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "D-5",
+      "category": "paths_and_commands",
+      "severity": "MEDIUM",
+      "title": "Documented aggregation output layout does not match disk",
+      "location": "docs/ARCHITECTURE.md:32,165",
+      "observed": "signatures documented as written to pcd_stats/ + dyad_stats/",
+      "expected": "only pcd_results/aggregation/stats/ exists on disk, holding 3 of 7 ragas' *_dyad_stats.npz dated 2026-01-05 - a stale layout no longer written",
+      "evidence": "find over repository; aggregate_all_v12.py:27 sets DYAD_DIR = RUN_DIR/dyad_stats",
+      "confidence": "high",
+      "recommended_resolution": "Note that persisted per-raga dyad models are stale and partial, and that current analyses build models in memory",
+      "files_affected": [
+        "docs/ARCHITECTURE.md",
+        ".ai-memory/architecture.md"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "D-6",
+      "category": "paths_and_commands",
+      "severity": "INFORMATIONAL",
+      "title": "benchmark.py does not exist",
+      "location": "repository root",
+      "observed": "no benchmark.py",
+      "expected": "ADR-016 requires a one-command reproducible benchmark",
+      "evidence": "adr.md:209-241 - ADR-016 already records its own enforcement as OPEN",
+      "confidence": "high",
+      "recommended_resolution": "No new action; already self-disclosed in the ADR",
+      "files_affected": [],
+      "disposition": "no_action"
+    },
+    {
+      "id": "E-1",
+      "category": "research_status",
+      "severity": "HIGH",
+      "title": "README does not disclose that the project has open research gates",
+      "location": "README.md overall",
+      "observed": "research status appears only inside a v1.3.2 version bullet (:12-20); no gate named except Q-003 in passing",
+      "expected": "PROJECT_STATUS.md Research Gates: Q-001A ANSWERED, Q-001B ACTIVE, Q-001B-A COMPLETED INCONCLUSIVE, Q-001B-B BLOCKED, Q-002 blocked, Q-003 ACTIVE-UNANSWERED, Q-004 pending",
+      "evidence": "PROJECT_STATUS.md:130-160",
+      "confidence": "high",
+      "recommended_resolution": "Add a research-status section sourced from PROJECT_STATUS.md. No status may be upgraded or downgraded.",
+      "files_affected": [
+        "README.md"
+      ],
+      "disposition": "should_fix_before_readme"
+    },
+    {
+      "id": "E-2",
+      "category": "research_status",
+      "severity": "MEDIUM",
+      "title": "README omits the navigation entry point",
+      "location": "README.md",
+      "observed": "links PROJECT_STATUS.md and docs/research/Q-003/PHASE_LOG.md at :20 but never docs/START_HERE.md",
+      "expected": "CLAUDE.md sections 4a/4b establish docs/START_HERE.md as the reading-order entry point",
+      "evidence": "CLAUDE.md 4a/4b; docs/START_HERE.md exists",
+      "confidence": "high",
+      "recommended_resolution": "Add a research-documentation section linking START_HERE -> PROJECT_STATUS -> PHASE_LOG -> ADRs",
+      "files_affected": [
+        "README.md"
+      ],
+      "disposition": "should_fix_before_readme"
+    },
+    {
+      "id": "E-3",
+      "category": "research_status",
+      "severity": "MEDIUM",
+      "title": "README carries no limitations section",
+      "location": "README.md",
+      "observed": "no limitations section",
+      "expected": "PROJECT_STATUS.md Known Limitations records Abhogi 33% structural, Bhairavi 14% cause UNPROVEN, Mohanam 9/10 UNKNOWN, Kamboji excluded, Saveri as sink, no OOD floor",
+      "evidence": "PROJECT_STATUS.md Known Limitations",
+      "confidence": "high",
+      "recommended_resolution": "Add verbatim, without softening",
+      "files_affected": [
+        "README.md"
+      ],
+      "disposition": "should_fix_before_readme"
+    },
+    {
+      "id": "F-1",
+      "category": "numbers",
+      "severity": "INFORMATIONAL",
+      "title": "Canonical accuracy table PASSES every verification check",
+      "location": "README.md:86-95",
+      "observed": "clips 70, correct 25, wrong 14, unknown 31, 64.1% decided",
+      "expected": "same",
+      "evidence": "clips 10+8+9+14+11+7+11=70; correct sums 25; wrong sums 14; unknown sums 31; per-raga decided accuracy recomputes exactly (Saveri 7/8=88%, Kalyani 6/8=75%, Thodi 5/7=71%, Abhogi 1/3=33%, Bhairavi 1/7=14%); total 25/39=64.1%. Bhairavi 1c/6w/4u matches Q003 run_20260825_202704_phase1c/per_clip.csv exactly",
+      "confidence": "high",
+      "recommended_resolution": "No action. This is the row-sum check the fabricated 67.4% figure failed; the table passes it.",
+      "files_affected": [],
+      "disposition": "no_action"
+    },
+    {
+      "id": "F-2",
+      "category": "numbers",
+      "severity": "LOW",
+      "title": "'Clips' is undefined for staged ragas",
+      "location": "README.md:99-103",
+      "observed": "Kamboji 3, Madhyamavati 2, Hamsadhvani 1",
+      "expected": "feature cache holds Kamboji 3, Madhyamavati 2, Hamsadhvani 0; raw audio counts are Kamboji 4, Madhyamavati 4, Hamsadhvani 1",
+      "evidence": "raga field read from pcd_results/features_v12/*.npz; directory listing of datasets/seed_carnatic/",
+      "confidence": "high",
+      "recommended_resolution": "Define 'clips' as extracted, eligible clips and reconcile the Hamsadhvani row. Do not change numbers without deciding the definition.",
+      "files_affected": [
+        "README.md"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "F-3",
+      "category": "numbers",
+      "severity": "LOW",
+      "title": "requirements.txt header is version-stale",
+      "location": "requirements.txt:1",
+      "observed": "'Swarag v1.3 -- Python Dependencies'",
+      "expected": "v1.3.2",
+      "evidence": "PROJECT_STATUS.md Current Version",
+      "confidence": "high",
+      "recommended_resolution": "Update header, or drop the version from it so it cannot drift again",
+      "files_affected": [
+        "requirements.txt"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "F-4",
+      "category": "numbers",
+      "severity": "INFORMATIONAL",
+      "title": "Confidence thresholds and scoring constants agree everywhere",
+      "location": "recognize_raga_v12.py, DEVELOPMENT.md section 8, PROJECT_STATUS.md",
+      "observed": "MARGIN_STRICT 0.003, MIN_MARGIN_FINAL 0.001, ALPHA 0.01, N_BINS 72, PCD_WEIGHT 0.8, DYAD_WEIGHT 0.2, MIN_CLIPS_PER_RAGA 5",
+      "expected": "same",
+      "evidence": "direct comparison of all three sources",
+      "confidence": "high",
+      "recommended_resolution": "No action. No drift.",
+      "files_affected": [],
+      "disposition": "no_action"
+    },
+    {
+      "id": "G-1",
+      "category": "methodology",
+      "severity": "MEDIUM",
+      "title": "No document records that the dyad channel is unweighted and unnormalised",
+      "location": "absent from .ai-memory/feature-registry.md, docs/ARCHITECTURE.md, PROJECT_STATUS.md",
+      "observed": "nothing states that the dyad channel receives neither IDF x Variance weighting nor L2 normalisation while PCD receives weighting",
+      "expected": "recorded where features are described",
+      "evidence": "recognize_raga_v12.py:210-214; established by Q-003 Phase 1-C and currently recorded only in docs/research/Q-003/PHASE_LOG.md",
+      "confidence": "high",
+      "recommended_resolution": "Record as a live representation fact. Note feature-registry.md's table is for rejected features, so a new row type may be needed.",
+      "files_affected": [
+        ".ai-memory/feature-registry.md",
+        "docs/ARCHITECTURE.md"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "H-1",
+      "category": "documentation_architecture",
+      "severity": "MEDIUM",
+      "title": "Phase 1-C authorisation gate is untracked",
+      "location": "docs/research/Q-003/PHASE_1C_PRECHECK.md",
+      "observed": "exists on disk, not in version control",
+      "expected": "tracked, so the gate that authorised Phase 1-C is reconstructible",
+      "evidence": "git status shows it as untracked",
+      "confidence": "high",
+      "recommended_resolution": "Commit it, or record why it is deliberately excluded. DECISION REQUIRED.",
+      "files_affected": [
+        "docs/research/Q-003/PHASE_1C_PRECHECK.md"
+      ],
+      "disposition": "safe_to_defer",
+      "requires_user_authorisation": true
+    },
+    {
+      "id": "H-2",
+      "category": "documentation_architecture",
+      "severity": "MEDIUM",
+      "title": "Q-003 has no research plan",
+      "location": "docs/research/Q-003/",
+      "observed": "no research plan for the active gate; .ai-memory/Q-001B_Research_Plan.md exists for Q-001B",
+      "expected": "CLAUDE.md section 4a places 'the active research plan' at level 3 of the source-of-truth hierarchy",
+      "evidence": "directory listing; CLAUDE.md section 4a",
+      "confidence": "high",
+      "recommended_resolution": "Create docs/research/Q-003/RESEARCH_PLAN.md; the Phase 1-D pre-registration is the natural first entry",
+      "files_affected": [
+        "docs/research/Q-003/"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "H-3",
+      "category": "documentation_architecture",
+      "severity": "LOW",
+      "title": "All README links verified to resolve",
+      "location": "README.md:139,140,144,20",
+      "observed": "DEVELOPMENT.md, CONTRIBUTING.md, LICENSE, PROJECT_STATUS.md, docs/research/Q-003/PHASE_LOG.md all exist",
+      "expected": "same",
+      "evidence": "filesystem check of each referenced path",
+      "confidence": "high",
+      "recommended_resolution": "No action. CODE_OF_CONDUCT.md is absent but also not referenced, so it is not a defect.",
+      "files_affected": [],
+      "disposition": "no_action"
+    },
+    {
+      "id": "I-1",
+      "category": "duplication",
+      "severity": "HIGH",
+      "title": "Canonical accuracy figures exist in four places",
+      "location": "README.md:82-95; PROJECT_STATUS.md; .ai-memory/architecture.md:80-88; datasets/README.md:43",
+      "observed": "four copies of the 64.1% / 25-14-31 / per-raga figures",
+      "expected": "PROJECT_STATUS.md is the canonical owner per CLAUDE.md section 4b",
+      "evidence": "all four copies read and compared - they currently AGREE",
+      "confidence": "high",
+      "canonical_owner": "PROJECT_STATUS.md",
+      "duplication_intentional": "partly - README needs a summary; .ai-memory/ and datasets/README.md are working copies",
+      "consolidation_safe": "not fully - a README with no numbers is unusable",
+      "recommended_resolution": "README keeps the table and adds a one-line pointer naming PROJECT_STATUS.md as canonical; reduce the .ai-memory/ copy to a pointer",
+      "risk_if_left": "this duplication class produced the fabricated 67.4% figure, which stood three months and drove ADR-006",
+      "files_affected": [
+        "README.md",
+        ".ai-memory/architecture.md",
+        "datasets/README.md"
+      ],
+      "disposition": "should_fix_before_readme",
+      "resolution": "RESOLVED in 416cc44 -- PROJECT_STATUS.md declared canonical; README and .ai-memory point to it."
+    },
+    {
+      "id": "I-2",
+      "category": "duplication",
+      "severity": "MEDIUM",
+      "title": "Scoring constants duplicated across documentation and code",
+      "location": "DEVELOPMENT.md section 8; recognize_raga_v12.py; aggregate_all_v12.py",
+      "observed": "three copies",
+      "expected": "recognize_raga_v12.py is canonical per ADR-015",
+      "evidence": "all three read; values currently agree",
+      "confidence": "high",
+      "canonical_owner": "recognize_raga_v12.py",
+      "duplication_intentional": "the documentation copy is intentional as reference; the code copy is not",
+      "consolidation_safe": "yes for the documentation copy; the code copy is C-4 and needs authorisation",
+      "recommended_resolution": "Reframe DEVELOPMENT.md section 8 as 'sourced from recognize_raga_v12.py'",
+      "files_affected": [
+        "DEVELOPMENT.md",
+        "aggregate_all_v12.py"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "I-3",
+      "category": "duplication",
+      "severity": "LOW",
+      "title": "Pipeline diagram exists twice and the copies disagree",
+      "location": "README.md:49-78; docs/ARCHITECTURE.md:28-37",
+      "observed": "near-duplicate diagrams that disagree exactly at the IDF claim",
+      "expected": "docs/ARCHITECTURE.md is canonical per CLAUDE.md section 4b (stable conceptual architecture)",
+      "evidence": "both read; divergence is C-1/C-2",
+      "confidence": "high",
+      "canonical_owner": "docs/ARCHITECTURE.md",
+      "duplication_intentional": "yes - README needs an overview",
+      "consolidation_safe": "partially - keep the README copy shorter and explicitly derivative",
+      "recommended_resolution": "Fix both; mark the README copy as derivative",
+      "files_affected": [
+        "README.md",
+        "docs/ARCHITECTURE.md"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "J-1",
+      "category": "governance",
+      "severity": "HIGH",
+      "title": "DEVELOPMENT.md section 8 versus ADR-015",
+      "location": "DEVELOPMENT.md:195 vs adr.md:189-208",
+      "observed": "a locked ADR mandates importing constants; an active workflow document instructs contributors to keep copies identical",
+      "expected": "ADR-015 governs",
+      "evidence": "both read directly",
+      "confidence": "high",
+      "recommended_resolution": "FLAGGED, NOT RESOLVED. A contributor following DEVELOPMENT.md would reintroduce the exact failure ADR-015 closed.",
+      "files_affected": [
+        "DEVELOPMENT.md"
+      ],
+      "disposition": "safe_to_defer",
+      "cross_listed_as": "C-3"
+    },
+    {
+      "id": "J-2",
+      "category": "governance",
+      "severity": "LOW",
+      "title": "Sandbox naming convention drift",
+      "location": "DEVELOPMENT.md:33,54-58; CONTRIBUTING.md:33; CLAUDE.md quick reference",
+      "observed": "DEVELOPMENT.md and CONTRIBUTING.md prescribe test_*.py; CLAUDE.md prescribes scripts/sandbox_*.py",
+      "expected": "ADR-010 sanctions both ('a test_*.py / sandbox_*.py script')",
+      "evidence": "adr.md:110-123",
+      "confidence": "high",
+      "recommended_resolution": "Cosmetic drift, not a contradiction. Recent Q-003 work used sandbox_*.py.",
+      "files_affected": [
+        "DEVELOPMENT.md",
+        "CONTRIBUTING.md"
+      ],
+      "disposition": "safe_to_defer"
+    },
+    {
+      "id": "J-3",
+      "category": "governance",
+      "severity": "INFORMATIONAL",
+      "title": "Pre-commit hook depends on python3",
+      "location": ".githooks/pre-commit",
+      "observed": "invokes python3 -m py_compile",
+      "expected": "CLAUDE.md section 9 warns the bare interpreter lacks numpy",
+      "evidence": "hook source; hook ran clean on commits 9b1dd6d and 0bf39cb",
+      "confidence": "high",
+      "recommended_resolution": "No conflict - the hook only compiles and does not import numpy. Worth documenting as an undeclared dependency.",
+      "files_affected": [],
+      "disposition": "no_action"
+    }
+  ],
+  "disposition_index": {
+    "must_fix_before_readme": [
+      "B-1",
+      "C-1",
+      "C-2",
+      "D-1"
+    ],
+    "should_fix_before_readme": [
+      "D-3",
+      "E-1",
+      "E-2",
+      "E-3",
+      "I-1"
+    ],
+    "safe_to_defer": [
+      "C-3",
+      "C-4",
+      "D-2",
+      "D-4",
+      "D-5",
+      "F-2",
+      "F-3",
+      "G-1",
+      "H-1",
+      "H-2",
+      "I-2",
+      "I-3",
+      "J-1",
+      "J-2"
+    ],
+    "no_action": [
+      "B-2",
+      "C-5",
+      "D-6",
+      "F-1",
+      "F-4",
+      "H-3",
+      "J-3"
+    ]
+  },
+  "decisions_required_from_user": [
+    {
+      "id": "DEC-1",
+      "question": "Which naming architecture?",
+      "relates_to": "B-1",
+      "options": [
+        "display/slug split",
+        "full rename",
+        "standardise on Swarag",
+        "also rename filesystem paths"
+      ],
+      "decided": false
+    },
+    {
+      "id": "DEC-2",
+      "question": "Authorise correcting the IDF x Variance claim in README.md:71 and docs/ARCHITECTURE.md:36?",
+      "relates_to": [
+        "C-1",
+        "C-2"
+      ],
+      "note": "changes a stated technical claim in two documents; flagged rather than silently corrected per CLAUDE.md section 4",
+      "decided": false
+    },
+    {
+      "id": "DEC-3",
+      "question": "Scope of the README redesign - must-fix only, or must-fix plus should-fix?",
+      "relates_to": [
+        "L1",
+        "L2"
+      ],
+      "decided": false
+    },
+    {
+      "id": "DEC-4",
+      "question": "Should docs/research/Q-003/PHASE_1C_PRECHECK.md be committed?",
+      "relates_to": "H-1",
+      "decided": false
+    },
+    {
+      "id": "DEC-5",
+      "question": "Should DEVELOPMENT.md section 8 versus ADR-015 become its own task?",
+      "relates_to": [
+        "C-3",
+        "J-1"
+      ],
+      "decided": false
+    }
+  ]
+}
