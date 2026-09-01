@@ -203,21 +203,69 @@ Never skip a higher priority to work on a lower one.
 
 ## 8. Shared Constants
 
-These must be identical across `aggregate_all_v12.py`, `recognize_raga_v12.py`, and all test scripts:
+**Import these constants. Never copy them.**
 
-| Constant | Value | Purpose |
-|---|---|---|
-| `N_BINS` | 72 | PCD histogram bins (17 cents each) |
-| `MIN_STABLE_FRAMES` | 5 | Stable region detection |
-| `ALPHA` | 0.01 | Laplace smoothing (scaled for 72x72 matrix) |
-| `EPS` | 1e-8 | Numerical stability |
-| `MAX_DURATION_SEC` | 360 | Audio duration cap (6 min) |
-| `PCD_WEIGHT` | 0.8 | PCD scoring weight (global default) |
-| `DYAD_WEIGHT` | 0.2 | Dyad scoring weight (global default) |
-| `PER_RAGA_WEIGHTS` | none (retired v1.3.2) | Bhairavi 0.5/0.5 tested and retired -- see ADR-006/ADR-013 |
-| `MARGIN_STRICT` | 0.003 | HIGH confidence threshold |
-| `MIN_MARGIN_FINAL` | 0.001 | MODERATE confidence threshold |
-| `MIN_CLIPS_PER_RAGA` | 5 | Aggregation guardrail |
+ADR-015 (**ACTIVE, locked**) requires audit, sandbox and test scripts to import
+shared constants from the production module that owns them, instead of
+redeclaring their own copies. The reason is recorded: a duplicated copy drifted
+stale for a single commit on 2026-07-11 and silently mislabelled a retired
+config as canonical (BUG-017). Importing makes that failure mode structurally
+impossible — if a production constant changes, every importer follows
+automatically, with no manual sync step to forget.
+
+`scripts/confusion_matrix_audit.py:25-30` is the canonical example of the
+pattern:
+
+```python
+from recognize_raga_v12 import (
+    N_BINS, MIN_STABLE_FRAMES, ALPHA, EPS,
+    PCD_WEIGHT, DYAD_WEIGHT, PER_RAGA_WEIGHTS,
+    MARGIN_STRICT, MIN_MARGIN_FINAL,
+)
+from aggregate_all_v12 import MIN_CLIPS_PER_RAGA as MIN_CLIPS
+```
+
+### Reference table
+
+Each constant has **one owning module**. That module is the authority; the
+values below are a reference for reading and are subordinate to the source. Do
+not copy this table into a script.
+
+| Constant | Value | Owner | Purpose |
+|---|---|---|---|
+| `N_BINS` | 72 | `recognize_raga_v12.py:24` | PCD histogram bins (17 cents each) |
+| `MIN_STABLE_FRAMES` | 5 | `recognize_raga_v12.py:27` | Stable region detection |
+| `ALPHA` | 0.01 | `recognize_raga_v12.py:28` | Laplace smoothing (scaled for 72x72 matrix) |
+| `EPS` | 1e-8 | `recognize_raga_v12.py:29` | Numerical stability |
+| `MAX_DURATION_SEC` | 360 | `recognize_raga_v12.py:13` | Audio duration cap (6 min) |
+| `PCD_WEIGHT` | 0.8 | `recognize_raga_v12.py:14` | PCD scoring weight (global default) |
+| `DYAD_WEIGHT` | 0.2 | `recognize_raga_v12.py:15` | Dyad scoring weight (global default) |
+| `PER_RAGA_WEIGHTS` | none (retired v1.3.2) | `recognize_raga_v12.py:22` | Bhairavi 0.5/0.5 tested and retired -- see ADR-006/ADR-013 |
+| `MARGIN_STRICT` | 0.003 | `recognize_raga_v12.py:35` | HIGH confidence threshold |
+| `MIN_MARGIN_FINAL` | 0.001 | `recognize_raga_v12.py:37` | MODERATE confidence threshold |
+| `MIN_CLIPS_PER_RAGA` | 5 | `aggregate_all_v12.py:17` | Aggregation guardrail |
+
+`MIN_CLIPS_PER_RAGA` is **not** declared in `recognize_raga_v12.py`. Import it
+from `aggregate_all_v12`, as the example above does.
+
+`FEATURE_VERSION` is a shared constant too, and is owned by
+`scripts/feature_constants.py` — never by a producer module (ADR-017).
+
+### Known exception, recorded not resolved
+
+`aggregate_all_v12.py:15-19` currently declares its own `N_BINS`,
+`MIN_STABLE_FRAMES`, `ALPHA` and `EPS` rather than importing them from
+`recognize_raga_v12.py`. This duplication predates ADR-015: those lines were
+last changed in `37cd584` (2026-03-21), while ADR-015 was recorded in `b961563`
+(2026-07-25), and its decision is scoped to the audit and sandbox scripts.
+
+The `MIN_STABLE_FRAMES` half of it is recorded as finding **C-4** in
+`docs/repository-consistency-audit.md`; the other three constants are the same
+pattern. It is **not** resolved here — importing them changes a production
+module, which requires its own authorisation and sandbox validation under
+ADR-010 (Section 2).
+
+Do not treat that exception as licence to add a new copy. **New code imports.**
 
 Changing any of these requires re-extraction and re-aggregation of all features.
 
