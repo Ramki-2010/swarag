@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 120" width="640" height="120"
+     role="img" aria-labelledby="swaragam-title swaragam-desc">
+  <title id="swaragam-title">Swaragam</title>
+  <desc id="swaragam-desc">A taut string meets a shallow jivari bridge; beyond the point of contact it
+    resolves into spectral partials and then into swara notation: S, R2, G3, M2.</desc>
+
+  <!-- Sandal Ivory ground -->
+  <rect width="640" height="120" fill="#F4EDE1"/>
+
+  <!-- The string: taut, entering from the left, terminating at the arc's crown -->
+  <path d="M 40 60 L 310 60"
+        stroke="#5C3A21" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- The jivari arc. Identical curve to the approved 240..380 Bezier, truncated at
+       x=345 by de Casteljau split at t=0.75 to clear the comb. Crown still (310,60);
+       curvature unchanged. -->
+  <path d="M 240 68 Q 292.5 56 345 62"
+        stroke="#7A1F2B" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Overtone partials (Alt A "Emanation"): 7 strokes, irregular spacing,
+       non-monotonic lengths. Left origins fan from the jivari contact point:
+       x = 352 + 0.55*|y-60|, so partials nearest the axis begin closest to it.
+       The three longest strokes were shortened (100->74, 88->70, 70->56) to drop the
+       line-to-space ratio from 1.96 to 1.45, which removes the ruled-text reading. -->
+  <g stroke="#5C3A21" stroke-width="1.25" stroke-linecap="round" fill="none">
+    <path d="M 366.3 34 h 46"/>
+    <path d="M 361.4 43 h 70"/>
+    <path d="M 357.0 51 h 30"/>
+    <path d="M 353.1 58 h 74"/>
+    <path d="M 355.3 66 h 62"/>
+    <path d="M 359.7 74 h 24"/>
+    <path d="M 365.8 85 h 56"/>
+  </g>
+
+  <!-- Calibrated baseline: restrained 5-graduation version -->
+  <g stroke="#5C3A21" stroke-width="0.75" opacity="0.35" fill="none">
+    <path d="M 350 96 h 250"/>
+    <path d="M 350 96 v 4"/>
+    <path d="M 412 96 v 4"/>
+    <path d="M 474 96 v 4"/>
+    <path d="M 536 96 v 4"/>
+    <path d="M 598 96 v 4"/>
+  </g>
+
+  <!-- Swara notation sample. Neutral vocabulary sample; not a raga or phrase.
+       Deep Brown (8.67:1 on ivory); Temple Gold measured 2.08:1 and was rejected. -->
+  <text x="470" y="65" font-family="Georgia, 'Times New Roman', Times, serif"
+        font-size="13" letter-spacing="0.18em" fill="#5C3A21">S<tspan
+        opacity="0.4"> · </tspan>R2<tspan
+        opacity="0.4"> · </tspan>G3<tspan
+        opacity="0.4"> · </tspan>M2</text>
+</svg>

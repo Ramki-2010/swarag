@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 120" width="640" height="120"
+     role="img" aria-labelledby="swaragam-title-dark swaragam-desc-dark">
+  <title id="swaragam-title-dark">Swaragam</title>
+  <desc id="swaragam-desc-dark">A taut string meets a shallow jivari bridge; beyond the point of contact it
+    resolves into spectral partials and then into swara notation: S, R2, G3, M2.</desc>
+
+  <!-- Transparent ground: the page supplies the dark canvas -->
+
+  <!-- The string: Sandal Ivory carries the structural geometry on dark -->
+  <path d="M 40 60 L 310 60"
+        stroke="#F4EDE1" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- The jivari arc, truncated at x=345 (de Casteljau split at t=0.75; crown still
+       (310,60), curvature unchanged). Kumkum Red is RETAINED as the semantic accent.
+       Measured: #7A1F2B on #0d1117 = 1.85:1, below the 3:1 minimum for graphical
+       objects, so a Sandal Ivory underlay carries the FORM (16.26:1) while the red
+       carries the MEANING. Both colours are from the approved five. -->
+  <path d="M 240 68 Q 292.5 56 345 62"
+        stroke="#F4EDE1" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M 240 68 Q 292.5 56 345 62"
+        stroke="#7A1F2B" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Overtone partials (Alt A "Emanation"): 7 strokes, irregular spacing,
+       non-monotonic lengths. Left origins fan from the jivari contact point:
+       x = 352 + 0.55*|y-60|, so partials nearest the axis begin closest to it.
+       The three longest strokes were shortened (100->74, 88->70, 70->56) to drop the
+       line-to-space ratio from 1.96 to 1.45, which removes the ruled-text reading. -->
+  <g stroke="#F4EDE1" stroke-width="1.25" stroke-linecap="round" fill="none">
+    <path d="M 366.3 34 h 46"/>
+    <path d="M 361.4 43 h 70"/>
+    <path d="M 357.0 51 h 30"/>
+    <path d="M 353.1 58 h 74"/>
+    <path d="M 355.3 66 h 62"/>
+    <path d="M 359.7 74 h 24"/>
+    <path d="M 365.8 85 h 56"/>
+  </g>
+
+  <!-- Calibrated baseline: restrained 5-graduation version -->
+  <g stroke="#F4EDE1" stroke-width="0.75" opacity="0.40" fill="none">
+    <path d="M 350 96 h 250"/>
+    <path d="M 350 96 v 4"/>
+    <path d="M 412 96 v 4"/>
+    <path d="M 474 96 v 4"/>
+    <path d="M 536 96 v 4"/>
+    <path d="M 598 96 v 4"/>
+  </g>
+
+  <!-- Swara notation sample. Temple Gold measures 7.82:1 on #0d1117 and is retained. -->
+  <text x="470" y="65" font-family="Georgia, 'Times New Roman', Times, serif"
+        font-size="13" letter-spacing="0.18em" fill="#C9A227">S<tspan
+        fill="#F4EDE1" opacity="0.5"> · </tspan>R2<tspan
+        fill="#F4EDE1" opacity="0.5"> · </tspan>G3<tspan
+        fill="#F4EDE1" opacity="0.5"> · </tspan>M2</text>
+</svg>
