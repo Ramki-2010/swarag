@@ -23,6 +23,10 @@ dated snapshot taken at `0bf39cb`; some findings have since been closed.
 | D-2 | **RESOLVED** in `416cc44` -- `DEVELOPMENT.md` commands corrected; `AGG_FOLDER` behaviour documented |
 | I-1 | **RESOLVED** in `416cc44` -- `PROJECT_STATUS.md` declared canonical; README and `.ai-memory` point to it |
 | B-1 | **PARTIALLY RESOLVED** in `416cc44` -- naming architecture established (`CLAUDE.md` 1a). The prose rename of ~84 occurrences remains deferred |
+| C-3 | **RESOLVED** in `39a9e22` -- `DEVELOPMENT.md` §8 rewritten as an import mandate with per-constant ownership. Values unchanged and re-verified; **C-4 deliberately NOT resolved** and is recorded in §8 as a known exception |
+| J-1 | **RESOLVED** in `39a9e22` -- cross-lists C-3; same fix |
+| H-1 | **RESOLVED** in `176510f` -- `docs/research/Q-003/PHASE_1C_PRECHECK.md` tracked |
+| H-2 | **RESOLVED** in `56d360c` -- `docs/research/Q-003/RESEARCH_PLAN.md` created |
 
 All other findings were open as of `416cc44`. **This table is not maintained
 continuously** -- check `git log` for anything closed since. Section L's
@@ -438,6 +442,64 @@ and `0bf39cb`. Worth documenting as an undeclared dependency.
 3. **Scope of the README redesign** — L1 only, or L1 + L2.
 4. **Whether `PHASE_1C_PRECHECK.md` should be committed** (H-1).
 5. **Whether `DEVELOPMENT.md` §8 vs ADR-015 becomes its own task** (C-3/J-1).
+
+---
+
+## M. Findings identified after the audit
+
+**Added 2026-09-01, at commit `39a9e22`.** These were found while remediating
+C-3/J-1 and are **outside the `0bf39cb` snapshot**. Sections A–L above, including
+the severity counts in §K and the disposition in §L, are unaltered and do **not**
+include these. M-1 and M-2 are resolved by the current working-tree changes; M-3
+remains open and requires separate authorisation.
+
+### M-1 · HIGH — `.ai-memory/architecture.md` presents a retired config as canonical
+
+| | |
+|---|---|
+| **Location** | `.ai-memory/architecture.md:130` |
+| **Observed** | Shared Constants table row: `PER_RAGA_WEIGHTS \| Bhairavi=(0.5,0.5) \| Per-raga override for transition-heavy ragas` — stated with an active rationale, no retirement note |
+| **Canonical** | `PER_RAGA_WEIGHTS = {}` at `scripts/recognize_raga_v12.py:22`. The Bhairavi 0.5/0.5 override was tested and **retired in v1.3.2** (ADR-006 superseded, ADR-013); `PROJECT_STATUS.md` records `PER_RAGA_WEIGHTS: none (retired)` |
+| **Evidence** | Production source read directly. **The same document contradicts itself**: `:4` reads "v1.3.2 -- Bhairavi override retired, global 0.8/0.2 for all ragas" and `:174` reads "v1.3.2 \| 64.1% \| Bhairavi override retired", while `:130` still lists the override as a constant |
+| **Confidence** | High |
+| **Why it matters** | This is the **BUG-017 failure mode** that ADR-015 exists to prevent: a duplicated constant table drifted stale and now mislabels a retired config as canonical. ADR-006 previously shipped on fabricated documentation, so a stale override claim in living memory is not a cosmetic defect |
+| **Resolution** | Correct `:130` to `none (retired v1.3.2)` with a pointer to ADR-013, or remove the duplicated table in favour of a link to `DEVELOPMENT.md` §8. **Flagged, not fixed** — `CLAUDE.md` §4 requires reporting a documentation/code contradiction before editing |
+| **Files affected** | `.ai-memory/architecture.md` |
+
+### M-2 · MEDIUM — the duplicate-and-sync policy survives in `.ai-memory/`
+
+| | |
+|---|---|
+| **Location** | `.ai-memory/architecture.md:118` |
+| **Observed** | Heading: "Shared Constants (must be identical in aggregate + recognize)" |
+| **Canonical** | ADR-015 (**ACTIVE, locked**) — import, do not duplicate and hand-sync |
+| **Evidence** | Same conflict as C-3, in a second document. C-3 corrected the contributor-facing copy in `DEVELOPMENT.md` §8 (`39a9e22`); this one was not in scope |
+| **Confidence** | High |
+| **Relationship to M-1** | Same table. The heading states the policy that produced the stale row — fixing M-1 without M-2 leaves the mechanism in place |
+| **Resolution** | Replace the duplicated table with a link to `DEVELOPMENT.md` §8, which now carries per-constant ownership. **Flagged, not fixed** |
+| **Files affected** | `.ai-memory/architecture.md` |
+
+### M-3 · HIGH — tracked scripts overwrite canonical documentation from stale embedded templates
+
+**Added 2026-09-06, at commit `e66f916`,** during the M-1/M-2 investigation. Outside
+the `0bf39cb` snapshot and outside section M's original two findings.
+
+| | |
+|---|---|
+| **Location** | `scripts/_update_memory.py:175`, `scripts/_docs_v13.py:141,216,227`, `scripts/_lock_v13.py:231,315,329`, `scripts/_update_and_verify.py:194,315` |
+| **Observed** | Four **tracked** scripts open canonical documents in `"w"` mode and overwrite them from templates embedded in the script source. Between them they target `README.md`, `PROJECT_STATUS.md`, `.ai-memory/architecture.md`, `bugs.md`, `lessons.md`, `datasets.md` and `debug-playbook.md` |
+| **Canonical** | `PROJECT_STATUS.md` is the §4a level-2 source of truth; `README.md` is the repository's public front door. Neither should be reconstructible from a script's embedded copy |
+| **Evidence** | `scripts/_update_memory.py:128-129` embeds `PCD_WEIGHT 0.6` / `DYAD_WEIGHT 0.4` against production's 0.8/0.2 (`recognize_raga_v12.py:14-15`); its template carries no `PER_RAGA_WEIGHTS` row at all; its validator at `:400` still asserts `"v1.2.5"`, `"61 clips"`, `"72.0%"`, `"72.7%"`. Running it today would revert `.ai-memory/architecture.md` to v1.2.5-era content **and regress the documented scoring weights** |
+| **Confidence** | High |
+| **Why it matters** | This is the BUG-017 class at document scale. `.githooks/pre-commit` audits staged **Python** only, so a regenerated document would pass unchallenged. Nothing in the repository marks these scripts as historical or retired |
+| **Bearing on M-1** | **None causally.** No generator emits the stale `PER_RAGA_WEIGHTS \| Bhairavi=(0.5,0.5)` row; that line traces to `08804c5` (2026-04-01), when it was accurate. The generators are a separate hazard, and the reason a documentation fix alone is not durable |
+| **Resolution** | Not decided here. Candidates: mark the four scripts historical in-file, move them to `scripts/archive/`, or strip the embedded templates. **All four are production tooling — any change requires its own authorisation and sandbox validation under ADR-010.** Flagged, not fixed |
+| **Files affected** | `scripts/_update_memory.py`, `scripts/_docs_v13.py`, `scripts/_lock_v13.py`, `scripts/_update_and_verify.py` |
+
+**Note on `.ai-memory/` authority.** `CLAUDE.md` §4b assigns volatile
+architectural state to `.ai-memory/architecture.md` and calls these documents
+**evidence, not advice**. That makes a stale constant there more consequential
+than the same error in general documentation, not less.
 
 ---
 

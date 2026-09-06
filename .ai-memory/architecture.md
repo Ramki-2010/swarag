@@ -115,7 +115,10 @@ D:\Swaragam\pcd_results\features_v12\           75 .npz files (70 modeled + 5 be
 D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Harikambhoji clips
 ```
 
-## Shared Constants (must be identical in aggregate + recognize)
+## Shared Constants
+
+Owned by `recognize_raga_v12.py` and `aggregate_all_v12.py`; import, never duplicate (ADR-015).
+Mirror of `DEVELOPMENT.md` §8, which carries per-constant ownership. If the two disagree, §8 is correct.
 
 | Constant | Value | Notes |
 |---|---|---|
@@ -127,7 +130,7 @@ D:\Swaragam\pcd_results\features_v12\excluded\  duplicates + Thodi outliers + Ha
 | EPS | 1e-8 | Division safety |
 | PCD_WEIGHT | 0.8 | Global default (v1.3.1: was 0.7) |
 | DYAD_WEIGHT | 0.2 | Global default (v1.3.1: was 0.3) |
-| PER_RAGA_WEIGHTS | Bhairavi=(0.5,0.5) | Per-raga override for transition-heavy ragas |
+| PER_RAGA_WEIGHTS | none (retired v1.3.2) | Bhairavi 0.5/0.5 tested and retired -- see ADR-006 (superseded) / ADR-013 |
 | GENERICNESS_WEIGHT | 0.0 | Disabled |
 | MARGIN_STRICT | 0.003 | HIGH confidence threshold |
 | MIN_MARGIN_FINAL | 0.001 | MODERATE confidence threshold |
