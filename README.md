@@ -1,41 +1,26 @@
-# Swarag -- Carnatic Raga Identification Engine
+# Swaragam
+**Carnatic raga identification through deterministic signal processing.**
 
-Swarag is a deterministic Carnatic raga recognition engine built using interpretable signal processing and structured statistical modeling. It emphasizes explainability, musical grammar, and bias correction over black-box learning.
+Swaragam identifies Carnatic ragas from vocal audio using interpretable signal processing and structured
+statistical modeling, emphasizing explainability, musical grammar, and bias correction over black-box learning.
 
-## Version: v1.3.2
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/swaragam-motif-dark.svg">
+  <img src="docs/assets/swaragam-motif-light.svg" alt="Swaragam — a string meeting a jivari bridge, resolving into spectral partials and swara notation">
+</picture>
 
-v1.3.2 retires the Bhairavi per-raga weight override:
-- Canonical LOO audit found the override scored 0% decided for Bhairavi
-  (9 wrongs) -- confirmed counter-productive, not just unproven
-- All 7 ragas now use uniform PCD=0.8/Dyad=0.2 weighting
-- LOO accuracy: 64.1% decided (25c/14w/31u), sandbox_loo_v131_canonical.py
-- Weakest raga is now Bhairavi (14%) rather than Abhogi (33%, structural
-  janya problem -- see L-044, BUG-015). Bhairavi's cause is UNPROVEN and
-  under investigation as research gate Q-003.
-  *Correction 2026-08-25:* this line previously read "Bhairavi (14%, needs
-  diverse clips)". The 14% is FACT; "needs diverse clips" was a HYPOTHESIS
-  stated as a fact. Q-003 Phase 1-A eliminated mean-PCD overlap as the
-  mechanism and Phase 1-B localised the failure to the dyad channel;
-  whether the limit is data or representation is still not established.
-  See `PROJECT_STATUS.md` and `docs/research/Q-003/PHASE_LOG.md`.
-- A prior 67.4% figure was found fabricated (per-raga rows never summed
-  to their stated total) and has been retired from all documentation
+[![Research](https://img.shields.io/badge/Research-active-7A1F2B?style=flat-square&labelColor=5C3A21)](PROJECT_STATUS.md)
+[![Version](https://img.shields.io/badge/Version-v1.3.2-8B6914?style=flat-square&labelColor=5C3A21)](PROJECT_STATUS.md)
+[![Approach](https://img.shields.io/badge/Approach-deterministic%20DSP-7A1F2B?style=flat-square&labelColor=5C3A21)](adr.md)
+[![License](https://img.shields.io/badge/License-MIT-C9A227?style=flat-square&labelColor=5C3A21)](LICENSE)
 
-### Version History
+> **On the name.** The project is **Swaragam**. The repository slug, the virtual environment
+> (`my_virtual_env_swarag`) and several tooling identifiers keep the earlier `swarag` spelling — frozen
+> technical identifiers, not labels, whose renaming would invalidate documented commands. See `CLAUDE.md` §1a.
 
-| Version | Accuracy | Ragas | Key Change |
-|---|---|---|---|
-| v1.2 | 25% | 3 | Baseline |
-| v1.2.1 | -- | 6 | Vocal isolation, OOD fixed |
-| v1.2.2 | 64% | 6 | ALPHA fix (0.5 to 0.01) |
-| v1.2.3 | 70% | 6 | IDF x Variance scoring |
-| v1.2.4 | 78.6% | 6 | 72-bin PCD |
-| v1.2.5 | 72.0% | 6 | Expanded data, dedup, MIN_CLIPS guardrail |
-| v1.3 | 58.8% | 5 | Harikambhoji removed, weights 0.7/0.3, honest baseline |
-| v1.3.1 | 60.5% | 7 | Abhogi+Saveri activated, 0.8/0.2, Bhairavi override (later confirmed counter-productive) |
-| v1.3.2 | 64.1% | 7 | Bhairavi override retired, uniform 0.8/0.2 for all ragas |
-
-## Core Philosophy
+## What Swaragam is
+A deterministic recognition engine. No neural network, no learned embedding —
+every decision traces to a measured pitch distribution and a transition matrix.
 
 - Relative pitch, not absolute frequency
 - Behavioral transitions over scale checklists
@@ -44,8 +29,26 @@ v1.3.2 retires the Bhairavi per-raga weight override:
 
 All modeling is tonic-normalized (Sa).
 
-## Pipeline
+## Research status
+**Swaragam is an active research project, not a finished production engine.** Accuracy below is a measured baseline, not a product claim.
 
+| Gate | Question | Status |
+|---|---|---|
+| Q-001A | Is the representation sufficient for Abhogi? | ANSWERED — adequate; not the bottleneck |
+| Q-001B | Do phrase n-grams add power beyond PCD+dyads? | ACTIVE |
+| Q-001B-A | Higher-order structure in Abhogi sequences? | COMPLETED — INCONCLUSIVE |
+| Q-001B-B | Composition-held-out discrimination? | BLOCKED — only 2 compositional units |
+| Q-002 | Would a phrase model improve recognition? | Blocked by Q-001B |
+| Q-003 | Is Bhairavi limited by representation or by data? | ACTIVE — UNANSWERED |
+| Q-004 | What reproducibility artifact is legally permissible? | Pending |
+
+> **Q-003, the live gate.** Phase 1-A eliminated mean-PCD overlap as the mechanism; Phase 1-B localised the
+> failure to the dyad channel; Phase 1-C (complete and independently verified, `9b1dd6d`) found the dyad channel
+> explains 3 of Bhairavi's 4 UNKNOWNs and **0 of its 6 wrong answers**, which remain unexplained. Localisation is
+> not a diagnosis — the gate is still open. Record:
+> [`docs/research/Q-003/PHASE_LOG.md`](docs/research/Q-003/PHASE_LOG.md).
+
+## Pipeline
 ```
 Audio (.wav / .mp3 / .flac)
   |
@@ -78,11 +81,9 @@ Raga Scoring
 Output: { "final": str, "ranking": list, "margin": float, "confidence_tier": str }
 ```
 
-## Ragas Currently Modeled
-
-All ragas use uniform PCD=0.8 / Dyad=0.2 weighting. LOO figures below are
-the canonical v1.3.2 run (sandbox_loo_v131_canonical.py, 70 clips,
-25 correct / 14 wrong / 31 unknown, 64.1% decided).
+## Validated results
+Uniform PCD=0.8 / Dyad=0.2 for all ragas. Canonical v1.3.2 leave-one-out run
+(`sandbox_loo_v131_canonical.py`, 70 clips, 25 correct / 14 wrong / 31 unknown, 64.1% decided).
 
 > **Canonical source:** [`PROJECT_STATUS.md`](PROJECT_STATUS.md) -> Current
 > Accuracy. The table below is a summary of it. If the two ever disagree,
@@ -99,57 +100,96 @@ the canonical v1.3.2 run (sandbox_loo_v131_canonical.py, 70 clips,
 | Bhairavi | 11 | 1 | 6 | 4 | 14% |
 | **TOTAL** | **70** | **25** | **14** | **31** | **64.1%** |
 
-### Staged / Excluded (need more data)
+### Staged / excluded ragas
+"Clips" are distinct eligible source recordings; "Extracted" counts those represented by extracted `.npz` feature files.
 
-| Raga | Current Clips | Status |
-|---|---|---|
-| Kamboji | 3 | Needs 2+ real clips (Harikambhoji removed) |
-| Madhyamavati | 2 | Needs 3 more |
-| Hamsadhvani | 1 | Needs 4 more |
+| Raga | Clips | Extracted | Status |
+|---|---|---|---|
+| Kamboji | 3 | 3 | Needs 2+ real clips (Saraga exhausted) |
+| Madhyamavati | 2 | 2 | Needs 3 more |
+| Hamsadhvani | 1 | 0 | Audio acquired, not yet extracted |
 
-## Repository Structure
+### Version history
+| Version | Accuracy | Ragas | Key Change |
+|---|---|---|---|
+| v1.2 | 25% | 3 | Baseline |
+| v1.2.1 | -- | 6 | Vocal isolation, OOD fixed |
+| v1.2.2 | 64% | 6 | ALPHA fix (0.5 to 0.01) |
+| v1.2.3 | 70% | 6 | IDF x Variance scoring |
+| v1.2.4 | 78.6% | 6 | 72-bin PCD |
+| v1.2.5 | 72.0% | 6 | Expanded data, dedup, MIN_CLIPS guardrail |
+| v1.3 | 58.8% | 5 | Harikambhoji removed, weights 0.7/0.3, honest baseline |
+| v1.3.1 | 60.5% | 7 | Abhogi+Saveri activated, 0.8/0.2, Bhairavi override (later confirmed counter-productive) |
+| v1.3.2 | 64.1% | 7 | Bhairavi override retired, uniform 0.8/0.2 for all ragas |
 
+> **Caveat.** Pre-v1.3 figures predate the fabrication audit and are **not independently verifiable** —
+> historical record, not current accuracy claims. A prior 67.4% figure was found fabricated, its per-raga
+> rows never summing to their stated total, and has been retired from all documentation. Only the v1.3.2
+> row is canonical.
+
+## Methodology and limitations
+> This section exists because the project treats limitations as results.
+
+- **Abhogi 33%** — structural, not tunable. A janya of Kalyani whose PCD is a strict subset; weight
+  overrides (L-044) and energy-ratio scoring (L-050) were both tested and rejected.
+- **Bhairavi 14%** — cause **UNPROVEN**; representation versus dataset diversity is untested, and "more
+  clips" is a hypothesis, not a confirmed diagnosis. *(Correction 2026-08-25: this previously read "needs
+  diverse clips". The 14% is FACT; "needs diverse clips" was a HYPOTHESIS stated as a fact.)*
+- **Mohanam 100% decided, but 9 of 10 UNKNOWN** — the model barely commits.
+- **Kamboji excluded** — 3 real clips, Saraga exhausted, 0 new sources.
+- **Saveri is the current error sink** — 8 of 14 wrong answers land there.
+- **No OOD score floor.**
+- **ADR-016 is unmet** — no `benchmark.py` and no bundled evaluation data, so the one-command
+  reproducibility standard remains aspirational.
+
+## Repository navigation
 ```
-scripts/                        Active v1.3.2 pipeline
-  recognize_raga_v12.py             Inference engine (72-bin, IDF x Variance, uniform 0.8/0.2)
-  aggregate_all_v12.py              Build raga models (with MIN_CLIPS guardrail)
-  extract_pitch_batch_v12.py        Feature extraction (with 6-min cap)
-  batch_evaluate.py                 Evaluation on seed dataset (per-file timeout)
-  batch_evaluate_random.py          Evaluation on unknown clips
-  utils.py                          Shared utilities (tonic estimation)
-  sandbox_*.py                      Phase 2-4 sandbox test scripts
-  archive/                          Deprecated pre-v1.2 scripts
+scripts/            Active v1.3.2 pipeline, sandbox experiments, archive/
+datasets/           Seed corpus, staging, source datasets
+docs/               START_HERE.md, ARCHITECTURE.md, research/, assets/, audits
+notebooks/          Exploratory notebooks
+archive/            Retired material
+.ai/                Agent specification
+.ai-memory/         Project memory (bugs, lessons, architecture, datasets)
+.githooks/          Pre-commit audit hooks
 
-.ai/                            AI agent specification
-.ai-memory/                     Project memory (bugs, lessons, architecture)
-docs/                           Documentation and visual assets
+CLAUDE.md           Governance, working rules, environment
+PROJECT_STATUS.md   Canonical current state, gates, baseline
+adr.md              Architecture decision records
+DEVELOPMENT.md      Development loop and sandbox-first rule
+CONTRIBUTING.md     Contribution guidelines
+requirements.txt    Python dependencies
 ```
 
-## Installation
+| Read | For |
+|---|---|
+| [`docs/START_HERE.md`](docs/START_HERE.md) | Navigation and the source-of-truth hierarchy |
+| [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | Canonical current state, gates, accuracy |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Stable conceptual architecture |
+| [`adr.md`](adr.md) | Settled decisions (ADR-001 through ADR-018) |
 
+## Installation and usage
 ```bash
 pip install -r requirements.txt
 ```
-
-## Run Pipeline
-
-Use the project virtual environment. The bare `python` on PATH is a separate
-install without numpy and will fail.
-
+Use the project virtual environment — the bare `python` on PATH is a separate install without numpy and will fail.
 ```bat
 my_virtual_env_swarag\Scripts\python.exe scripts\extract_pitch_batch_v12.py   :: 1. Extract features
 my_virtual_env_swarag\Scripts\python.exe scripts\aggregate_all_v12.py         :: 2. Build models
 my_virtual_env_swarag\Scripts\python.exe scripts\batch_evaluate.py            :: 3. Evaluate
 ```
+Run from the repository root. The scripts resolve data paths absolutely, so the working directory does not matter, but the interpreter does.
 
-Run from the repository root. The scripts resolve their data paths absolutely,
-so the working directory does not matter, but the interpreter does.
+## Research documentation
+Research reasoning is not duplicated here — follow the links.
 
-## Development
+| Document | Contains |
+|---|---|
+| [`docs/research/Q-003/PHASE_LOG.md`](docs/research/Q-003/PHASE_LOG.md) | Active gate's detailed phase record, append-only |
+| [`docs/research/Q-003/RESEARCH_PLAN.md`](docs/research/Q-003/RESEARCH_PLAN.md) | Methodology for the active gate's next phase |
+| [`docs/repository-consistency-audit.md`](docs/repository-consistency-audit.md) | Latest repository consistency audit |
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for the development loop and sandbox-first rule.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
-
+## Development and contributing
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the development loop and sandbox-first rule, and [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 ## License
-
 MIT License -- see [LICENSE](LICENSE).
