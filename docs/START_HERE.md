@@ -74,6 +74,8 @@ must not depend on conversational memory from a previous session.
 | Phase authorisation gates | `docs/research/<GATE>/PHASE_*_PRECHECK.md` | Historical, never edited |
 | Repository consistency audits | `docs/repository-consistency-audit.md` (+ `.json`) | Dated snapshots |
 | Stable conceptual architecture | `docs/ARCHITECTURE.md` | Rarely |
+| Visual identity decisions | `docs/VISUAL_IDENTITY.md` | Per identity decision |
+| Codex-facing governance pointer | `AGENTS.md` — points to `CLAUDE.md`, never a second governance source | Rarely |
 | Volatile architectural state | `.ai-memory/architecture.md` | Often |
 | Settled decisions | `adr.md` | Append-only |
 | Frozen methodology | `.ai-memory/*-protocol.md` | Only by explicit decision |

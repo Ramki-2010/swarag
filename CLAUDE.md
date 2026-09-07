@@ -17,6 +17,10 @@ project-level instruction set. It does not replace:
 - `.ai-memory/phrase-evaluation-protocol.md` and `adr.md` — frozen methodology and
   recorded decisions. Read-only unless explicitly reopened.
 
+`AGENTS.md` is a **Codex-facing pointer to this file**, not a second governance
+source. This file remains canonical; governance content must not be duplicated
+there.
+
 Nothing in this file overrides Claude Code's own system rules or the user's direct
 instructions in a session. Where this file and a live instruction conflict, ask.
 
@@ -46,7 +50,7 @@ renamed.** They are identifiers, not labels:
 | Continue slash commands | `/analyze-swarag`, `/debug-swarag` | Must match the live commands in `~/.continue/prompts/` |
 | Filesystem root | `D:\Swaragam` | Hardcoded in 66 scripts; already spelled `Swaragam` |
 
-**Pending, and deliberate:** roughly 84 prose occurrences of "Swarag" have not
+**Pending, and deliberate:** roughly 66 prose occurrences of "Swarag" have not
 yet been renamed -- that pass is deferred to the documentation cleanup. Until
 it runs, both spellings appear in the repository. The split is intentional per
 the table above; it is **not** drift, and the prose occurrences are **not** to

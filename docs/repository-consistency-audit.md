@@ -22,11 +22,18 @@ dated snapshot taken at `0bf39cb`; some findings have since been closed.
 | D-1 | **RESOLVED** in `416cc44` -- README run commands use the venv interpreter and `scripts/` paths |
 | D-2 | **RESOLVED** in `416cc44` -- `DEVELOPMENT.md` commands corrected; `AGG_FOLDER` behaviour documented |
 | I-1 | **RESOLVED** in `416cc44` -- `PROJECT_STATUS.md` declared canonical; README and `.ai-memory` point to it |
-| B-1 | **PARTIALLY RESOLVED** in `416cc44` -- naming architecture established (`CLAUDE.md` 1a). The prose rename of ~84 occurrences remains deferred |
+| B-1 | **PARTIALLY RESOLVED** in `416cc44` -- naming architecture established (`CLAUDE.md` 1a). The prose rename of ~66 occurrences remains deferred |
 | C-3 | **RESOLVED** in `39a9e22` -- `DEVELOPMENT.md` §8 rewritten as an import mandate with per-constant ownership. Values unchanged and re-verified; **C-4 deliberately NOT resolved** and is recorded in §8 as a known exception |
 | J-1 | **RESOLVED** in `39a9e22` -- cross-lists C-3; same fix |
 | H-1 | **RESOLVED** in `176510f` -- `docs/research/Q-003/PHASE_1C_PRECHECK.md` tracked |
 | H-2 | **RESOLVED** in `56d360c` -- `docs/research/Q-003/RESEARCH_PLAN.md` created |
+| E-1 | **RESOLVED** in `e66f916` -- README gained a research-gates section; all seven gate statuses transcribed from `PROJECT_STATUS.md` with none upgraded or downgraded |
+| E-2 | **RESOLVED** in `e66f916` -- `docs/START_HERE.md` surfaced in the README as the navigation entry point |
+| E-3 | **RESOLVED** in `e66f916` -- Known Limitations added to the README verbatim and unsoftened |
+| D-3 | **RESOLVED** in `e66f916` -- README repository tree completed from `git ls-files` |
+| F-2 | **RESOLVED** in `e66f916` -- "clips" defined as distinct eligible source recordings and an Extracted column added; **no number was changed** (Hamsadhvani 1 clip / 0 extracted) |
+| M-1 | **RESOLVED** in `947fa73` -- `.ai-memory/architecture.md` `PER_RAGA_WEIGHTS` row corrected to `none (retired v1.3.2)` |
+| M-2 | **RESOLVED** in `947fa73` -- duplicate-and-sync policy removed from the Shared Constants heading; source ownership recorded in its place |
 
 All other findings were open as of `416cc44`. **This table is not maintained
 continuously** -- check `git log` for anything closed since. Section L's
