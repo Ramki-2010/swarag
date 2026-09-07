@@ -1,3 +1,32 @@
+# =============================================================================
+# HISTORICAL / DEPRECATED -- v1.2.5 memory-update script (2026-03-21). DO NOT RUN.
+#
+# This is a one-time migration artifact from the v1.2.5 -> v1.3 transition,
+# introduced in 3a5b026 and never modified since. It is not a maintenance tool,
+# and no workflow, hook, document or contributor instruction invokes it.
+#
+# It targets SUPERSEDED v1.2.5 state:
+#   - PCD_WEIGHT 0.6 / DYAD_WEIGHT 0.4, superseded by v1.3.2 (0.8 / 0.2)
+#   - 6 ragas, 61 clips, superseded by v1.3.2 (7 ragas, 70 clips)
+#   - accuracy figures 72.0% / 72.7% / 78.6%, from the era PROJECT_STATUS.md
+#     records as calibrated against the retired, fabricated 67.4% figure
+#   - its verification list still asserts "v1.2.5", "61 clips" and "72.0%", so
+#     it would report success after regressing the documents
+#
+# Running it today would OVERWRITE all five .ai-memory documents
+# (architecture.md, bugs.md, lessons.md, datasets.md, debug-playbook.md) with
+# that stale content. architecture.md is written at line ~190, before any read,
+# so even a mid-run failure destroys it.
+#
+# Do not use it for current workflows. Kept as an audit trail of the v1.2.5
+# state, matching the treatment of _lock_v13.py and _agg_and_paths.py.
+# Executable logic below is unchanged and deliberately not repaired, and the
+# embedded templates are deliberately NOT updated -- they are the record of
+# what was true at v1.2.5.
+#
+# Recorded as audit finding M-3 in docs/repository-consistency-audit.md.
+# =============================================================================
+
 """
 Update all .ai-memory files to v1.2.5 state.
 Then verify all updates are consistent.

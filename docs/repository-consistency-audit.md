@@ -450,8 +450,10 @@ and `0bf39cb`. Worth documenting as an undeclared dependency.
 **Added 2026-09-01, at commit `39a9e22`.** These were found while remediating
 C-3/J-1 and are **outside the `0bf39cb` snapshot**. Sections A–L above, including
 the severity counts in §K and the disposition in §L, are unaltered and do **not**
-include these. M-1 and M-2 are resolved by the current working-tree changes; M-3
-remains open and requires separate authorisation.
+include these. M-1 and M-2 were resolved in `947fa73`. M-3 is the HIGH finding on
+the two unmarked migration scripts; M-4 records the already-marked historical pair
+as LOW/INFORMATIONAL. M-3's remediation is being applied through the historical
+DO-NOT-RUN headers described in its correction below.
 
 ### M-1 · HIGH — `.ai-memory/architecture.md` presents a retired config as canonical
 
@@ -495,6 +497,68 @@ the `0bf39cb` snapshot and outside section M's original two findings.
 | **Bearing on M-1** | **None causally.** No generator emits the stale `PER_RAGA_WEIGHTS \| Bhairavi=(0.5,0.5)` row; that line traces to `08804c5` (2026-04-01), when it was accurate. The generators are a separate hazard, and the reason a documentation fix alone is not durable |
 | **Resolution** | Not decided here. Candidates: mark the four scripts historical in-file, move them to `scripts/archive/`, or strip the embedded templates. **All four are production tooling — any change requires its own authorisation and sandbox validation under ADR-010.** Flagged, not fixed |
 | **Files affected** | `scripts/_update_memory.py`, `scripts/_docs_v13.py`, `scripts/_lock_v13.py`, `scripts/_update_and_verify.py` |
+
+#### Correction to M-3 — scope narrowed and two claims withdrawn
+
+**Added 2026-09-06,** after a dedicated per-script investigation. **The M-3 entry
+above is left intact**; this correction supersedes it on the two points below and
+narrows its scope. Its evidence on template drift stands unchanged.
+
+**Withdrawn claim 1.** M-3 states *"Nothing in the repository marks these scripts
+as historical or retired."* **That is false for two of the four.**
+`scripts/_docs_v13.py` and `scripts/_lock_v13.py` each carry an explicit
+`HISTORICAL SNAPSHOT -- ... DO NOT RE-RUN` header, added deliberately in
+**`b1a1ac9`** (2026-07-11) — a commit whose only change to those two files was
+`+3` and `+5` lines of warning header. They are moved to **M-4** below.
+
+**Withdrawn claim 2.** M-3 states *"All four are production tooling -- any change
+requires its own authorisation and sandbox validation under ADR-010."*
+**Not supported.** Neither `DEVELOPMENT.md` §2 nor `CLAUDE.md`'s quick reference
+lists any `scripts/_*.py` as a production script; ADR-010's sandbox-first rule
+governs production code and does not reach them. A comment-only historical
+header changes no behaviour and has nothing to sandbox-validate. The precedent
+commit `b1a1ac9` made exactly this class of change with no ADR.
+
+**Narrowed scope.** M-3 is now **`scripts/_update_memory.py` and
+`scripts/_update_and_verify.py` only** — the two that were genuinely unmarked and
+unguarded. Provenance for all four: introduced together in **`3a5b026`**
+(2026-03-21, the v1.3 transition commit) as one-time migration tooling. The two
+narrowed scripts have **never been modified since**. Invocation search across all
+tracked files found **no workflow, hook, Makefile, CI, document or contributor
+instruction that calls any of them**; there is no task runner in the repository.
+Neither has a `__main__` guard, argparse, confirmation prompt, backup, or
+before/after comparison, so a single bare invocation runs the whole script.
+
+**Remediation applied (Option C).** Both now carry a `#`-comment historical
+header modelled on `_agg_and_paths.py` and `_lock_v13.py`, naming the superseded
+v1.2.5 state, stating what running them would overwrite, and recording that the
+executable logic and embedded templates are deliberately not repaired. **The
+embedded templates were not edited** — they are the audit trail of what was true
+at v1.2.5, and updating them would create a fifth hand-synced copy of canonical
+state, which is the pattern M-1/M-2 eliminated.
+
+**Relationship to C-4.** Independent, and not to be merged. C-4 concerns
+duplication *between two production modules* of constants that currently
+**agree**; resolving it means editing `aggregate_all_v12.py`, which is production
+and does fall under ADR-010. M-3 concerns stale documentation templates in
+non-production migration scripts.
+
+### M-4 · LOW / INFORMATIONAL — historical migration scripts already marked
+
+| | |
+|---|---|
+| **Location** | `scripts/_docs_v13.py`, `scripts/_lock_v13.py` |
+| **Observed** | Both open canonical documents in `"w"` mode and would overwrite `README.md`, `PROJECT_STATUS.md` and three `.ai-memory` documents from v1.3-era templates (0.7/0.3, 5 ragas, 55 clips) |
+| **Existing remediation** | Both carry `HISTORICAL SNAPSHOT -- v1.3 ... DO NOT RE-RUN` headers naming the superseded state, added in `b1a1ac9` (2026-07-11) |
+| **Residual risk** | A contributor who opens either file is warned; one who runs it blind is not. No guard, prompt or backup exists in either |
+| **Confidence** | High |
+| **Resolution** | **None required.** Recorded as the precedent that M-3's remediation follows. **Do not modify these files** |
+| **Files affected** | None |
+
+**Informational, no action:** `scripts/_update_all_docs.py` also writes an
+`architecture.md`, but via a **repository-root relative path**. No such file
+exists at the root, so it fails at its read before writing and is effectively
+inert. Recorded for completeness; not modified.
 
 **Note on `.ai-memory/` authority.** `CLAUDE.md` §4b assigns volatile
 architectural state to `.ai-memory/architecture.md` and calls these documents
